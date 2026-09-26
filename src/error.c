@@ -5,3 +5,5 @@
 #include <stdlib.h>
 
 #include "error.h"
+
+void error_exit();
