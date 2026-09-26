@@ -27,6 +27,13 @@ enum error_code {
     INTERNAL_ERR = 99   // internal compiler error  - (memory allocation failure)
 };
 
-void error_exit();
+/**
+* @brief Prints error with custom error message and exits with specified exit code
+*
+* @param err_code Exit/error code
+* @param line Line number where error occured
+* @param fmt Custom error message
+*/
+void error_exit(int err_code, unsigned line, const char *fmt, ...);
 
 #endif
