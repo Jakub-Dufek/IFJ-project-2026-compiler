@@ -18,7 +18,12 @@ void error_exit(int err_code, unsigned line, const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    fprintf(stderr, "Error %d on line %u: ", err_code, line);
+    fprintf(stderr, "Error %d", err_code);
+    // no line num needed with specific error cases
+    if (line != 0) {
+        fprintf(stderr, " on line %u", line);
+    }
+    fprintf(stderr, ": ");
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 
