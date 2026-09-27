@@ -12,6 +12,8 @@
 #ifndef STRUCTURES
 #define STRUCTURES
 
+#define MAX_LENGTH 1000     //#TODO... discuss if this will be enough
+
 #include "error.h"
 
 
@@ -80,8 +82,8 @@ typedef enum token_type {
  * This structure holds value of the lexeme and its length
  */
 typedef struct Lexeme {
-    char* value;        /**<String representation of the lexeme */
-    unsigned size;      /**<Size of the lexeme */
+    char value[MAX_LENGTH];     /**<String representation of the lexeme */
+    unsigned size;              /**<Size of the lexeme */
 } lexeme_t;
 
 /**
@@ -91,9 +93,9 @@ typedef struct Lexeme {
  * This union holds the value of the token, depending on the type of the value
  */
 typedef union Token_value {
-    int int_value;          /**<Storage for integer type of the token */
-    double double_value;    /**<Storage for double type of the token */
-    char* string_value;     /**<Storage for string representation of the token */
+    int int_value;                  /**<Storage for integer type of the token */
+    double double_value;            /**<Storage for double type of the token */
+    char string_value[MAX_LENGTH];  /**<Storage for string representation of the token */
 } token_value_t;
 
 /**
@@ -104,7 +106,7 @@ typedef union Token_value {
  */
 typedef struct Token {
     token_type type;        /**<Type of the token */
-    unsigned line;          /**<Line on which the token was found */
+    unsigned line_num;      /**<Line on which the token was found */
     token_value_t value;    /**<String representation of the token */
     unsigned size;          /**<Size of the token */
 } token_t;

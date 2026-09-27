@@ -10,66 +10,76 @@
 */
 
 #include "scanner.h"
-#include "structures.h"
 #include <ctype.h>
 #include <stdio.h>
 
 token_t handle_white_spaces(int* character) {
     token_t token = {0};
 
+    //#TODO... Loop for checking and clearing white spaces. Has to inicialise character variable
+
     character = character;  //Placeholder for compiler to shut up. Remove once you use character variable
 
     return token;
 }
 
-token_t first_alpha (int character) {
-    token_t token = {0};
-    int current_case = 0;
-
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme, int current_case) {
     do {
+        lexeme->value[lexeme->size] = (char)character;
+        lexeme->size++;
+        lexeme->value[lexeme->size] = '\0';
+
         switch (current_case) {
             case 0:
                 break;
         }
-    } while(!isspace(character = getchar()));
+    } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
-    ungetc(character, stdin);
+    //Return last read character, that was not used
+    if (character != EOF) { ungetc(character, stdin); }
     return token;
 }
 
-token_t first_digit (int character) {
-    token_t token = {0};
-    int current_case = 0;
-
+token_t first_digit (int character, token_t token, lexeme_t *lexeme, int current_case) {
     do {
+        lexeme->value[lexeme->size] = (char)character;
+        lexeme->size++;
+        lexeme->value[lexeme->size] = '\0';
+
         switch (current_case) {
             case 0:
                 break;
         }
-    } while(!isspace(character = getchar()) && character != EOF);
+    } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
-    ungetc(character, stdin);
+    //Return last read character, that was not used
+    if (character != EOF) { ungetc(character, stdin); }
     return token;
 }
 
-token_t first_special (int character) {
-    token_t token = {0};
-    int current_case = 0;
-
+token_t first_special (int character, token_t token, lexeme_t *lexeme, int current_case) {
     do {
+        lexeme->value[lexeme->size] = (char)character;
+        lexeme->size++;
+        lexeme->value[lexeme->size] = '\0';
+
         switch (current_case) {
             case 0:
                 break;
         }
-    } while(!isspace(character = getchar()));
+    } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
-    ungetc(character, stdin);
+    //Return last read character, that was not used
+    if (character != EOF) { ungetc(character, stdin); }
     return token;
 }
 
-token_t scanner_fsm (/*int argc, char** argv*/) {
+token_t scanner_fsm (unsigned line_num) {
     //Initialize token and variable for storing read characters
     token_t token = {0};
+    token.line_num = line_num;
+    lexeme_t lexeme = {0};
+    int current_case = 0;
     int character;
 
     //while (isspace(character = getchar())) {}
@@ -81,13 +91,13 @@ token_t scanner_fsm (/*int argc, char** argv*/) {
     }
 
     if (isalpha(character)) {
-        token = first_alpha(character);
+        token = first_alpha(character, token, &lexeme, current_case);
     }
     else if (isdigit(character)) {
-        token = first_digit(character);
+        token = first_digit(character, token, &lexeme, current_case);
     }
     else {
-        token = first_special(character);
+        token = first_special(character, token, &lexeme, current_case);
     }
 
     return token;
