@@ -12,6 +12,8 @@
 #ifndef STRUCTURES
 #define STRUCTURES
 
+#include "error.h"
+
 
 typedef enum token_type {
     //keywords
@@ -76,8 +78,8 @@ typedef enum token_type {
  * This structure holds value of the lexeme and its length
  */
 typedef struct Lexeme {
-    char* value;    /**<String representation of the lexeme */
-    unsigned size;    /**<Size of the lexeme */
+    char* value;        /**<String representation of the lexeme */
+    unsigned size;      /**<Size of the lexeme */
 } lexeme_t;
 
 /**
@@ -102,7 +104,7 @@ typedef struct Token {
     token_type type;        /**<Type of the token */
     unsigned line;          /**<Line on which the token was found */
     token_value_t value;    /**<String representation of the token */
-    unsigned size;            /**<Size of the token */
+    unsigned size;          /**<Size of the token */
 } token_t;
 
 
