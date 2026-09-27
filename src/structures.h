@@ -12,11 +12,8 @@
 #ifndef STRUCTURES
 #define STRUCTURES
 
-//LIBRARIES
-#include <stdio.h>
 
-
-typedef enum {
+typedef enum token_type {
     //keywords
     T_KEY_DEF,
     T_KEY_DO,
@@ -80,7 +77,7 @@ typedef enum {
  */
 typedef struct Lexeme {
     char* value;    /**<String representation of the lexeme */
-    size_t size;    /**<Size of the lexeme */
+    unsigned size;    /**<Size of the lexeme */
 } lexeme_t;
 
 /**
@@ -103,8 +100,10 @@ typedef union Token_value {
  */
 typedef struct Token {
     token_type type;        /**<Type of the token */
+    unsigned line;          /**<Line on which the token was found */
     token_value_t value;    /**<String representation of the token */
-    size_t size;            /**<Size of the token */
+    unsigned size;            /**<Size of the token */
 } token_t;
+
 
 #endif
