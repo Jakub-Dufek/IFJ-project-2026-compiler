@@ -16,6 +16,8 @@
 
 
 typedef enum token_type {
+    T_UNDEFINED = 0,
+
     //keywords
     T_KEY_DEF,
     T_KEY_DO,
