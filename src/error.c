@@ -3,7 +3,8 @@
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
 * @brief Error handling and exitting with specified exit code and error message
-* @author Jakub Dufek (x274855)
+* @author Jakub Dufek (274855)
+* @date 26. 9. 2026
 */
 
 #include <stdio.h>

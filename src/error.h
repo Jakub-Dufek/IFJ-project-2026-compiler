@@ -3,7 +3,8 @@
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
 * @brief Header file for exitting with error message
-* @author Jakub Dufek (x274855)
+* @author Jakub Dufek (274855)
+* @date 26. 9. 2026
 *
 * Error code spec translation and enum value naming done with AI tools (Gemini flash 3.8)
 *
