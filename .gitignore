@@ -5,7 +5,7 @@
 
 # Build
 build/
-doc_build
+doc_build/
 
 # Universal
 *.o
