@@ -7,12 +7,11 @@
 * @date 26. 9. 2026
 */
 
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "error.h"
-
 
 void error_exit(int err_code, unsigned line, const char *fmt, ...)
 {

@@ -1,0 +1,15 @@
+# File:     .clang-format
+# Project:  Part of IFJ-project-2026-compiler, Team 274855
+# Author:   Jakub Dufek (274855)
+# Date:     28. 9. 2026
+
+BasedOnStyle: LLVM
+Language: Cpp
+
+IndentWidth: 4
+ColumnLimit: 120
+
+PointerAlignment: Right
+BreakBeforeBraces: Linux
+
+ReflowComments: false
