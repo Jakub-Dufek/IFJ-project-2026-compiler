@@ -9,17 +9,30 @@
 
 
 #	.PHONY
-.PHONY: all pack clean test-err
+.PHONY: all pack clean test-err help
 
 #	FLAGS
 CC = gcc
 CFLAGS = -pedantic -Wall -Wextra -Isrc
 
-all: tests/err_test.c src/error.c | build
-	$(CC) $(CFLAGS) tests/err_test.c src/error.c -o build/err_test
 
-test-err:
-	-./build/err_test
+#	RULES
+build/%.o: src/%.c | build
+	$(CC) $(CFLAGS) -c $< -o $@
 
+build/%.o: tests/%.c | build
+	$(CC) $(CFLAGS) -c $< -o $@
+
+#	DEPENDENCIES
 build:
 	mkdir -p build/
+
+
+#	MAIN COMMANDS
+all:
+
+
+#	TEST COMMANDS
+test-err: build/err_test.o build/error.o
+	$(CC) $(CFLAGS) $^ -o build/err_test
+	-./build/err_test
