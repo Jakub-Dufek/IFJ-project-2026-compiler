@@ -15,6 +15,17 @@
 #include "structures.h"
 
 
+typedef enum {
+    CASE_START,
+
+    CASE_SLASH,
+    CASE_LINE_COMMENT,
+    CASE_BLOCK_COMMENT,
+} scanner_case;
+
+//#TODO... dopsat doxygen komentar
+void handle_comment (int character, scanner_case current_case);
+
 /**
  * @brief Handles white spaces
  * 
@@ -22,7 +33,7 @@
  * 
  * @return token_t structure either empty or with found token, ready to send
  */
-token_t handle_white_spaces(int* character);
+token_t handle_white_spaces(int* character, token_t token, lexeme_t *lexeme, scanner_case current_case);
 
 /**
  * @brief Handles all cases of tokens starting with an alphabetical character
@@ -34,8 +45,7 @@ token_t handle_white_spaces(int* character);
  * 
  * @return token_t structure, ready to send
  */
-token_t first_alpha (int character, token_t token, lexeme_t *lexeme, int current_case);
-
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
 
 /**
  * @brief Handles all cases of tokens starting with a digit character
@@ -47,8 +57,7 @@ token_t first_alpha (int character, token_t token, lexeme_t *lexeme, int current
  * 
  * @return token_t structure, ready to send
  */
-token_t first_digit (int character, token_t token, lexeme_t *lexeme, int current_case);
-
+token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
 
 /**
  * @brief Handles all cases of tokens starting with all other possible characters
@@ -60,11 +69,10 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, int current
  * 
  * @return token_t structure, ready to send
  */
-token_t first_special (int character, token_t token, lexeme_t *lexeme, int current_case);
-
+token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
 
 /**
- * @brief Declares all needed variables and starts the process of the fsm
+ * @brief Scanner entry function. Declares all needed variables and starts the process of the fsm
  * 
  * @return token_t structure, ready to send
  */
