@@ -3,7 +3,7 @@
 * @internal Part of IFJ-project-2026-compiler
 *
 * @brief Library file containing structures
-* @author Šimon Greger (xgreges00)
+* @author Šimon Greger (xgreges00) 
 * @date 27.09.2026
 * 
 * @details This file contains finite state machine representing the functions of a scanner
@@ -12,19 +12,93 @@
 #include "scanner.h"
 #include <ctype.h>
 #include <stdio.h>
+#include <stdbool.h>
 
-token_t handle_white_spaces(int* character) {
-    token_t token = {0};
+token_t handle_comment (int character, token_t token, scanner_case current_case) {
+    switch (current_case) {
+        case CASE_LINE_COMMENT:
+            //throw away contents of line comment
+            while ((character = getchar()) != '\n' && character != EOF) { }
+            //create token indicating end of line
+            if (character == '\n') {
+                token.type = T_LF;
+            }
+            else {
+                token.type = T_EOF;
+            }
+            break;
+        case CASE_BLOCK_COMMENT:
+            unsigned block_depth = 1;
+            bool multiline_block = false;
+            while (block_depth > 0 && (character = getchar()) != EOF) {
+                switch (character) {
+                    case '/':
+                        if ((character = getchar()) == '*') {
+                            block_depth++;
+                        }
+                        else if (character == '\n') {
+                            token.line_num++;
+                            multiline_block = true;
+                        }
+                        else if (character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '*':
+                        if ((character = getchar()) == '/') {
+                            block_depth--;
+                        }
+                        else if (character == '\n') {
+                            token.line_num++;
+                            multiline_block = true;
+                        }
+                        else if (character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '\n':
+                        token.line_num++;
+                        multiline_block = true;
+                        break;
+                }
+            }
 
+            if (block_depth > 0 && character == EOF) {
+                //#TODO... CHYBA: konec souboru před tím, než byl ukončen blokový komentář
+            }
+            else if (multiline_block == true) {
+                //Check if the rest of the line is empty
+                while ((character = getchar()) != '\n' && character != EOF) {
+                    if (!isspace(character)) {
+                        //#TODO... CHYBA: po komentáři není prázdný řádek 
+                    }
+                }
+                token.type = T_LF;
+            }
+            break;
+    }
+
+    return token;
+}
+
+token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     //#TODO... Loop for checking and clearing white spaces. Has to inicialise character variable
+    while (isspace(*character = getchar())) {
+        switch (current_case) {
+            case 0:
 
-    character = character;  //Placeholder for compiler to shut up. Remove once you use character variable
+                break;
+        }
+    }
+
+    //character = character;  //Placeholder for compiler to shut up. Remove once you use character variable
 
     return token;
 }
 
-token_t first_alpha (int character, token_t token, lexeme_t *lexeme, int current_case) {
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     do {
+        //note the lexeme's value
         lexeme->value[lexeme->size] = (char)character;
         lexeme->size++;
         lexeme->value[lexeme->size] = '\0';
@@ -40,8 +114,9 @@ token_t first_alpha (int character, token_t token, lexeme_t *lexeme, int current
     return token;
 }
 
-token_t first_digit (int character, token_t token, lexeme_t *lexeme, int current_case) {
+token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     do {
+        //note the lexeme's value
         lexeme->value[lexeme->size] = (char)character;
         lexeme->size++;
         lexeme->value[lexeme->size] = '\0';
@@ -57,15 +132,40 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, int current
     return token;
 }
 
-token_t first_special (int character, token_t token, lexeme_t *lexeme, int current_case) {
+token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     do {
+        //note the lexeme's value
         lexeme->value[lexeme->size] = (char)character;
         lexeme->size++;
         lexeme->value[lexeme->size] = '\0';
 
         switch (current_case) {
-            case 0:
+            case CASE_START:
+                switch (character){
+                    case '/':
+                        current_case = CASE_SLASH;
+                        break;
+                    default:
+                        break;
+                }
                 break;
+
+            case CASE_SLASH:
+                switch (character) {
+                    case '/':
+                        current_case = CASE_LINE_COMMENT;
+                        token = handle_comment(character, token, current_case);
+                        return token;
+                        break;
+                    case '*':
+                        current_case = CASE_BLOCK_COMMENT;
+                        token = handle_comment(character, token, current_case);
+                        return token;
+                        break;
+                    default:
+                        token.type = T_DIV;
+                        break;
+                }
         }
     } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
@@ -79,25 +179,26 @@ token_t scanner_fsm (unsigned line_num) {
     token_t token = {0};
     token.line_num = line_num;
     lexeme_t lexeme = {0};
-    int current_case = 0;
+    scanner_case current_case = CASE_START;
     int character;
 
-    //while (isspace(character = getchar())) {}
+    //
+    while (token.type == T_UNDEFINED) {
+        //Handle white spaces and if some if them is a token, leave loop
+        token = handle_white_spaces(&character, token, &lexeme, current_case);
+        if (token.type != T_UNDEFINED) {
+            break;
+        }
 
-    //Handle white spaces and if some if them is a token, return token
-    token = handle_white_spaces(&character);
-    if (token.type != T_UNDEFINED) {
-        return token;
-    }
-
-    if (isalpha(character)) {
-        token = first_alpha(character, token, &lexeme, current_case);
-    }
-    else if (isdigit(character)) {
-        token = first_digit(character, token, &lexeme, current_case);
-    }
-    else {
-        token = first_special(character, token, &lexeme, current_case);
+        if (isalpha(character)) {
+            token = first_alpha(character, token, &lexeme, current_case);
+        }
+        else if (isdigit(character)) {
+            token = first_digit(character, token, &lexeme, current_case);
+        }
+        else {
+            token = first_special(character, token, &lexeme, current_case);
+        }
     }
 
     return token;
