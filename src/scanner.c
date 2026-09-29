@@ -12,9 +12,73 @@
 #include "scanner.h"
 #include <ctype.h>
 #include <stdio.h>
+#include <stdbool.h>
 
-void handle_comment (int character, scanner_case current_case) {
-    
+token_t handle_comment (int character, token_t token, scanner_case current_case) {
+    switch (current_case) {
+        case CASE_LINE_COMMENT:
+            //throw away contents of line comment
+            while ((character = getchar()) != '\n' && character != EOF) { }
+            //create token indicating end of line
+            if (character == '\n') {
+                token.type = T_LF;
+            }
+            else {
+                token.type = T_EOF;
+            }
+            break;
+        case CASE_BLOCK_COMMENT:
+            unsigned block_depth = 1;
+            bool multiline_block = false;
+            while (block_depth > 0 && (character = getchar()) != EOF) {
+                switch (character) {
+                    case '/':
+                        if ((character = getchar()) == '*') {
+                            block_depth++;
+                        }
+                        else if (character == '\n') {
+                            token.line_num++;
+                            multiline_block = true;
+                        }
+                        else if (character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '*':
+                        if ((character = getchar()) == '/') {
+                            block_depth--;
+                        }
+                        else if (character == '\n') {
+                            token.line_num++;
+                            multiline_block = true;
+                        }
+                        else if (character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '\n':
+                        token.line_num++;
+                        multiline_block = true;
+                        break;
+                }
+            }
+
+            if (block_depth > 0 && character == EOF) {
+                //#TODO... CHYBA: konec souboru před tím, než byl ukončen blokový komentář
+            }
+            else if (multiline_block == true) {
+                //Check if the rest of the line is empty
+                while ((character = getchar()) != '\n' && character != EOF) {
+                    if (!isspace(character)) {
+                        //#TODO... CHYBA: po komentáři není prázdný řádek 
+                    }
+                }
+                token.type = T_LF;
+            }
+            break;
+    }
+
+    return token;
 }
 
 token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
@@ -90,11 +154,13 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                 switch (character) {
                     case '/':
                         current_case = CASE_LINE_COMMENT;
-                        handle_comment(character, current_case);
+                        token = handle_comment(character, token, current_case);
+                        return token;
                         break;
                     case '*':
                         current_case = CASE_BLOCK_COMMENT;
-                        handle_comment(character, current_case);
+                        token = handle_comment(character, token, current_case);
+                        return token;
                         break;
                     default:
                         token.type = T_DIV;
