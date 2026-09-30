@@ -67,6 +67,8 @@ typedef enum token_type {
     T_SEMICOLON,
     T_EOF,
     T_AT_MAIN,  //@main
+    T_INDENT_UP,
+    T_INDENT_DOWN,
 
     T_IDENTIFIER,
     T_STRING_LITERAL,

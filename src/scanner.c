@@ -9,11 +9,19 @@
 * @details This file contains finite state machine representing the functions of a scanner
 */
 
+//libraries
 #include "scanner.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdbool.h>
 
+//global variables
+static bool line_start = true;
+static unsigned depth_of_brackets = 0;
+static unsigned indent_depth = 0;
+static unsigned past_indent_depth = 0;
+
+//functions
 token_t handle_comment (int character, token_t token, scanner_case current_case) {
     switch (current_case) {
         case CASE_LINE_COMMENT:
@@ -77,6 +85,9 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                 }
                 token.type = T_LF;
             }
+            else if (multiline_block == false && line_start == true) {
+                indent_depth++;
+            }
             break;
         default:
             break;
@@ -86,19 +97,20 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
 }
 
 token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
-    //#TODO... Loop for checking and clearing white spaces. Has to inicialise character variable
     while (isspace(*character = getchar())) {
+        indent_depth++;
         switch (current_case) {
             case CASE_START:
-
+                
                 break;
             default:
                 break;
         }
     }
 
-    //character = character;  //Placeholder for compiler to shut up. Remove once you use character variable
-
+    if (*character == EOF) {
+        token.type = T_EOF;
+    }
     return token;
 }
 
