@@ -24,6 +24,13 @@ typedef enum {
 } scanner_case;
 
 /**
+ * @brief Creates new token and initialises it
+ * 
+ * @return New initialised token.
+ */
+token_t new_token ();
+
+/**
  * @brief Removes comments from code
  * 
  * @param character Pointer to a variable holding one character from stdin.
