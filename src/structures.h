@@ -12,7 +12,7 @@
 #ifndef STRUCTURES
 #define STRUCTURES
 
-#define MAX_LENGTH 200     //#TODO... discuss if this will be enough
+#define MAX_LENGTH 256     //#TODO... discuss if this will be enough
 
 #include "error.h"
 

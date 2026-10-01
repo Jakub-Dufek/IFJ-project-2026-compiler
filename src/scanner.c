@@ -110,7 +110,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
     return token;
 }
 
-token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
+token_t handle_white_spaces (int* character, token_t token) {
     while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
         if (line_start == true && *character == ' ') {
             indent_depth++;
@@ -127,7 +127,7 @@ token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, sc
                     token.type = T_LF;
                 }
                 else if (line_start == false && depth_of_brackets > 0) {
-                    line_start == true;
+                    line_start = true;
                 }
                 token.line_num++;
                 current_line_num++;
@@ -231,7 +231,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
     return token;
 }
 
-token_t scanner_fsm () {
+token_t get_next_token () {
     //Initialize token and variable for storing read characters
     token_t token = new_token(current_line_num);
     lexeme_t lexeme = {0};
@@ -241,7 +241,7 @@ token_t scanner_fsm () {
     //Main loop for finding and creating token
     while (token.type == T_UNDEFINED && next_token.type == T_UNDEFINED) {
         //Handle white spaces and if some if them is a token, leave loop
-        token = handle_white_spaces(&character, token, &lexeme, current_case);
+        token = handle_white_spaces(&character, token);
         if (token.type != T_UNDEFINED) {
             break;
         }
@@ -263,6 +263,7 @@ token_t scanner_fsm () {
     }
 
     //Handle indent
+    token.indent = indent_depth;
     if (line_start == true && token.type != T_LF) {
         line_start = false;
         if (depth_of_brackets == 0 && indent_depth != past_indent_depth) {
@@ -281,10 +282,10 @@ token_t scanner_fsm () {
             //#TODO... chyba: v závorkách je menší úroveň odsazení než před nimi
         }
     }
-    else if (line_start == false && token.type == T_LF) {
-        line_start = true;
+    else if (token.type == T_LF) {  //If the current line ends,...
+        indent_depth = 0;   //...reset indent depth for another line...
+        line_start = true;  //...and reset start of line variable
     }
 
-    indent_depth = 0;
     return token;
 }

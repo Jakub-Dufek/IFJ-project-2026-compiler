@@ -21,6 +21,8 @@ typedef enum {
     CASE_SLASH,
     CASE_LINE_COMMENT,
     CASE_BLOCK_COMMENT,
+
+
 } scanner_case;
 
 /**
@@ -53,7 +55,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
  * 
  * @return token_t structure either empty or with found token, ready to send
  */
-token_t handle_white_spaces(int* character, token_t token, lexeme_t *lexeme, scanner_case current_case);
+token_t handle_white_spaces(int* character, token_t token);
 
 /**
  * @brief Handles all cases of tokens starting with an alphabetical character
@@ -96,6 +98,6 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
  * 
  * @return token_t structure, ready to send
  */
-token_t scanner_fsm (unsigned line_num);
+token_t get_next_token ();
 
 #endif
