@@ -12,7 +12,7 @@
 #ifndef STRUCTURES
 #define STRUCTURES
 
-#define MAX_LENGTH 1000     //#TODO... discuss if this will be enough
+#define MAX_LENGTH 256     //#TODO... discuss if this will be enough
 
 #include "error.h"
 
@@ -67,6 +67,8 @@ typedef enum token_type {
     T_SEMICOLON,
     T_EOF,
     T_AT_MAIN,  //@main
+    T_MORE_INDENT,
+    T_LESS_INDENT,
 
     T_IDENTIFIER,
     T_STRING_LITERAL,
@@ -109,6 +111,7 @@ typedef struct Token {
     unsigned line_num;      /**<Line on which the token was found */
     token_value_t value;    /**<String representation of the token */
     unsigned size;          /**<Size of the token */
+    unsigned indent;        /**<Number of spaces before first token on this line */
 } token_t;
 
 

@@ -21,9 +21,26 @@ typedef enum {
     CASE_SLASH,
     CASE_LINE_COMMENT,
     CASE_BLOCK_COMMENT,
+<<<<<<< HEAD
 } scanner_case;
 
 /**
+=======
+
+
+} scanner_case;
+
+/**
+ * @brief Creates new token and initialises it
+ * 
+ * @param line_num Number holding on which like the token is located
+ * 
+ * @return New initialised token.
+ */
+token_t new_token (unsigned line_num);
+
+/**
+>>>>>>> scanner
  * @brief Removes comments from code
  * 
  * @param character Pointer to a variable holding one character from stdin.
@@ -44,7 +61,11 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
  * 
  * @return token_t structure either empty or with found token, ready to send
  */
+<<<<<<< HEAD
 token_t handle_white_spaces(int* character, token_t token, lexeme_t *lexeme, scanner_case current_case);
+=======
+token_t handle_white_spaces(int* character, token_t token);
+>>>>>>> scanner
 
 /**
  * @brief Handles all cases of tokens starting with an alphabetical character
@@ -87,6 +108,6 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
  * 
  * @return token_t structure, ready to send
  */
-token_t scanner_fsm (unsigned line_num);
+token_t get_next_token ();
 
 #endif

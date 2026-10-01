@@ -9,11 +9,27 @@
 * @details This file contains finite state machine representing the functions of a scanner
 */
 
+//libraries
 #include "scanner.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdbool.h>
 
+//global variables
+static bool line_start = true;
+static unsigned depth_of_brackets = 0;
+static unsigned indent_depth = 0;
+static unsigned past_indent_depth = 0;
+static token_t next_token;
+static unsigned current_line_num = 1;
+
+token_t new_token (unsigned line_num) {
+    token_t new_token = {0};
+    new_token.line_num = line_num;
+    return new_token;
+}
+
+//functions
 token_t handle_comment (int character, token_t token, scanner_case current_case) {
     switch (current_case) {
         case CASE_LINE_COMMENT:
@@ -21,9 +37,13 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
             while ((character = getchar()) != '\n' && character != EOF) { }
             //create token indicating end of line
             if (character == '\n') {
-                token.type = T_LF;
+                if (line_start == false) {
+                    token.type = T_LF;
+                }
+                current_line_num++;
+                token.line_num++;
             }
-            else {
+            else if (character == EOF) {
                 token.type = T_EOF;
             }
             break;
@@ -38,6 +58,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                         }
                         else if (character == '\n') {
                             token.line_num++;
+                            current_line_num++;
                             multiline_block = true;
                         }
                         else if (character != EOF) {
@@ -50,6 +71,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                         }
                         else if (character == '\n') {
                             token.line_num++;
+                            current_line_num++;
                             multiline_block = true;
                         }
                         else if (character != EOF) {
@@ -58,7 +80,10 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                         break;
                     case '\n':
                         token.line_num++;
+                        current_line_num++;
                         multiline_block = true;
+                        break;
+                    default:
                         break;
                 }
             }
@@ -74,25 +99,48 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                     }
                 }
                 token.type = T_LF;
+                current_line_num++;
+                token.line_num++;
             }
+            break;
+        default:
             break;
     }
 
     return token;
 }
 
-token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
-    //#TODO... Loop for checking and clearing white spaces. Has to inicialise character variable
-    while (isspace(*character = getchar())) {
-        switch (current_case) {
-            case 0:
-
+token_t handle_white_spaces (int* character, token_t token) {
+    while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
+        if (line_start == true && *character == ' ') {
+            indent_depth++;
+        }
+        switch (*character) {
+            case '\t':
+                if (line_start == true) {
+                    //#TODO... Chyba: tabulátor na začátku
+                }
+                break;
+            case '\n':
+                //do not send T_LF token if one of these conditions happen
+                if (line_start == false && depth_of_brackets == 0) {
+                    token.type = T_LF;
+                }
+                else if (line_start == false && depth_of_brackets > 0) {
+                    line_start = true;
+                }
+                token.line_num++;
+                current_line_num++;
+                indent_depth = 0;
+                break;
+            default:
                 break;
         }
     }
 
-    //character = character;  //Placeholder for compiler to shut up. Remove once you use character variable
-
+    if (*character == EOF) {
+        token.type = T_EOF;
+    }
     return token;
 }
 
@@ -104,7 +152,9 @@ token_t first_alpha (int character, token_t token, lexeme_t *lexeme, scanner_cas
         lexeme->value[lexeme->size] = '\0';
 
         switch (current_case) {
-            case 0:
+            case CASE_START:
+                break;
+            default:
                 break;
         }
     } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
@@ -122,7 +172,9 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
         lexeme->value[lexeme->size] = '\0';
 
         switch (current_case) {
-            case 0:
+            case CASE_START:
+                break;
+            default:
                 break;
         }
     } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
@@ -153,19 +205,24 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
             case CASE_SLASH:
                 switch (character) {
                     case '/':
+                        lexeme->size = 0;
                         current_case = CASE_LINE_COMMENT;
                         token = handle_comment(character, token, current_case);
                         return token;
                         break;
                     case '*':
+                        lexeme->size = 0;
                         current_case = CASE_BLOCK_COMMENT;
                         token = handle_comment(character, token, current_case);
                         return token;
                         break;
                     default:
                         token.type = T_DIV;
+                        ungetc(character, stdin);
                         break;
                 }
+            default:
+                break;
         }
     } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
@@ -174,18 +231,17 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
     return token;
 }
 
-token_t scanner_fsm (unsigned line_num) {
+token_t get_next_token () {
     //Initialize token and variable for storing read characters
-    token_t token = {0};
-    token.line_num = line_num;
+    token_t token = new_token(current_line_num);
     lexeme_t lexeme = {0};
     scanner_case current_case = CASE_START;
     int character;
 
-    //
-    while (token.type == T_UNDEFINED) {
+    //Main loop for finding and creating token
+    while (token.type == T_UNDEFINED && next_token.type == T_UNDEFINED) {
         //Handle white spaces and if some if them is a token, leave loop
-        token = handle_white_spaces(&character, token, &lexeme, current_case);
+        token = handle_white_spaces(&character, token);
         if (token.type != T_UNDEFINED) {
             break;
         }
@@ -199,6 +255,36 @@ token_t scanner_fsm (unsigned line_num) {
         else {
             token = first_special(character, token, &lexeme, current_case);
         }
+    }
+
+    if (next_token.type != T_UNDEFINED) {
+        token = next_token;
+        next_token = new_token(0);
+    }
+
+    //Handle indent
+    token.indent = indent_depth;
+    if (line_start == true && token.type != T_LF) {
+        line_start = false;
+        if (depth_of_brackets == 0 && indent_depth != past_indent_depth) {
+            next_token = token;
+            token = new_token(0);
+            token.indent = indent_depth;
+            if (indent_depth > past_indent_depth) {
+                token.type = T_MORE_INDENT;
+            }
+            else if (indent_depth < past_indent_depth) {
+                token.type = T_LESS_INDENT;
+            }
+            past_indent_depth = indent_depth;
+        }
+        else if (depth_of_brackets > 0 && indent_depth <= past_indent_depth) {
+            //#TODO... chyba: v závorkách je menší úroveň odsazení než před nimi
+        }
+    }
+    else if (token.type == T_LF) {  //If the current line ends,...
+        indent_depth = 0;   //...reset indent depth for another line...
+        line_start = true;  //...and reset start of line variable
     }
 
     return token;
