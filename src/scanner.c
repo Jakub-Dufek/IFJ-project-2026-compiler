@@ -23,9 +23,9 @@ static unsigned past_indent_depth = 0;
 static token_t next_token;
 static unsigned current_line_num = 1;
 
-token_t new_token () {
+token_t new_token (unsigned line_num) {
     token_t new_token = {0};
-    new_token.line_num = current_line_num;
+    new_token.line_num = line_num;
     return new_token;
 }
 
@@ -36,8 +36,10 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
             //throw away contents of line comment
             while ((character = getchar()) != '\n' && character != EOF) { }
             //create token indicating end of line
-            if (character == '\n' && line_start == false) {
-                token.type = T_LF;
+            if (character == '\n') {
+                if (line_start == false) {
+                    token.type = T_LF;
+                }
                 current_line_num++;
                 token.line_num++;
             }
@@ -110,7 +112,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
 
 token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
-        if (line_start == true) {
+        if (line_start == true && *character == ' ') {
             indent_depth++;
         }
         switch (*character) {
@@ -123,6 +125,9 @@ token_t handle_white_spaces (int* character, token_t token, lexeme_t *lexeme, sc
                 //do not send T_LF token if one of these conditions happen
                 if (line_start == false && depth_of_brackets == 0) {
                     token.type = T_LF;
+                }
+                else if (line_start == false && depth_of_brackets > 0) {
+                    line_start == true;
                 }
                 token.line_num++;
                 current_line_num++;
@@ -228,7 +233,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
 
 token_t scanner_fsm () {
     //Initialize token and variable for storing read characters
-    token_t token = new_token();
+    token_t token = new_token(current_line_num);
     lexeme_t lexeme = {0};
     scanner_case current_case = CASE_START;
     int character;
@@ -260,8 +265,10 @@ token_t scanner_fsm () {
     //Handle indent
     if (line_start == true && token.type != T_LF) {
         line_start = false;
-        if (depth_of_brackets == 0 && indent_depth == past_indent_depth) {
+        if (depth_of_brackets == 0 && indent_depth != past_indent_depth) {
             next_token = token;
+            token = new_token(0);
+            token.indent = indent_depth;
             if (indent_depth > past_indent_depth) {
                 token.type = T_MORE_INDENT;
             }

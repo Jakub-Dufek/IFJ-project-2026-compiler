@@ -111,6 +111,7 @@ typedef struct Token {
     unsigned line_num;      /**<Line on which the token was found */
     token_value_t value;    /**<String representation of the token */
     unsigned size;          /**<Size of the token */
+    unsigned indent;        /**<Number of spaces before first token on this line */
 } token_t;
 
 

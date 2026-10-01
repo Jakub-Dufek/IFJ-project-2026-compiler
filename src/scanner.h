@@ -26,9 +26,11 @@ typedef enum {
 /**
  * @brief Creates new token and initialises it
  * 
+ * @param line_num Number holding on which like the token is located
+ * 
  * @return New initialised token.
  */
-token_t new_token ();
+token_t new_token (unsigned line_num);
 
 /**
  * @brief Removes comments from code
