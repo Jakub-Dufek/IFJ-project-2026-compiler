@@ -6,3 +6,7 @@
 * @author Jakub Dufek (274855)
 * @date 3. 10. 2026
 */
+
+#ifndef EXPR_PARSER_H
+#define EXPR_PARSER_H
+#endif

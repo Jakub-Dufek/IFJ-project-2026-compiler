@@ -6,3 +6,5 @@
 * @author Jakub Dufek (274855)
 * @date 3. 10. 2026
 */
+
+
