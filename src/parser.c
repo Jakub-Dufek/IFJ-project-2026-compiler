@@ -60,6 +60,9 @@ void parse_var_declaration(token_t *current)
     else {
         error_exit(SYNT_ERR, line_num, "Expected data type or assign");
     }
+
+    ast_node_t *expression = parse_expression();
+    ast_insert_var_declaration(value, is_mutable, data_type, expression);
 }
 
 

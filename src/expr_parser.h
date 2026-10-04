@@ -10,6 +10,6 @@
 #ifndef EXPR_PARSER_H
 #define EXPR_PARSER_H
 
-
+ast_node_t *parse_expression();
 
 #endif

@@ -15,6 +15,7 @@
 typedef struct ast_node ast_node_t;
 
 
+
 //  ENUM TYPES
 
 /**
@@ -82,10 +83,14 @@ struct ast_node {
 
 
 
+//  AST FUNCTIONS
+
 /**
  * TODO: comment
  */
-void ast_insert_var_declaration();
+void ast_insert_var_declaration
+    (char value[MAX_LENGTH], bool is_mutable, ast_data_type_t data_type, ast_node_t *expression);
+
 
 
 #endif
