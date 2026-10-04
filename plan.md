@@ -17,3 +17,14 @@ Deadline xkyclon00:
 - 4\. 9. 2026: Focus on binary tree implementation, add function for adding WITHOUT any rotations yet
 Deadline 274855:
 - Showcase Makefile usage, .clang-format usage, build syntax tree for trivial programme (variable, number and set tokens)
+# 4. 10. 
+Deadline 274855:
+- \11. 9. 2026: AST functions and building complete for declaration, complete Makefile
+Deadline xkyclon00:
+- \11. 9. 2026: Complete symtable including rotations
+Deadline xgreges00:
+- \11. 9. 2026: Special cases in lex + block
+Deadline xlehots00:
+- \8. 9. 2026: Handle edge cases in lex
+Deadline xgreges00 & xlehots00:
+- \11. 9. 2026: Complete lex
