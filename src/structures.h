@@ -109,10 +109,19 @@ typedef union Token_value {
 typedef struct Token {
     token_type type;        /**<Type of the token */
     unsigned line_num;      /**<Line on which the token was found */
-    token_value_t value;    /**<String representation of the token */
+    token_value_t value;    /**<Specific lexeme represented by this token, that was read from input */
     unsigned size;          /**<Size of the token */
     unsigned indent;        /**<Number of spaces before first token on this line */
 } token_t;
+
+/**
+ * @struct indent_t
+ * @brief List holding values of indentation
+ */
+typedef struct Indent {
+    unsigned value;         /**<Variable holding the ammount of spaces used for certain indentation */
+    struct Indent *next;    /**<Pointer to the next item in the list */
+} indent_t;
 
 
 #endif
