@@ -20,22 +20,25 @@
 typedef enum token_type {
     T_UNDEFINED = 0,
 
+    //type keywords
+    T_KEY_INT,
+    T_KEY_DOUBLE,
+    T_KEY_STRING,
+    T_KEY_BOOLEAN,
+    T_KEY_UNIT,
+    T_NO_TYPE,
+
     //keywords
     T_KEY_DEF,
     T_KEY_DO,
-    T_KEY_DOUBLE,
     T_KEY_ELSE,
     T_KEY_IF,
     T_KEY_IMPORT,
-    T_KEY_INT,
     T_KEY_RETURN,
-    T_KEY_STRING,
     T_KEY_THEN,
-    T_KEY_UNIT,
     T_KEY_VAL,
     T_KEY_VAR,
     T_KEY_WHILE,
-    T_KEY_BOOLEAN,
     T_KEY_CASE,
     T_KEY_CLASS,
     T_KEY_EXTENSION,
