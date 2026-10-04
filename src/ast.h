@@ -11,4 +11,28 @@
 #define AST_H
 
 
+/**
+ * TODO: comment
+ */
+typedef union node_data {
+    // TODO: node_data union
+} ast_node_data_t;
+
+
+/**
+ * TODO: comment
+ */
+typedef struct node {
+    int type;
+    int line_num;
+    ast_node_data_t *data;
+    struct node *next;
+} ast_node_t;
+
+/**
+ * TODO: comment
+ */
+void ast_insert_var_declaration();
+
+
 #endif

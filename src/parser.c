@@ -2,13 +2,14 @@
 * @file parser.c
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
-* @brief TODO
+* @brief TODO: comment
 * @author Jakub Dufek (274855)
 * @date 3. 10. 2026
 */
 
 #include "parser.h"
 #include "expr_parser.h"
+#include "ast.h"
 
 #include "structures.h"
 #include "scanner.h"
@@ -38,13 +39,15 @@ void parse_var_declaration(token_t *current)
 
 //  MAIN PARSING SWITCH
 
-void parse(token_t *current)
+void parse_next(token_t *current)
 {
     // TODO: FIRST EXPRESSION PROGRAMME BEGIN
 
     switch(current->type) {
         case T_KEY_VAR || T_KEY_VAL:
             parse_var_declaration(current);
+        
+        // TODO: OTHER CASES
     }
 }
 

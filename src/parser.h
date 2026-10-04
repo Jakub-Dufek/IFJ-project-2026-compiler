@@ -2,7 +2,7 @@
 * @file parser.h
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
-* @brief TODO
+* @brief TODO: comment
 * @author Jakub Dufek (274855)
 * @date 3. 10. 2026
 */
@@ -15,7 +15,7 @@
 *
 * @param current Current token
 */
-void parse(token_t *current);
+void parse_next(token_t *current);
 
 /**
 * @brief parses declaration of variables
