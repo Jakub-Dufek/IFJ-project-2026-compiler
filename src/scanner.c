@@ -154,6 +154,56 @@ token_t handle_white_spaces (int* character, token_t token) {
     return token;
 }
 
+void handle_indent (token_t *token) {
+    if (line_start == true && token->type != T_LF) { //When I find first lexeme,...
+        line_start = false;
+        if (depth_of_brackets == 0) {
+            next_token = *token;
+            *token = new_token(0);
+            bool same_indent = false;
+            //...I compare its indentation value with all values I have stored.
+            for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
+                //If I find the indentation value in the list, but it is not the furthest,...
+                if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
+                    token->type = T_LESS_INDENT;                 //...I send token representing less indentation,...
+                    indent_values[last_indent_idx] = NO_VALUE;  //...remove the furthest indentation,...
+                    last_indent_idx--;                          //...subtract one from the indentation index...
+                    line_start = true;                          //...and set line_start to true in case there is even less indentation
+                }
+                //If there is no change in indent, note it and delete next_token (no need for it)
+                else if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
+                    same_indent = true;
+                    *token = next_token;
+                    next_token = new_token(NO_VALUE);
+                    break;
+                }
+            }
+            if (token->type != T_LESS_INDENT && same_indent == false) {
+                if (indent_depth < indent_values[last_indent_idx]) {
+                    //#TODO... chyba odsazení
+                }
+                else {  //Note new indent value
+                    if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
+                        //#TODO... chyba přetečení pole
+                    }
+                    else {
+                        last_indent_idx++;
+                        indent_values[last_indent_idx] = indent_depth;
+                        token->type = T_MORE_INDENT; 
+                    }
+                }
+            }
+        }
+        else if (depth_of_brackets > 0 && indent_depth <= indent_values[last_indent_idx]) {
+            //#TODO... chyba: v závorkách je menší úroveň odsazení než před nimi
+        }
+    }
+    else if (token->type == T_LF) { //If the current line ends,...
+        indent_depth = 0;           //...reset indent depth for another line...
+        line_start = true;          //...and reset start of line variable
+    }
+}
+
 int compare (const void* string, const void* keyword_string) {
     const keywords* keyword = (const keywords*)keyword_string;
     return (strcmp((const char*)string, keyword->string));
@@ -344,53 +394,7 @@ token_t get_next_token () {
         next_token = new_token(NO_VALUE);
     }
 
-    //Handle indent
-    if (line_start == true && token.type != T_LF) {
-        line_start = false;
-        if (depth_of_brackets == 0) {
-            next_token = token;
-            token = new_token(0);
-            bool same_indent = false;
-            for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
-                //If I find the indentation value, but it is not the furthest,...
-                if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
-                    token.type = T_LESS_INDENT;                 //...send token representing less indentation,...
-                    indent_values[last_indent_idx] = NO_VALUE;  //...remove the furthest indentation,...
-                    last_indent_idx--;                          //...subtract one from the indentation index...
-                    line_start = true;                          //...and set line_start to true in case there is even less indentation
-                }
-                //If there is no change in indent, note it and delete next_token (no need for it)
-                else if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
-                    same_indent = true;
-                    token = next_token;
-                    next_token = new_token(NO_VALUE);
-                    break;
-                }
-            }
-            if (token.type != T_LESS_INDENT && same_indent == false) {
-                if (indent_depth < indent_values[last_indent_idx]) {
-                    //#TODO... chyba odsazení
-                }
-                else {  //Note new indent value
-                    if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
-                        //#TODO... chyba přetečení pole
-                    }
-                    else {
-                        last_indent_idx++;
-                        indent_values[last_indent_idx] = indent_depth;
-                        token.type = T_MORE_INDENT; 
-                    }
-                }
-            }
-        }
-        else if (depth_of_brackets > 0 && indent_depth <= indent_values[last_indent_idx]) {
-            //#TODO... chyba: v závorkách je menší úroveň odsazení než před nimi
-        }
-    }
-    else if (token.type == T_LF) {  //If the current line ends,...
-        indent_depth = 0;           //...reset indent depth for another line...
-        line_start = true;          //...and reset start of line variable
-    }
+    handle_indent(&token);
 
     return token;
 }

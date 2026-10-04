@@ -59,6 +59,13 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
 token_t handle_white_spaces(int* character, token_t token);
 
 /**
+ * @brief Handles levels of indentations on lines
+ * 
+ * @param token Pointer to a structure holding output for this module
+ */
+void handle_indent (token_t *token);
+
+/**
  * @brief Handles all cases of tokens starting with an alphabetical character
  * 
  * @param character Variable holding one character from stdin.
