@@ -15,17 +15,42 @@
 typedef struct ast_node ast_node_t;
 
 
+//  ENUM TYPES
+
+/**
+ * @brief Enum for data types in nodes
+ */
+typedef enum ast_data_type {
+    AST_NO_T = 0,   /// no type given
+
+    AST_INT_T,
+    AST_DOUBLE_T,
+    AST_STRING_T,
+    AST_UNIT_T,
+
+    AST_BOOL_T      /// BOOLTHEN extension
+} ast_data_type_t;
+
+/**
+ * @brief Enum for statement types of nodes
+ */
+typedef enum ast_stmt_type {
+    AST_DECLARATION
+    // TODO: other types
+} ast_stmt_type_t;
+
 //  INDIVIDUAL NODE TYPES
 
 /**
- * TODO: comment
+ * @brief Node for variable declaration
  */
 typedef struct {
     char id_val[MAX_LENGTH];
     bool is_mutable;
-    int data_type; //TODO: enum
+    ast_data_type_t data_type;
     ast_node_t *expression;
 } ast_declaration_node_t;
+
 
 
 //  MAIN NODE TYPES
@@ -42,11 +67,13 @@ typedef union {
  * @brief Main node of AST
  */
 struct ast_node {
-    int type;       //TODO: enum
+    ast_stmt_type_t stmt_type;
     unsigned line_num;
     ast_node_data_t *data;
     ast_node_t *next;
 };
+
+
 
 /**
  * TODO: comment
