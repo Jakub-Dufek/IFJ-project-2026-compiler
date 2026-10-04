@@ -29,11 +29,6 @@ typedef enum {
     TYPE_LABEL // <-- Come back to this
 } IdType;
 
-typedef struct tkey {
-    char *id;
-    unsigned key; // integer value for searching
-} TKey;
-
 typedef struct tsymb {
     DataType datatype;
     IdType idtype;
@@ -46,10 +41,11 @@ typedef struct tsymb {
 } TSymb;
 
 typedef struct tnode {
-    TKey key;
+    char *key; // symbol/identifier used for binary search
     TSymb symb;
     struct tnode *lPtr;
     struct tnode *rPtr;
+    // int weight;
 } TNode;   
 
 #ifndef SYMTABLE
@@ -57,6 +53,10 @@ typedef struct tnode {
 
 TNode * symtable_init();
 
+TNode *FindSymbol(TNode *rootPtr, char *k);
+
+TNode *CreateNode(char *key, TSymb symb); // Helper function
+TNode *Insert(TNode *rootPtr, char *key, TSymb symb);
 void table_dst();
 
 #endif
