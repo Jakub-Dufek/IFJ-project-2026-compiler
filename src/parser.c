@@ -1,11 +1,11 @@
 /**
-* @file parser.c
-* @internal Part of IFJ-project-2026-compiler, Team 274855
-*
-* @brief TODO: comment
-* @author Jakub Dufek (274855)
-* @date 3. 10. 2026
-*/
+ * @file parser.c
+ * @internal Part of IFJ-project-2026-compiler, Team 274855
+ *
+ * @brief Source file for recursive descent parsing
+ * @author Jakub Dufek (274855)
+ * @date 3. 10. 2026
+ */
 
 #include "parser.h"
 #include "expr_parser.h"

@@ -1,33 +1,52 @@
 /**
-* @file ast.h
-* @internal Part of IFJ-project-2026-compiler, Team 274855
-*
-* @brief Header file for Abstract Syntax Tree building
-* @author Jakub Dufek (274855)
-* @date 3. 10. 2026
-*/
+ * @file ast.h
+ * @internal Part of IFJ-project-2026-compiler, Team 274855
+ *
+ * @brief Header file for Abstract Syntax Tree building
+ * @author Jakub Dufek (274855)
+ * @date 3. 10. 2026
+ */
 
 #ifndef AST_H
 #define AST_H
 
+#include "structures.h" // MAX_LENGTH
+
+typedef struct ast_node ast_node_t;
+
+
+//  INDIVIDUAL NODE TYPES
 
 /**
  * TODO: comment
  */
-typedef union node_data {
-    // TODO: node_data union
+typedef struct {
+    char id_val[MAX_LENGTH];
+    bool is_mutable;
+    int data_type; //TODO: enum
+    ast_node_t *expression;
+} ast_declaration_node_t;
+
+
+//  MAIN NODE TYPES
+
+/**
+ * @brief Union of different nodes for different types of expressions
+ */
+typedef union {
+    ast_declaration_node_t declaration_node;
+    // TODO: other structures
 } ast_node_data_t;
 
-
 /**
- * TODO: comment
+ * @brief Main node of AST
  */
-typedef struct node {
-    int type;
-    int line_num;
+struct ast_node {
+    int type;       //TODO: enum
+    unsigned line_num;
     ast_node_data_t *data;
-    struct node *next;
-} ast_node_t;
+    ast_node_t *next;
+};
 
 /**
  * TODO: comment
