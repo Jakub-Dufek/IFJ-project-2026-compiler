@@ -32,7 +32,34 @@ void parse_var_declaration(token_t *current)
         error_exit(SYNT_ERR, current->line_num, "Expected identifier");
     }
 
-    // TODO: IDENTIFIER HANDLING
+    char value[MAX_LENGTH] = current->value.string_value;
+    unsigned line_num = current->line_num;
+
+    *current = get_next_token();
+    ast_data_type_t data_type;
+
+    // TODO: put into separate helper function
+    if(current->type == T_ASSIGN) {
+        data_type = AST_NO_T;
+    }
+    else if(current->type == T_KEY_BOOLEAN) {
+        data_type = AST_BOOL_T;
+    }
+    else if(current->type == T_KEY_DOUBLE) {
+        data_type = AST_DOUBLE_T;
+    }
+    else if(current->type == T_KEY_INT) {
+        data_type = AST_INT_T;
+    }
+    else if(current->type == T_KEY_STRING) {
+        data_type = AST_STRING_T;
+    }
+    else if(current->type == T_KEY_UNIT) {
+        data_type = AST_UNIT_T;
+    }
+    else {
+        error_exit(SYNT_ERR, line_num, "Expected data type or assign");
+    }
 }
 
 
@@ -46,7 +73,6 @@ void parse_next(token_t *current)
     switch(current->type) {
         case T_KEY_VAR || T_KEY_VAL:
             parse_var_declaration(current);
-        
         // TODO: OTHER CASES
     }
 }

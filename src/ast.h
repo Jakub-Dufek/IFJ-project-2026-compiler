@@ -18,6 +18,7 @@ typedef struct ast_node ast_node_t;
 //  ENUM TYPES
 
 /**
+ * @enum ast_data_type_t
  * @brief Enum for data types in nodes
  */
 typedef enum ast_data_type {
@@ -32,6 +33,7 @@ typedef enum ast_data_type {
 } ast_data_type_t;
 
 /**
+ * @enum ast_stmt_type_t
  * @brief Enum for statement types of nodes
  */
 typedef enum ast_stmt_type {
@@ -39,16 +41,19 @@ typedef enum ast_stmt_type {
     // TODO: other types
 } ast_stmt_type_t;
 
+
+
 //  INDIVIDUAL NODE TYPES
 
 /**
+ * @struct ast_declaration_node_t
  * @brief Node for variable declaration
  */
 typedef struct {
     char id_val[MAX_LENGTH];
     bool is_mutable;
     ast_data_type_t data_type;
-    ast_node_t *expression;
+    ast_node_t *expression;     /// another node (abstract tree)
 } ast_declaration_node_t;
 
 
@@ -56,6 +61,7 @@ typedef struct {
 //  MAIN NODE TYPES
 
 /**
+ * @union ast_node_data_t
  * @brief Union of different nodes for different types of expressions
  */
 typedef union {
@@ -64,6 +70,7 @@ typedef union {
 } ast_node_data_t;
 
 /**
+ * @struct ast_node_t
  * @brief Main node of AST
  */
 struct ast_node {
