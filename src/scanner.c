@@ -4,6 +4,7 @@
 *
 * @brief Library file containing structures
 * @author Šimon Greger (xgreges00) 
+* @author Samuel Vít Lehotský (xlehots00)
 * @date 27.09.2026
 * 
 * @details This file contains finite state machine representing the functions of a scanner
@@ -14,6 +15,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 //global variables
 static bool line_start = true;
@@ -144,43 +147,101 @@ token_t handle_white_spaces (int* character, token_t token) {
     return token;
 }
 
-token_t first_alpha (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
+int compare (const void* string, const void* keyword_string) {
+    const keywords* keyword = (const keywords*)keyword_string;
+    return (strcmp((const char*)string, keyword->string));
+}
+
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme) { //TODO... INDENTIFIER: _
     do {
         //note the lexeme's value
         lexeme->value[lexeme->size] = (char)character;
         lexeme->size++;
         lexeme->value[lexeme->size] = '\0';
 
-        switch (current_case) {
-            case CASE_START:
-                break;
-            default:
-                break;
-        }
-    } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
+    } while((isalnum(character = getchar()) || character == '_') && character != EOF);
 
     //Return last read character, that was not used
     if (character != EOF) { ungetc(character, stdin); }
+
+    keywords* keyword = bsearch(lexeme->value, keywords_table, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keywords), compare);
+    if (keyword == NULL) { token.type = T_IDENTIFIER; }
+    else { token.type = keyword->t_type; }
+
+    token.size = lexeme->size;
+    strcpy(token.value.string_value, lexeme->value);
+ 
     return token;
 }
 
-token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
+token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) { //TODO... There is at least one digit after e/E
+    int dot = 0;
+    bool validation = true;
+    char last_character = character;
     do {
-        //note the lexeme's value
-        lexeme->value[lexeme->size] = (char)character;
-        lexeme->size++;
-        lexeme->value[lexeme->size] = '\0';
-
+        if (character == '0') { /*TODO...*/ }
+        
         switch (current_case) {
-            case CASE_START:
+            case CASE_INT_LITERAL:
+                if (character == '_') { continue; }
+                if (character == '-') { validation = false; break; }
+                if (character == '.') { dot = 1; current_case = CASE_DOUBLE_LITERAL; }
+                if (character == 'e' || character == 'E') { current_case = CASE_EXPONENT; }
+
+                //note the lexeme's value
+                lexeme->value[lexeme->size] = (char)character;
+                lexeme->size++;
+                lexeme->value[lexeme->size] = '\0';
+
                 break;
+
+            case CASE_DOUBLE_LITERAL:
+                if (character == '_') { continue; }
+                if (character == '-') { validation = false; break; }
+                if (character == '.' && dot == 1) { validation = false; break; }
+                if (character == 'e' || character == 'E') { current_case = CASE_EXPONENT; continue;}
+
+                lexeme->value[lexeme->size] = (char)character;
+                lexeme->size++;
+                lexeme->value[lexeme->size] = '\0';
+
+                break;
+
+            case CASE_EXPONENT:
+                if (character == '_') { continue; }
+                if (character == '.') { validation = false; break; }
+                if (character == '-' && (last_character != 'e' && last_character != 'E')) { validation = false; break; }
+                
+                lexeme->value[lexeme->size] = (char)character;
+                lexeme->size++;
+                lexeme->value[lexeme->size] = '\0';
+
+                break;
+
             default:
                 break;
         }
-    } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
+        last_character = character;
+    } while((isdigit(character = getchar()) || character == '.' || character == '_' || character == '-'
+                                            || character == 'e' || character == 'E') && validation == true && character != EOF);
+
+    if (current_case == CASE_INT_LITERAL) { 
+        token.type = T_INT_LITERAL; 
+
+        token.value.int_value = atoi(lexeme->value);
+    }
+    else if (current_case == CASE_DOUBLE_LITERAL ) { 
+        token.type = T_DOUBLE_LITERAL;
+
+        token.value.double_value = atof(lexeme->value);
+    }
+    
     //Return last read character, that was not used
-    if (character != EOF) { ungetc(character, stdin); }
+    if (character != EOF && character != 'd' && character != 'D') { ungetc(character, stdin); }
+
+    token.size = lexeme->size;
+
     return token;
 }
 
@@ -246,11 +307,23 @@ token_t get_next_token () {
             break;
         }
 
-        if (isalpha(character)) {
-            token = first_alpha(character, token, &lexeme, current_case);
+        if (isalpha(character) || character == '_') {
+            token = first_alpha(character, token, &lexeme);
         }
-        else if (isdigit(character)) {
-            token = first_digit(character, token, &lexeme, current_case);
+        else if (isdigit(character) || character == '.') {
+            if (character == '.') {
+                char next_character = getchar();
+                ungetc(next_character, stdin);
+                if (isdigit(next_character)) {
+                    token = first_digit(character, token, &lexeme, CASE_DOUBLE_LITERAL);
+                }
+                else {
+                    token.type = T_DOT; //#TODO...
+                }
+            }
+            else {
+                token = first_digit(character, token, &lexeme, CASE_INT_LITERAL);
+            }
         }
         else {
             token = first_special(character, token, &lexeme, current_case);

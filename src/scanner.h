@@ -4,6 +4,7 @@
 *
 * @brief Library file containing structures
 * @author Šimon Greger (xgreges00)
+* @author Samuel Vít Lehotský (xlehots00)
 * @date 27.09.2026
 * 
 * @details This file contains definitions of functions used in scanner.c
@@ -22,7 +23,9 @@ typedef enum {
     CASE_LINE_COMMENT,
     CASE_BLOCK_COMMENT,
 
-
+    CASE_INT_LITERAL,
+    CASE_DOUBLE_LITERAL,
+    CASE_EXPONENT,
 } scanner_case;
 
 /**
@@ -67,7 +70,7 @@ token_t handle_white_spaces(int* character, token_t token);
  * 
  * @return token_t structure, ready to send
  */
-token_t first_alpha (int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme);
 
 /**
  * @brief Handles all cases of tokens starting with a digit character
