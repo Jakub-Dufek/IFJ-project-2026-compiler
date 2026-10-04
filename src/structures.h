@@ -13,13 +13,15 @@
 #ifndef STRUCTURES
 #define STRUCTURES
 
-#define MAX_LENGTH 256     //#TODO... discuss if this will be enough
+#define MAX_LENGTH 256
+#define MAX_INDENT_LENGTH 256
+#define NO_VALUE 0
 #define KEYWORDS_TABLE_NUM_ELEMENTS 22
 
 #include "error.h"
 
 typedef enum token_type {
-    T_UNDEFINED = 0,
+    T_UNDEFINED = NO_VALUE,
 
     //type keywords
     T_KEY_INT,
@@ -47,6 +49,8 @@ typedef enum token_type {
     T_KEY_LIST,
     T_KEY_MATCH,
     T_KEY_TYPE,
+    T_KEY_TRUE,
+    T_KEY_FALSE,
 
     //operators
     T_PLUS,
@@ -145,17 +149,7 @@ typedef struct Token {
     unsigned line_num;      /**<Line on which the token was found */
     token_value_t value;    /**<Specific lexeme represented by this token, that was read from input */
     unsigned size;          /**<Size of the token */
-    unsigned indent;        /**<Number of spaces before first token on this line */
 } token_t;
-
-/**
- * @struct indent_t
- * @brief List holding values of indentation
- */
-typedef struct Indent {
-    unsigned value;         /**<Variable holding the ammount of spaces used for certain indentation */
-    struct Indent *next;    /**<Pointer to the next item in the list */
-} indent_t;
 
 
 #endif

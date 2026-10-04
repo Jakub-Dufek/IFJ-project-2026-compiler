@@ -20,14 +20,15 @@
 
 //global variables
 static bool line_start = true;
-static unsigned depth_of_brackets = 0;
-static unsigned indent_depth = 0;
-static unsigned past_indent_depth = 0;
+static unsigned depth_of_brackets = NO_VALUE;
+static unsigned indent_depth = NO_VALUE;
+static unsigned last_indent_idx = NO_VALUE;
 static token_t next_token;
 static unsigned current_line_num = 1;
+static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
 
 token_t new_token (unsigned line_num) {
-    token_t new_token = {0};
+    token_t new_token = {NO_VALUE};
     new_token.line_num = line_num;
     return new_token;
 }
@@ -38,10 +39,13 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
         case CASE_LINE_COMMENT:
             //throw away contents of line comment
             while ((character = getchar()) != '\n' && character != EOF) { }
-            //create token indicating end of line
+            //create token for end of line
             if (character == '\n') {
                 if (line_start == false) {
                     token.type = T_LF;
+                }
+                else {
+                    indent_depth = NO_VALUE;
                 }
                 current_line_num++;
                 token.line_num++;
@@ -95,16 +99,19 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                 //#TODO... CHYBA: konec souboru před tím, než byl ukončen blokový komentář
             }
             else if (multiline_block == true) {
-                //Check if the rest of the line is empty
+                //Check if the rest of the line is empty for multiline comment
                 while ((character = getchar()) != '\n' && character != EOF) {
                     if (!isspace(character)) {
                         //#TODO... CHYBA: po komentáři není prázdný řádek 
                     }
                 }
+                if (character != EOF) {
+                    token.line_num++;
+                    current_line_num++;
+                }
                 token.type = T_LF;
-                current_line_num++;
-                token.line_num++;
             }
+            indent_depth = NO_VALUE;
             break;
         default:
             break;
@@ -279,13 +286,15 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         break;
                     default:
                         token.type = T_DIV;
-                        ungetc(character, stdin);
                         break;
                 }
             default:
                 break;
         }
-    } while(!isspace(character = getchar()) && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
+        if (token.type == T_UNDEFINED) {
+            character = getchar();
+        }
+    } while(token.type == T_UNDEFINED && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
     //Return last read character, that was not used
     if (character != EOF) { ungetc(character, stdin); }
@@ -325,39 +334,62 @@ token_t get_next_token () {
                 token = first_digit(character, token, &lexeme, CASE_INT_LITERAL);
             }
         }
-        else {
+        else if (!isspace(character)) {
             token = first_special(character, token, &lexeme, current_case);
         }
     }
 
     if (next_token.type != T_UNDEFINED) {
         token = next_token;
-        next_token = new_token(0);
+        next_token = new_token(NO_VALUE);
     }
 
     //Handle indent
-    token.indent = indent_depth;
     if (line_start == true && token.type != T_LF) {
         line_start = false;
-        if (depth_of_brackets == 0 && indent_depth != past_indent_depth) {
+        if (depth_of_brackets == 0) {
             next_token = token;
             token = new_token(0);
-            token.indent = indent_depth;
-            if (indent_depth > past_indent_depth) {
-                token.type = T_MORE_INDENT;
+            bool same_indent = false;
+            for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
+                //If I find the indentation value, but it is not the furthest,...
+                if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
+                    token.type = T_LESS_INDENT;                 //...send token representing less indentation,...
+                    indent_values[last_indent_idx] = NO_VALUE;  //...remove the furthest indentation,...
+                    last_indent_idx--;                          //...subtract one from the indentation index...
+                    line_start = true;                          //...and set line_start to true in case there is even less indentation
+                }
+                //If there is no change in indent, note it and delete next_token (no need for it)
+                else if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
+                    same_indent = true;
+                    token = next_token;
+                    next_token = new_token(NO_VALUE);
+                    break;
+                }
             }
-            else if (indent_depth < past_indent_depth) {
-                token.type = T_LESS_INDENT;
+            if (token.type != T_LESS_INDENT && same_indent == false) {
+                if (indent_depth < indent_values[last_indent_idx]) {
+                    //#TODO... chyba odsazení
+                }
+                else {  //Note new indent value
+                    if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
+                        //#TODO... chyba přetečení pole
+                    }
+                    else {
+                        last_indent_idx++;
+                        indent_values[last_indent_idx] = indent_depth;
+                        token.type = T_MORE_INDENT; 
+                    }
+                }
             }
-            past_indent_depth = indent_depth;
         }
-        else if (depth_of_brackets > 0 && indent_depth <= past_indent_depth) {
+        else if (depth_of_brackets > 0 && indent_depth <= indent_values[last_indent_idx]) {
             //#TODO... chyba: v závorkách je menší úroveň odsazení než před nimi
         }
     }
     else if (token.type == T_LF) {  //If the current line ends,...
-        indent_depth = 0;   //...reset indent depth for another line...
-        line_start = true;  //...and reset start of line variable
+        indent_depth = 0;           //...reset indent depth for another line...
+        line_start = true;          //...and reset start of line variable
     }
 
     return token;

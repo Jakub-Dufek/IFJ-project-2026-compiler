@@ -53,8 +53,6 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
  * 
  * @param character Pointer to a variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- * @param current_case Variable representing the current case for switch
  * 
  * @return token_t structure either empty or with found token, ready to send
  */
