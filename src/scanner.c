@@ -12,6 +12,7 @@
 
 //libraries
 #include "scanner.h"
+#include "error.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -490,6 +491,9 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         break;
                     case ';':
                         token.type = T_SEMICOLON;
+                        break;
+                    case '.':
+                        token.type = T_DOT;
                         break;
                     case '@':
                         current_case = CASE_AT;
