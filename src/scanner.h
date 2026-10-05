@@ -4,6 +4,7 @@
 *
 * @brief Library file containing structures
 * @author Šimon Greger (xgreges00)
+* @author Samuel Vít Lehotský (xlehots00)
 * @date 27.09.2026
 * 
 * @details This file contains definitions of functions used in scanner.c
@@ -21,13 +22,10 @@ typedef enum {
     CASE_SLASH,
     CASE_LINE_COMMENT,
     CASE_BLOCK_COMMENT,
-<<<<<<< HEAD
-} scanner_case;
 
-/**
-=======
-
-
+    CASE_INT_LITERAL,
+    CASE_DOUBLE_LITERAL,
+    CASE_EXPONENT,
 } scanner_case;
 
 /**
@@ -40,7 +38,6 @@ typedef enum {
 token_t new_token (unsigned line_num);
 
 /**
->>>>>>> scanner
  * @brief Removes comments from code
  * 
  * @param character Pointer to a variable holding one character from stdin.
@@ -56,16 +53,17 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
  * 
  * @param character Pointer to a variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- * @param current_case Variable representing the current case for switch
  * 
  * @return token_t structure either empty or with found token, ready to send
  */
-<<<<<<< HEAD
-token_t handle_white_spaces(int* character, token_t token, lexeme_t *lexeme, scanner_case current_case);
-=======
 token_t handle_white_spaces(int* character, token_t token);
->>>>>>> scanner
+
+/**
+ * @brief Handles levels of indentations on lines
+ * 
+ * @param token Pointer to a structure holding output for this module
+ */
+void handle_indent (token_t *token);
 
 /**
  * @brief Handles all cases of tokens starting with an alphabetical character
@@ -77,7 +75,7 @@ token_t handle_white_spaces(int* character, token_t token);
  * 
  * @return token_t structure, ready to send
  */
-token_t first_alpha (int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme);
 
 /**
  * @brief Handles all cases of tokens starting with a digit character
