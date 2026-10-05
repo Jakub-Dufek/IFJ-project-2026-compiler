@@ -10,6 +10,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "ast.h"
+
+
 /**
  * @brief Calls individual parsing functions for each case of next_token
  *
@@ -23,5 +26,6 @@ void parse_next(token_t *current);
  * @param current Current token
  */
 void parse_var_declaration(token_t *current);
+
 
 #endif

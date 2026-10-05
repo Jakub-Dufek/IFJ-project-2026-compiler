@@ -16,6 +16,7 @@
 #include "error.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 
 // INDIVIDUAL PARSING FUNCTIONS
@@ -32,7 +33,8 @@ void parse_var_declaration(token_t *current)
         error_exit(SYNT_ERR, current->line_num, "Expected identifier");
     }
 
-    char value[MAX_LENGTH] = current->value.string_value;
+    char value[MAX_LENGTH];
+    strcpy(value, current->value.string_value);
     unsigned line_num = current->line_num;
 
     *current = get_next_token();
@@ -89,5 +91,5 @@ int main()
     token_t *current;
     *current = get_next_token();
 
-    parse(current);
+    parse_next(current);
 }

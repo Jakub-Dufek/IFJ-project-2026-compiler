@@ -10,6 +10,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdbool.h>
+
 #include "structures.h" // MAX_LENGTH
 
 typedef struct ast_node ast_node_t;
@@ -88,8 +90,7 @@ struct ast_node {
 /**
  * TODO: comment
  */
-void ast_insert_var_declaration
-    (char value[MAX_LENGTH], bool is_mutable, ast_data_type_t data_type, ast_node_t *expression);
+void ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, ast_data_type_t data_type, ast_node_t *expression);
 
 
 

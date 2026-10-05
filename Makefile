@@ -8,31 +8,39 @@
 ##
 
 
-#	.PHONY
+#		.PHONY
 .PHONY: all pack clean test-err help
 
-#	FLAGS
+#		FLAGS
 CC = gcc
-CFLAGS = -pedantic -Wall -Wextra -Isrc
+CFLAGS = -Isrc -MMD -MP #-pedantic -Wall -Wextra
 
 
-#	RULES
+#		MAIN COMMANDS
+all: build/compiler
+
+
+#		TEST COMMANDS
+test-err: build/err_test.o build/error.o
+	$(CC) $(CFLAGS) $^ -o build/err_test
+	-./build/err_test
+
+
+#		RULES
 build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/%.o: tests/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#	DEPENDENCIES
+
+#		DEPENDENCIES
 build:
 	mkdir -p build/
 
+build/compiler: build/ast.o build/error.o build/expr_parser.o build/parser.o build/scanner.o build/symtable.o
+	$(CC) $(CFLAGS) $^ -o $@
 
-#	MAIN COMMANDS
-all:
 
-
-#	TEST COMMANDS
-test-err: build/err_test.o build/error.o
-	$(CC) $(CFLAGS) $^ -o build/err_test
-	-./build/err_test
+#		HEADER FILE UPDATE HANDLING
+-include build/*.d
