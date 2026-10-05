@@ -7,4 +7,10 @@
 * @date 3. 10. 2026
 */
 
+#include "expr_parser.h"
+#include "ast.h"
 
+ast_node_t *parse_expression()
+{
+    // TODO: complete
+}

@@ -7,5 +7,10 @@
  * @date 3. 10. 2026
  */
 
-// TODO: implement
-void ast_insert_var_declaration();
+#include "ast.h"
+
+
+void ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, ast_data_type_t data_type, ast_node_t *expression)
+{
+    // TODO: implement
+}

@@ -19,6 +19,17 @@ CFLAGS = -Isrc -MMD -MP #-pedantic -Wall -Wextra
 #		MAIN COMMANDS
 all: build/compiler
 
+clean:
+	rm -rf build/
+
+help:
+	@echo ==================== HELP ====================
+	@echo make all 		- Compiles entire project
+	@echo make clean 	- Removes build/
+	@echo make help		- Shows help feed
+	@echo 
+	@echo make test-err	- Tests error handling
+	@echo ==================== HELP ====================
 
 #		TEST COMMANDS
 test-err: build/err_test.o build/error.o
