@@ -14,6 +14,7 @@
 #define SCANNER_H
 
 #include "structures.h"
+#include <stdbool.h>
 
 
 typedef enum {
@@ -70,7 +71,13 @@ void write_lexeme (int character, lexeme_t *lexeme);
  */
 token_t handle_comment (int character, token_t token, scanner_case current_case);
 
-handle_oneline_quotation (int character, lexeme_t *lexeme);
+/**
+ * @brief Removes comments from code
+ * 
+ * @param character Variable holding one character from stdin.
+ * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it.
+ */
+void handle_quotation (int character, lexeme_t *lexeme, bool multiline);
 
 /**
  * @brief Handles white spaces
@@ -95,7 +102,6 @@ void handle_indent (token_t *token);
  * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
  * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- * @param current_case Variable representing the current case for switch
  * 
  * @return token_t structure, ready to send
  */
