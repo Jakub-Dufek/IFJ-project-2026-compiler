@@ -1,14 +1,14 @@
 /**
-* @file scanner.c
-* @internal Part of IFJ-project-2026-compiler
-*
-* @brief Library file containing structures
-* @author Šimon Greger (xgreges00) 
-* @author Samuel Vít Lehotský (xlehots00)
-* @date 27.09.2026
-* 
-* @details This file contains finite state machine representing the functions of a scanner
-*/
+ * @file scanner.c
+ * @internal Part of IFJ-project-2026-compiler
+ *
+ * @brief Library file containing structures
+ * @author Šimon Greger (xgreges00) 
+ * @author Samuel Vít Lehotský (xlehots00)
+ * @date 27.09.2026
+ * 
+ * @details This file contains finite state machine representing the functions of a scanner
+ */
 
 //libraries
 #include "scanner.h"
@@ -31,6 +31,12 @@ token_t new_token (unsigned line_num) {
     token_t new_token = {NO_VALUE};
     new_token.line_num = line_num;
     return new_token;
+}
+
+void write_lexeme (int character, lexeme_t *lexeme) {
+    lexeme->value[lexeme->size] = (char)character;
+    lexeme->size++;
+    lexeme->value[lexeme->size] = '\0';
 }
 
 //functions
@@ -305,9 +311,7 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
 token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     do {
         //note the lexeme's value
-        lexeme->value[lexeme->size] = (char)character;
-        lexeme->size++;
-        lexeme->value[lexeme->size] = '\0';
+        write_lexeme(character, lexeme);
 
         switch (current_case) {
             case CASE_START:

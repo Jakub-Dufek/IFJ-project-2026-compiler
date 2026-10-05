@@ -1,14 +1,14 @@
 /**
-* @file structures.h
-* @internal Part of IFJ-project-2026-compiler
-*
-* @brief Library file containing structures
-* @author Šimon Greger (xgreges00)
-* @author Samuel Vít Lehotský (xlehots00)
-* @date 27.09.2026
-* 
-* @details This file contains definitions of structures
-*/
+ * @file structures.h
+ * @internal Part of IFJ-project-2026-compiler
+ *
+ * @brief Library file containing structures
+ * @author Šimon Greger (xgreges00)
+ * @author Samuel Vít Lehotský (xlehots00)
+ * @date 27.09.2026
+ * 
+ * @details This file contains definitions of structures
+ */
 
 #ifndef STRUCTURES
 #define STRUCTURES

@@ -1,14 +1,14 @@
 /**
-* @file scanner.h
-* @internal Part of IFJ-project-2026-compiler
-*
-* @brief Library file containing structures
-* @author Šimon Greger (xgreges00)
-* @author Samuel Vít Lehotský (xlehots00)
-* @date 27.09.2026
-* 
-* @details This file contains definitions of functions used in scanner.c
-*/
+ * @file scanner.h
+ * @internal Part of IFJ-project-2026-compiler
+ *
+ * @brief Library file containing structures
+ * @author Šimon Greger (xgreges00)
+ * @author Samuel Vít Lehotský (xlehots00)
+ * @date 27.09.2026
+ * 
+ * @details This file contains definitions of functions used in scanner.c
+ */
 
 #ifndef SCANNER
 #define SCANNER
@@ -38,9 +38,18 @@ typedef enum {
 token_t new_token (unsigned line_num);
 
 /**
+ * @brief Writes one character on the end of lexeme string
+ * 
+ * @param character Variable holding one character from stdin.
+ * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
+ * 
+ */
+void write_lexeme (int character, lexeme_t *lexeme);
+
+/**
  * @brief Removes comments from code
  * 
- * @param character Pointer to a variable holding one character from stdin.
+ * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
  * @param current_case Variable representing the current case for switch
  * 
