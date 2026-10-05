@@ -27,11 +27,40 @@ static token_t next_token;
 static unsigned current_line_num = 1;
 static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
 
+//dictionary
+keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
+    {"Boolean", T_KEY_BOOLEAN}, 
+    {"Double", T_KEY_DOUBLE},
+    {"Int", T_KEY_INT},
+    {"List", T_KEY_LIST},
+    {"String", T_KEY_STRING},
+    {"Unit", T_KEY_UNIT},
+    {"case", T_KEY_CASE},
+    {"class", T_KEY_CLASS},
+    {"def", T_KEY_DEF},
+    {"do", T_KEY_DO},
+    {"else", T_KEY_ELSE},
+    {"extension", T_KEY_EXTENSION},
+    {"false", T_KEY_FALSE},
+    {"for", T_KEY_FOR},
+    {"if", T_KEY_IF},
+    {"import", T_KEY_IMPORT},
+    {"match", T_KEY_MATCH},
+    {"return", T_KEY_RETURN},
+    {"then", T_KEY_THEN},
+    {"true", T_KEY_TRUE},
+    {"type", T_KEY_TYPE},
+    {"val", T_KEY_VAL},
+    {"var", T_KEY_VAR},
+    {"while", T_KEY_WHILE}
+};
+
 token_t new_token (unsigned line_num) {
     token_t new_token = {NO_VALUE};
     new_token.line_num = line_num;
     return new_token;
 }
+
 
 //functions
 token_t handle_comment (int character, token_t token, scanner_case current_case) {
@@ -205,8 +234,8 @@ void handle_indent (token_t *token) {
 }
 
 int compare (const void* string, const void* keyword_string) {
-    const keywords* keyword = (const keywords*)keyword_string;
-    return (strcmp((const char*)string, keyword->string));
+    const keyword* new_keyword = (const keyword*)keyword_string;
+    return (strcmp((const char*)string, new_keyword->string));
 }
 
 token_t first_alpha (int character, token_t token, lexeme_t *lexeme) { //TODO... INDENTIFIER: _
@@ -221,9 +250,9 @@ token_t first_alpha (int character, token_t token, lexeme_t *lexeme) { //TODO...
     //Return last read character, that was not used
     if (character != EOF) { ungetc(character, stdin); }
 
-    keywords* keyword = bsearch(lexeme->value, keywords_table, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keywords), compare);
-    if (keyword == NULL) { token.type = T_IDENTIFIER; }
-    else { token.type = keyword->t_type; }
+    keyword* the_keyword = bsearch(lexeme->value, keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
+    if (the_keyword == NULL) { token.type = T_IDENTIFIER; }
+    else { token.type = the_keyword->type; }
 
     token.size = lexeme->size;
     strcpy(token.value.string_value, lexeme->value);

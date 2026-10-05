@@ -4,7 +4,6 @@
 *
 * @brief Library file containing structures
 * @author Šimon Greger (xgreges00)
-* @author Samuel Vít Lehotský (xlehots00)
 * @date 27.09.2026
 * 
 * @details This file contains definitions of structures
@@ -16,7 +15,6 @@
 #define MAX_LENGTH 256
 #define MAX_INDENT_LENGTH 256
 #define NO_VALUE 0
-#define KEYWORDS_TABLE_NUM_ELEMENTS 22
 
 #include "error.h"
 
@@ -84,36 +82,6 @@ typedef enum token_type {
     T_DOUBLE_LITERAL,
     T_UNIT_LITERAL
 } token_type;
-
-typedef struct keywords_dictionary {
-    char* string;
-    token_type t_type;
-} keywords;
-
-keywords keywords_table[KEYWORDS_TABLE_NUM_ELEMENTS] = {
-    {"Boolean", T_KEY_BOOLEAN}, 
-    {"Double", T_KEY_DOUBLE},
-    {"Int", T_KEY_INT},
-    {"List", T_KEY_LIST},
-    {"String", T_KEY_STRING},
-    {"Unit", T_KEY_UNIT},
-    {"case", T_KEY_CASE},
-    {"class", T_KEY_CLASS},
-    {"def", T_KEY_DEF},
-    {"do", T_KEY_DO},
-    {"else", T_KEY_ELSE},
-    {"extension", T_KEY_EXTENSION},
-    {"for", T_KEY_FOR},
-    {"if", T_KEY_IF},
-    {"import", T_KEY_IMPORT},
-    {"match", T_KEY_MATCH},
-    {"return", T_KEY_RETURN},
-    {"then", T_KEY_THEN},
-    {"type", T_KEY_TYPE},
-    {"val", T_KEY_VAL},
-    {"var", T_KEY_VAR},
-    {"while", T_KEY_WHILE}
-};
 
 /**
  * @struct lexeme_t

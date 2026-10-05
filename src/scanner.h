@@ -13,6 +13,8 @@
 #ifndef SCANNER
 #define SCANNER
 
+#define KEYWORDS_TABLE_NUM_ELEMENTS 24
+
 #include "structures.h"
 
 
@@ -27,6 +29,17 @@ typedef enum {
     CASE_DOUBLE_LITERAL,
     CASE_EXPONENT,
 } scanner_case;
+
+/**
+ * @struct keyword
+ * @brief Structure representing a single keyword in the keywords dictionary
+ * 
+ * This structure holds the string representation of a keyword and its token type
+ */
+typedef struct keyword {
+    const char* string;
+    token_type type;
+} keyword;
 
 /**
  * @brief Creates new token and initialises it
