@@ -70,6 +70,8 @@ void write_lexeme (int character, lexeme_t *lexeme);
  */
 token_t handle_comment (int character, token_t token, scanner_case current_case);
 
+handle_oneline_quotation (int character, lexeme_t *lexeme);
+
 /**
  * @brief Handles white spaces
  * 

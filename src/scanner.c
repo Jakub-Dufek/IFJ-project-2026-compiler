@@ -126,6 +126,46 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
     return token;
 }
 
+handle_oneline_quotation (int character, lexeme_t *lexeme) {
+    while ((character = getchar()) != '"') {        
+        switch (character) {
+            case '\n':
+                //#TODO... chyba: konec řádku v jednořádkovém stringu
+                break;
+            case '\\':
+                character = getchar();
+                switch (character) {
+                    case 'n':
+                        write_lexeme('\n', lexeme);
+                        break;
+                    case 't':
+                        write_lexeme('\t', lexeme);
+                        break;
+                    case 'r':
+                        write_lexeme('\r', lexeme);
+                        break;
+                    case '\\':
+                        write_lexeme('\\', lexeme);
+                        break;
+                    case '"':
+                        write_lexeme('"', lexeme);
+                        break;
+                    default:
+                        //#TODO... chyba, jiné escape sekvence neexistují
+                        break;
+                }
+                break;
+            default:
+                write_lexeme(character, lexeme);
+                break;
+        }
+    }
+}
+
+handle_multiline_quotation () {
+
+}
+
 token_t handle_white_spaces (int* character, token_t token) {
     while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
         if (line_start == true && *character == ' ') {
@@ -388,6 +428,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                     case '"':
                         current_case = CASE_QUOTATION_MARKS;
                         token.type = T_STRING_LITERAL;
+                        lexeme->size = 0;
                         break;
                     default:
                         break;
@@ -431,7 +472,19 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                 break;
                 
             case CASE_QUOTATION_MARKS:
-                
+                if (character == '"') {
+                    if ((character = getchar()) == '"') {
+                        handle_multiline_quotation();
+                    }
+                    else {
+                        token.type = T_STRING_LITERAL;
+                        lexeme->size = NO_VALUE;
+                        lexeme->value[lexeme->size] = '\0';
+                    }
+                }
+                else {
+                    handle_oneline_quotation(character, lexeme);
+                }
                 break;
 
             default:
