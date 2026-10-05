@@ -10,8 +10,8 @@
  * @details This file contains definitions of functions used in scanner.c
  */
 
-#ifndef SCANNER
-#define SCANNER
+#ifndef SCANNER_H
+#define SCANNER_H
 
 #include "structures.h"
 
@@ -22,11 +22,24 @@ typedef enum {
     CASE_SLASH,
     CASE_LINE_COMMENT,
     CASE_BLOCK_COMMENT,
+    CASE_AT,
+    CASE_QUOTATION_MARKS,
 
     CASE_INT_LITERAL,
     CASE_DOUBLE_LITERAL,
     CASE_EXPONENT,
 } scanner_case;
+
+/**
+ * @struct lexeme_t
+ * @brief Structure representing one lexeme
+ * 
+ * This structure holds value of the lexeme and its length
+ */
+typedef struct Lexeme {
+    char value[MAX_LENGTH];     /**<String representation of the lexeme */
+    unsigned size;              /**<Size of the lexeme */
+} lexeme_t;
 
 /**
  * @brief Creates new token and initialises it

@@ -316,8 +316,78 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
         switch (current_case) {
             case CASE_START:
                 switch (character){
+                    case '+':
+                        token.type = T_PLUS;
+                        break;
+                    case '-':
+                        token.type = T_MINUS;
+                        break;
+                    case '*':
+                        token.type = T_MULT;
+                        break;
                     case '/':
                         current_case = CASE_SLASH;
+                        break;
+                    case '(':
+                        depth_of_brackets++;
+                        token.type = T_L_ROUND_BRACKET;
+                        break;
+                    case ')':
+                        if (depth_of_brackets == 0) {
+                            //#TODO... chyba vynořujících závorek bez zanořujících závorek
+                        }
+                        depth_of_brackets--;
+                        token.type = T_L_ROUND_BRACKET;
+                        break;
+                    case '<':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_LTE;
+                        }
+                        else {
+                            token.type = T_LT;
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '>':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_GTE;
+                        }
+                        else {
+                            token.type = T_LT;
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '=':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_EQ;
+                        }
+                        else {
+                            token.type = T_ASSIGN;
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '!':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_NEQ;
+                        }
+                        else {
+                            //#TODO... chyba, ! sám o sobě nic neznamená
+                        }
+                        break;
+                    case ',':
+                        token.type = T_COMMA;
+                        break;
+                    case ':':
+                        token.type = T_COLON;
+                        break;
+                    case ';':
+                        token.type = T_COMMA;
+                        break;
+                    case '@':
+                        current_case = CASE_AT;
+                    case '"':
+                        current_case = CASE_QUOTATION_MARKS;
+                        token.type = T_STRING_LITERAL;
                         break;
                     default:
                         break;
@@ -340,14 +410,34 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         break;
                     default:
                         token.type = T_DIV;
+                        ungetc(character, stdin);
                         break;
                 }
+                break;
+
+            case CASE_AT:
+                if (character == 'm') {
+                    if ((character = getchar()) == 'a') {
+                        if ((character = getchar()) == 'i') {
+                            if ((character = getchar()) == 'n') {
+                                token.type = T_AT_MAIN;
+                            }
+                        }
+                    }
+                }
+                if (token.type != T_AT_MAIN) {
+                    //#TODO... chyba: neplatný zápis lexému
+                }
+                break;
+                
+            case CASE_QUOTATION_MARKS:
+                
+                break;
+
             default:
                 break;
         }
-        if (token.type == T_UNDEFINED) {
-            character = getchar();
-        }
+        character = getchar();
     } while(token.type == T_UNDEFINED && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
 
     //Return last read character, that was not used

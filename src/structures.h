@@ -10,8 +10,8 @@
  * @details This file contains definitions of structures
  */
 
-#ifndef STRUCTURES
-#define STRUCTURES
+#ifndef STRUCTURES_H
+#define STRUCTURES_H
 
 #define MAX_LENGTH 256
 #define MAX_INDENT_LENGTH 256
@@ -53,28 +53,28 @@ typedef enum token_type {
     T_KEY_FALSE,
 
     //operators
-    T_PLUS,
-    T_MINUS,
-    T_MULT,
-    T_DIV,
-    T_GT,   //greater than
-    T_GTE,  //greater or equal than
-    T_LT,   //lesser than
-    T_LTE,  //lesser or equal than
-    T_EQ,   //equal
-    T_NEQ,  //not equal
-    T_ASSIGN,
+    T_PLUS,     // '+'
+    T_MINUS,    // '-'
+    T_MULT,     // '*'
+    T_DIV,      // '/'
+    T_GT,       // '>'
+    T_GTE,      // '>='
+    T_LT,       // '<'
+    T_LTE,      // '<='
+    T_EQ,       // '=='
+    T_NEQ,      // '!='
+    T_ASSIGN,   // '='
     
-    T_DOT,
-    T_LROUNDBRACKET,
-    T_RROUNDBRACKET,
+    T_DOT,              // '.'
+    T_L_ROUND_BRACKET,  // '('
+    T_R_ROUND_BRACKET,  // ')'
 
-    T_LF,
-    T_COLON,
-    T_COMMA,
-    T_SEMICOLON,
-    T_EOF,
-    T_AT_MAIN,  //@main
+    T_LF,           // '\n'
+    T_COLON,        // ':'
+    T_COMMA,        // ','
+    T_SEMICOLON,    // ';'
+    T_EOF,          // 'EOF'
+    T_AT_MAIN,      // "@main"
     T_MORE_INDENT,
     T_LESS_INDENT,
 
@@ -114,17 +114,6 @@ keywords keywords_table[KEYWORDS_TABLE_NUM_ELEMENTS] = {
     {"var", T_KEY_VAR},
     {"while", T_KEY_WHILE}
 };
-
-/**
- * @struct lexeme_t
- * @brief Structure representing one lexeme
- * 
- * This structure holds value of the lexeme and its length
- */
-typedef struct Lexeme {
-    char value[MAX_LENGTH];     /**<String representation of the lexeme */
-    unsigned size;              /**<Size of the lexeme */
-} lexeme_t;
 
 /**
  * @union token_value_t
