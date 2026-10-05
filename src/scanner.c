@@ -1,20 +1,19 @@
 /**
-* @file scanner.c
-* @internal Part of IFJ-project-2026-compiler
-*
-* @brief Library file containing structures
-* @author Šimon Greger (xgreges00) 
-* @author Samuel Vít Lehotský (xlehots00)
-* @date 27.09.2026
-* 
-* @details This file contains finite state machine representing the functions of a scanner
-*/
+ * @file scanner.c
+ * @internal Part of IFJ-project-2026-compiler
+ *
+ * @brief Library file containing structures
+ * @author Šimon Greger (xgreges00) 
+ * @author Samuel Vít Lehotský (xlehots00)
+ * @date 27.09.2026
+ * 
+ * @details This file contains finite state machine representing the functions of a scanner
+ */
 
 //libraries
 #include "scanner.h"
 #include <ctype.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,6 +60,15 @@ token_t new_token (unsigned line_num) {
     return new_token;
 }
 
+void write_lexeme (int character, lexeme_t *lexeme) {
+    if (lexeme->size + 1 >= MAX_LENGTH) {
+        //#TODO... chyba: přetečení maximální délky lexému
+    }
+    lexeme->value[lexeme->size] = (char)character;
+    lexeme->size++;
+    lexeme->value[lexeme->size] = '\0';
+    return;
+}
 
 //functions
 token_t handle_comment (int character, token_t token, scanner_case current_case) {
@@ -147,7 +155,77 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
     }
 
     return token;
-}
+}   //end of handle_comment()
+
+void handle_quotation (int character, lexeme_t *lexeme, bool multiline) {
+    while (true) {        
+        switch (character) {
+            case '\n':
+                if (multiline == false) {
+                    //#TODO... chyba: konec řádku v jednořádkovém stringu
+                }
+                else {
+                    write_lexeme(character, lexeme);
+                }
+                break;
+            case '\\':
+                if (multiline == false) {
+                    switch (character = getchar()) {
+                        case 'n':
+                            write_lexeme('\n', lexeme);
+                            break;
+                        case 't':
+                            write_lexeme('\t', lexeme);
+                            break;
+                        case 'r':
+                            write_lexeme('\r', lexeme);
+                            break;
+                        case '\\':
+                            write_lexeme('\\', lexeme);
+                            break;
+                        case '"':
+                            write_lexeme('"', lexeme);
+                            break;
+                        default:
+                            //#TODO... chyba, jiné escape sekvence neexistují
+                            break;
+                    }
+                }
+                else {
+                    write_lexeme(character, lexeme);
+                }
+                break;
+            case '"':
+                if (multiline == true && (character = getchar()) == '"') {
+                    if ((character = getchar()) == '"') {
+                        return; //end multiline quotation
+                    }
+                    else {
+                        write_lexeme('"', lexeme);
+                        write_lexeme('"', lexeme);
+                        write_lexeme(character, lexeme);
+                    }
+                }
+                else if (multiline == true) {   //write all read in lexeme, if quotations is not ending
+                    write_lexeme('"', lexeme);
+                    write_lexeme(character, lexeme);
+                }
+                else if (multiline == false) {  //end oneline quotation
+                    return;
+                }
+                break;
+            case EOF:
+                //#TODO... nemůže být EOF v rámci stringového literálu
+                break;
+            default:
+                write_lexeme(character, lexeme);
+                break;
+        }
+        character = getchar();
+    }
+
+    return;
+}   //end of handle_quotation
 
 token_t handle_white_spaces (int* character, token_t token) {
     while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
@@ -231,7 +309,8 @@ void handle_indent (token_t *token) {
         indent_depth = 0;           //...reset indent depth for another line...
         line_start = true;          //...and reset start of line variable
     }
-}
+    return;
+}   //end of return_indent()
 
 int compare (const void* string, const void* keyword_string) {
     const keyword* new_keyword = (const keyword*)keyword_string;
@@ -334,15 +413,92 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
 token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
     do {
         //note the lexeme's value
-        lexeme->value[lexeme->size] = (char)character;
-        lexeme->size++;
-        lexeme->value[lexeme->size] = '\0';
+        write_lexeme(character, lexeme);
 
         switch (current_case) {
             case CASE_START:
                 switch (character){
+                    case '+':
+                        token.type = T_PLUS;
+                        break;
+                    case '-':
+                        token.type = T_MINUS;
+                        break;
+                    case '*':
+                        token.type = T_MULT;
+                        break;
                     case '/':
                         current_case = CASE_SLASH;
+                        break;
+                    case '(':
+                        depth_of_brackets++;
+                        token.type = T_L_ROUND_BRACKET;
+                        break;
+                    case ')':
+                        if (depth_of_brackets == 0) {
+                            //#TODO... chyba vynořujících závorek bez zanořujících závorek
+                        }
+                        depth_of_brackets--;
+                        token.type = T_R_ROUND_BRACKET;
+                        break;
+                    case '<':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_LTE;
+                        }
+                        else {
+                            token.type = T_LT;
+                            if (character != EOF) {
+                                ungetc(character, stdin);
+                            }
+                        }
+                        break;
+                    case '>':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_GTE;
+                        }
+                        else {
+                            token.type = T_GT;
+                            if (character != EOF) {
+                                ungetc(character, stdin);
+                            }
+                        }
+                        break;
+                    case '=':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_EQ;
+                        }
+                        else {
+                            token.type = T_ASSIGN;
+                            if (character != EOF) {
+                                ungetc(character, stdin);
+                            }
+                        }
+                        break;
+                    case '!':
+                        if ((character = getchar()) == '=') {
+                            token.type = T_NEQ;
+                        }
+                        else {
+                            //#TODO... chyba, ! sám o sobě nic neznamená
+                        }
+                        break;
+                    case ',':
+                        token.type = T_COMMA;
+                        break;
+                    case ':':
+                        token.type = T_COLON;
+                        break;
+                    case ';':
+                        token.type = T_SEMICOLON;
+                        break;
+                    case '@':
+                        current_case = CASE_AT;
+                        break;
+                    case '"':
+                        current_case = CASE_QUOTATION_MARKS;
+                        //Remove quotation marks from the literal's value
+                        lexeme->size = NO_VALUE;
+                        lexeme->value[lexeme->size] = '\0';
                         break;
                     default:
                         break;
@@ -365,20 +521,71 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         break;
                     default:
                         token.type = T_DIV;
+                        if (character != EOF) {
+                            ungetc(character, stdin);
+                        }
                         break;
                 }
+                break;
+
+            case CASE_AT:
+                if (character == 'm') {
+                    if ((character = getchar()) == 'a') {
+                        if ((character = getchar()) == 'i') {
+                            if ((character = getchar()) == 'n') {
+                                /*  If statement created by ChatGPT.
+                                    Prompt: Co má po @main správně pokračovat?  */
+                                if (isalnum((character = getchar())) || character == '_') {
+                                    //#TODO chyba: po @main je další neprázdný znak
+                                }
+                                else if (character != EOF) {
+                                    ungetc(character, stdin);
+                                }
+                                token.type = T_AT_MAIN;
+                            }
+                        }
+                    }
+                }
+                if (token.type != T_AT_MAIN) {
+                    //#TODO... chyba: neplatný zápis lexému
+                }
+                break;
+                
+            case CASE_QUOTATION_MARKS:
+                if (character == '"') {
+                    if ((character = getchar()) == '"') {
+                        handle_quotation(character = getchar(), lexeme, true);
+                    }
+                    else {  //Token contains empty string literal
+                        lexeme->size = NO_VALUE;
+                        lexeme->value[lexeme->size] = '\0';
+                        if (character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                    }
+                }
+                else {
+                    handle_quotation(character, lexeme, false);
+                }
+                token.type = T_STRING_LITERAL;
+                token.size = lexeme->size;
+                strcpy(token.value.string_value, lexeme->value);
+                break;
+
             default:
                 break;
         }
-        if (token.type == T_UNDEFINED) {
-            character = getchar();
-        }
+        character = getchar();
     } while(token.type == T_UNDEFINED && character != EOF);   //#TODO... Better condition, this one does not handle everything (př. x+2)
+
+    if (character == EOF && current_case == CASE_SLASH) {
+        token.type = T_DIV;
+    }
 
     //Return last read character, that was not used
     if (character != EOF) { ungetc(character, stdin); }
     return token;
-}
+}   //end of first_special()
 
 token_t get_next_token () {
     //Initialize token and variable for storing read characters

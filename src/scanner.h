@@ -1,21 +1,22 @@
 /**
-* @file scanner.h
-* @internal Part of IFJ-project-2026-compiler
-*
-* @brief Library file containing structures
-* @author Šimon Greger (xgreges00)
-* @author Samuel Vít Lehotský (xlehots00)
-* @date 27.09.2026
-* 
-* @details This file contains definitions of functions used in scanner.c
-*/
+ * @file scanner.h
+ * @internal Part of IFJ-project-2026-compiler
+ *
+ * @brief Library file containing structures
+ * @author Šimon Greger (xgreges00)
+ * @author Samuel Vít Lehotský (xlehots00)
+ * @date 27.09.2026
+ * 
+ * @details This file contains definitions of functions used in scanner.c
+ */
 
-#ifndef SCANNER
-#define SCANNER
+#ifndef SCANNER_H
+#define SCANNER_H
 
 #define KEYWORDS_TABLE_NUM_ELEMENTS 24
 
 #include "structures.h"
+#include <stdbool.h>
 
 
 typedef enum {
@@ -24,6 +25,8 @@ typedef enum {
     CASE_SLASH,
     CASE_LINE_COMMENT,
     CASE_BLOCK_COMMENT,
+    CASE_AT,
+    CASE_QUOTATION_MARKS,
 
     CASE_INT_LITERAL,
     CASE_DOUBLE_LITERAL,
@@ -42,6 +45,17 @@ typedef struct keyword {
 } keyword;
 
 /**
+ * @struct lexeme_t
+ * @brief Structure representing one lexeme
+ * 
+ * This structure holds value of the lexeme and its length
+ */
+typedef struct Lexeme {
+    char value[MAX_LENGTH];     /**<String representation of the lexeme */
+    unsigned size;              /**<Size of the lexeme */
+} lexeme_t;
+
+/**
  * @brief Creates new token and initialises it
  * 
  * @param line_num Number holding on which like the token is located
@@ -51,15 +65,32 @@ typedef struct keyword {
 token_t new_token (unsigned line_num);
 
 /**
+ * @brief Writes one character on the end of lexeme string
+ * 
+ * @param character Variable holding one character from stdin.
+ * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
+ * 
+ */
+void write_lexeme (int character, lexeme_t *lexeme);
+
+/**
  * @brief Removes comments from code
  * 
- * @param character Pointer to a variable holding one character from stdin.
+ * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
  * @param current_case Variable representing the current case for switch
  * 
  * @return token_t structure either empty or with found T_LF token, ready to send
  */
 token_t handle_comment (int character, token_t token, scanner_case current_case);
+
+/**
+ * @brief Removes comments from code
+ * 
+ * @param character Variable holding one character from stdin.
+ * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it.
+ */
+void handle_quotation (int character, lexeme_t *lexeme, bool multiline);
 
 /**
  * @brief Handles white spaces
@@ -84,7 +115,6 @@ void handle_indent (token_t *token);
  * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
  * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- * @param current_case Variable representing the current case for switch
  * 
  * @return token_t structure, ready to send
  */
