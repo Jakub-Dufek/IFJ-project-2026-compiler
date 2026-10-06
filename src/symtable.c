@@ -9,60 +9,144 @@
 * @details This file contains symbol table binary tree along with the user functions
 */
 
+//TODO : Upravit popisky,
+//       init?, 
+//       Zvážit varianty Find,Ins (rekurzivní nebo ne), ¨
+//       stejné identifikátory
+//       volání funkcí před lexikální definicí?
+//       destruktor?
+//       Spojit enumy s Kubou?
+//       popsat funkce?
+//       MAX_LENGTH pro Key/symbol  !!!!!
+
 // libraries
 #include "symtable.h"
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> 
 
-TNode * symtable_init() {
+bvs_node_t * symtable_init() {
     return NULL;
 }
 
-TNode *FindSymbol(TNode *rootPtr, char *k){
-    if (rootPtr == NULL){
-        return false;
+bvs_node_t *find_symbol(bvs_node_t *root_ptr, char *k){
+    if (root_ptr == NULL){
+        return NULL;
     }
     else {
-        if (strcmp(rootPtr->key, k) != 0){
-            if (strcmp(rootPtr->key, k) > 0){
-                return FindSymbol(rootPtr->lPtr, k);
+        if (strcmp(root_ptr->key, k) != 0){
+            if (strcmp(root_ptr->key, k) > 0){
+                return find_symbol(root_ptr->l_ptr, k);
             }
             else {
-                return FindSymbol(rootPtr->rPtr, k);
+                return find_symbol(root_ptr->r_ptr, k);
             }
         }
         else {
-            return rootPtr;
+            return root_ptr;
         }          
     } 
 }
 
-TNode *CreateNode(char *key, TSymb symb){
-    TNode *newNode = (TNode *) malloc(sizeof(TNode));
-    if (newNode == NULL){
+bvs_node_t *create_node(char *key, symbol_data_t symb){
+    bvs_node_t *new_node = (bvs_node_t *) malloc(sizeof(bvs_node_t));
+    if (new_node == NULL){
         return NULL;
     }
-    newNode->key = key;
-    newNode->symb = symb;
-    newNode->lPtr = NULL;
-    newNode->lPtr = NULL;
+    new_node->key = (char *)malloc((strlen(key) + 1) * sizeof(char));
+    strcpy(new_node->key, key);
+
+    new_node->symbol_data = symb;
+    new_node->l_ptr = NULL;
+    new_node->r_ptr = NULL;
+
+    return new_node;
 }
 
-TNode *Insert(TNode *rootPtr, char *key, TSymb symb){
-    if (rootPtr == NULL){
-        return CreateNode(key, symb);
+bvs_node_t *insert(bvs_node_t *root_ptr, char *key, symbol_data_t symb){
+    if (root_ptr == NULL){
+        return create_node(key, symb);
     }
     else {
-        if (strcmp(rootPtr->key, key) > 0){
-            rootPtr->lPtr = Insert(rootPtr->lPtr, key, symb);
+        if (strcmp(root_ptr->key, key) > 0){
+            root_ptr->l_ptr = insert(root_ptr->l_ptr, key, symb);
         }
         else{
-            if (strcmp(rootPtr->key, key) < 0){
-                rootPtr->rPtr = Insert(rootPtr->rPtr, key, symb);
+            if (strcmp(root_ptr->key, key) < 0){
+                root_ptr->r_ptr = insert(root_ptr->r_ptr, key, symb);
             }
             else{
-                rootPtr->symb = symb;
+                root_ptr->symbol_data = symb;
+                //return NULL ?;
+                //error
             }
+        }
+        return root_ptr;
+    }
+}
+
+bvs_node_t *bvs_min(bvs_node_t *root_ptr){
+    if (root_ptr == NULL) return NULL;
+
+    if (root_ptr->l_ptr == NULL){
+        return root_ptr;
+    }
+    else {
+        return bvs_min(root_ptr->l_ptr);
+    }
+}
+
+bvs_node_t *bvs_delete(bvs_node_t *root_ptr, char *k){
+    if (root_ptr == NULL){
+        return NULL;
+    }
+    else {
+        if (strcmp(root_ptr->key, k) > 0){
+            root_ptr->l_ptr = bvs_delete(root_ptr->l_ptr,k);
+            return root_ptr;
+        }
+        else {
+            if (strcmp(root_ptr->key, k) < 0){
+                root_ptr->r_ptr = bvs_delete(root_ptr->r_ptr,k);
+                return root_ptr;
+            }
+            else {
+                return bvs_delete_match(root_ptr);
+            }
+        }
+    }
+}
+
+bvs_node_t *bvs_delete_match(bvs_node_t *root_ptr){
+    bvs_node_t *only_child;
+    
+    if (root_ptr->l_ptr == NULL && root_ptr->r_ptr == NULL){
+        free(root_ptr->key);
+        free(root_ptr);
+        return NULL;
+    }
+    else {
+        if (root_ptr->l_ptr != NULL && root_ptr->r_ptr != NULL){
+            bvs_node_t *min = bvs_min(root_ptr->r_ptr);
+                        
+            free(root_ptr->key);
+            root_ptr->key = (char *)malloc((strlen(min->key) + 1) * sizeof(char));
+            strcpy(root_ptr->key, min->key);
+
+            root_ptr->symbol_data = min->symbol_data;
+            root_ptr->r_ptr = bvs_delete(root_ptr->r_ptr, min->key);
+            return root_ptr;
+        }
+        else {
+            if (root_ptr->l_ptr == NULL){
+                only_child = root_ptr->r_ptr;
+            }
+            else{
+                only_child = root_ptr->l_ptr;
+            }
+            free(root_ptr->key);
+            free(root_ptr);
+                       
+            return only_child;
         }
     }
 }
