@@ -432,8 +432,16 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         current_case = CASE_SLASH;
                         break;
                     case '(':
-                        depth_of_brackets++;
-                        token.type = T_L_ROUND_BRACKET;
+                        if (character = getchar() == ')') {
+                            token.type = T_UNIT_LITERAL;
+                        }
+                        else {
+                            depth_of_brackets++;
+                            token.type = T_L_ROUND_BRACKET;
+                            if (character != EOF) {
+                                ungetc(character, stdin);
+                            }
+                        }
                         break;
                     case ')':
                         if (depth_of_brackets == 0) {
