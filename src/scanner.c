@@ -88,13 +88,12 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                     tab_on_line_start = false;
                 }
                 current_line_num++;
-                token.line_num++;
             }
             else if (character == EOF) {
                 token.type = T_EOF;
             }
             break;
-        case CASE_BLOCK_COMMENT:
+        case CASE_BLOCK_COMMENT: {
             unsigned block_depth = 1;
             bool multiline_block = false;
             while (block_depth > 0 && (character = getchar()) != EOF) {
@@ -149,13 +148,13 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                     }
                 }
                 if (character != EOF) {
-                    token.line_num++;
                     current_line_num++;
                 }
                 token.type = T_LF;
             }
             indent_depth = NO_VALUE;
             break;
+        }
         default:
             break;
     }
@@ -164,7 +163,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
 }   //end of handle_comment()
 
 void handle_quotation (int character, lexeme_t *lexeme, bool multiline) {
-    while (true) {        
+    while (true) {
         switch (character) {
             case '\n':
                 if (multiline == false) {
@@ -255,7 +254,6 @@ token_t handle_white_spaces (int* character, token_t token) {
                 else if (line_start == true && tab_on_line_start == true) {
                     tab_on_line_start = false;
                 }
-                token.line_num++;
                 current_line_num++;
                 indent_depth = 0;
                 break;
@@ -286,6 +284,7 @@ void handle_indent (token_t *token) {
                 //If I find the indentation value in the list, but it is not the furthest,...
                 if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
                     token->type = T_LESS_INDENT;                 //...I send token representing less indentation,...
+                    token->line_num = current_line_num;
                     indent_values[last_indent_idx] = NO_VALUE;  //...remove the furthest indentation,...
                     last_indent_idx--;                          //...subtract one from the indentation index...
                     line_start = true;                          //...and set line_start to true in case there is even less indentation
@@ -310,12 +309,17 @@ void handle_indent (token_t *token) {
                         last_indent_idx++;
                         indent_values[last_indent_idx] = indent_depth;
                         token->type = T_MORE_INDENT; 
+                        token->line_num = current_line_num;
                     }
                 }
             }
         }
         else if (depth_of_brackets > 0 && indent_depth <= indent_values[last_indent_idx]) {
-            error_exit(LEX_ERR, token->line_num, "Lesser indentation level inside of brackets than before them.");
+            error_exit(LEX_ERR, token->line_num, "Lesser or equal indentation level inside of brackets than before them.");
+        }
+
+        if (token->type == T_L_ROUND_BRACKET) {
+            depth_of_brackets++;
         }
     }
     else if (token->type == T_LF) { //If the current line ends,...
@@ -444,7 +448,10 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         current_case = CASE_SLASH;
                         break;
                     case '(':
-                        depth_of_brackets++;
+                        //If we are at the start of the line, depth of brackets will be increased in handle_indent()
+                        if (line_start != true) {
+                            depth_of_brackets++;
+                        }
                         token.type = T_L_ROUND_BRACKET;
                         break;
                     case ')':
@@ -512,9 +519,6 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         break;
                     case '"':
                         current_case = CASE_QUOTATION_MARKS;
-                        //Remove quotation marks from the literal's value
-                        lexeme->size = NO_VALUE;
-                        lexeme->value[lexeme->size] = '\0';
                         break;
                     default:
                         error_exit(LEX_ERR, token.line_num, "Unknown character.");
@@ -569,6 +573,10 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                 break;
                 
             case CASE_QUOTATION_MARKS:
+                //Remove quotation marks from the literal's value
+                lexeme->size = NO_VALUE;
+                lexeme->value[lexeme->size] = '\0';
+
                 if (character == '"') {
                     if ((character = getchar()) == '"') {
                         handle_quotation(character = getchar(), lexeme, true);
