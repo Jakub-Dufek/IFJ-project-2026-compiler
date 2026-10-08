@@ -20,10 +20,11 @@
 
 //global variables
 static bool line_start = true;
+static bool tab_on_line_start = false;
 static unsigned depth_of_brackets = NO_VALUE;
 static unsigned indent_depth = NO_VALUE;
 static unsigned last_indent_idx = NO_VALUE;
-static token_t next_token;
+static token_t next_token = {0};
 static unsigned current_line_num = 1;
 static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
 
@@ -63,7 +64,7 @@ token_t new_token (unsigned line_num) {
 
 void write_lexeme (int character, lexeme_t *lexeme) {
     if (lexeme->size + 1 >= MAX_LENGTH) {
-        //#TODO... chyba: přetečení maximální délky lexému
+        error_exit(INTERNAL_ERR, current_line_num, "Too long lexeme value, lexeme buffer overflow.");
     }
     lexeme->value[lexeme->size] = (char)character;
     lexeme->size++;
@@ -84,6 +85,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                 }
                 else {
                     indent_depth = NO_VALUE;
+                    tab_on_line_start = false;
                 }
                 current_line_num++;
                 token.line_num++;
@@ -105,6 +107,7 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                             token.line_num++;
                             current_line_num++;
                             multiline_block = true;
+                            tab_on_line_start = false;
                         }
                         else if (character != EOF) {
                             ungetc(character, stdin);
@@ -118,12 +121,14 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
                             token.line_num++;
                             current_line_num++;
                             multiline_block = true;
+                            tab_on_line_start = false;
                         }
                         else if (character != EOF) {
                             ungetc(character, stdin);
                         }
                         break;
                     case '\n':
+                        tab_on_line_start = false;
                         token.line_num++;
                         current_line_num++;
                         multiline_block = true;
@@ -134,13 +139,13 @@ token_t handle_comment (int character, token_t token, scanner_case current_case)
             }
 
             if (block_depth > 0 && character == EOF) {
-                //#TODO... CHYBA: konec souboru před tím, než byl ukončen blokový komentář
+                error_exit(LEX_ERR, token.line_num, "File ended inside of a block comment.");
             }
             else if (multiline_block == true) {
                 //Check if the rest of the line is empty for multiline comment
                 while ((character = getchar()) != '\n' && character != EOF) {
                     if (!isspace(character)) {
-                        //#TODO... CHYBA: po komentáři není prázdný řádek 
+                        error_exit(SYNT_ERR, token.line_num, "Unexpected character after multiline block comment.");
                     }
                 }
                 if (character != EOF) {
@@ -163,7 +168,7 @@ void handle_quotation (int character, lexeme_t *lexeme, bool multiline) {
         switch (character) {
             case '\n':
                 if (multiline == false) {
-                    //#TODO... chyba: konec řádku v jednořádkovém stringu
+                    error_exit(LEX_ERR, current_line_num, "One-line string does not end on the same line.");
                 }
                 else {
                     write_lexeme(character, lexeme);
@@ -188,7 +193,7 @@ void handle_quotation (int character, lexeme_t *lexeme, bool multiline) {
                             write_lexeme('"', lexeme);
                             break;
                         default:
-                            //#TODO... chyba, jiné escape sekvence neexistují
+                            error_exit(LEX_ERR, current_line_num, "Unsupported escape sequence used inside of a string literal.");
                             break;
                     }
                 }
@@ -216,7 +221,7 @@ void handle_quotation (int character, lexeme_t *lexeme, bool multiline) {
                 }
                 break;
             case EOF:
-                //#TODO... nemůže být EOF v rámci stringového literálu
+                error_exit(LEX_ERR, current_line_num, "File ended inside of a string literal");
                 break;
             default:
                 write_lexeme(character, lexeme);
@@ -236,7 +241,7 @@ token_t handle_white_spaces (int* character, token_t token) {
         switch (*character) {
             case '\t':
                 if (line_start == true) {
-                    //#TODO... Chyba: tabulátor na začátku
+                    tab_on_line_start = true;
                 }
                 break;
             case '\n':
@@ -246,6 +251,9 @@ token_t handle_white_spaces (int* character, token_t token) {
                 }
                 else if (line_start == false && depth_of_brackets > 0) {
                     line_start = true;
+                }
+                else if (line_start == true && tab_on_line_start == true) {
+                    tab_on_line_start = false;
                 }
                 token.line_num++;
                 current_line_num++;
@@ -263,13 +271,17 @@ token_t handle_white_spaces (int* character, token_t token) {
 }
 
 void handle_indent (token_t *token) {
-    if (line_start == true && token->type != T_LF) { //When I find first lexeme,...
+    if (line_start == true && token->type != T_LF) {    //When I find first lexeme,...
+        if (tab_on_line_start == true) {                //...I check if tab was pressed somewhere before it...
+            error_exit(LEX_ERR, token->line_num, "Tabulator found on the start of a non-empty line.");
+        }
+
         line_start = false;
         if (depth_of_brackets == 0) {
             next_token = *token;
             *token = new_token(0);
             bool same_indent = false;
-            //...I compare its indentation value with all values I have stored.
+            //...and then I compare its indentation value with all values I have stored.
             for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
                 //If I find the indentation value in the list, but it is not the furthest,...
                 if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
@@ -288,11 +300,11 @@ void handle_indent (token_t *token) {
             }
             if (token->type != T_LESS_INDENT && same_indent == false) {
                 if (indent_depth < indent_values[last_indent_idx]) {
-                    //#TODO... chyba odsazení
+                    error_exit(SYNT_ERR, token->line_num, "Invalid indentation level.");
                 }
                 else {  //Note new indent value
                     if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
-                        //#TODO... chyba přetečení pole
+                        error_exit(INTERNAL_ERR, token->line_num, "Too many indentation levels, buffer overflow.");
                     }
                     else {
                         last_indent_idx++;
@@ -303,7 +315,7 @@ void handle_indent (token_t *token) {
             }
         }
         else if (depth_of_brackets > 0 && indent_depth <= indent_values[last_indent_idx]) {
-            //#TODO... chyba: v závorkách je menší úroveň odsazení než před nimi
+            error_exit(LEX_ERR, token->line_num, "Lesser indentation level inside of brackets than before them.");
         }
     }
     else if (token->type == T_LF) { //If the current line ends,...
@@ -432,20 +444,12 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         current_case = CASE_SLASH;
                         break;
                     case '(':
-                        if (character = getchar() == ')') {
-                            token.type = T_UNIT_LITERAL;
-                        }
-                        else {
-                            depth_of_brackets++;
-                            token.type = T_L_ROUND_BRACKET;
-                            if (character != EOF) {
-                                ungetc(character, stdin);
-                            }
-                        }
+                        depth_of_brackets++;
+                        token.type = T_L_ROUND_BRACKET;
                         break;
                     case ')':
                         if (depth_of_brackets == 0) {
-                            //#TODO... chyba vynořujících závorek bez zanořujících závorek
+                            error_exit(SYNT_ERR, token.line_num, "Unmatched closing brackets.");
                         }
                         depth_of_brackets--;
                         token.type = T_R_ROUND_BRACKET;
@@ -488,7 +492,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                             token.type = T_NEQ;
                         }
                         else {
-                            //#TODO... chyba, ! sám o sobě nic neznamená
+                            error_exit(LEX_ERR, token.line_num, "Invalid use of the '!' symbol.");
                         }
                         break;
                     case ',':
@@ -513,6 +517,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                         lexeme->value[lexeme->size] = '\0';
                         break;
                     default:
+                        error_exit(LEX_ERR, token.line_num, "Unknown character.");
                         break;
                 }
                 break;
@@ -548,7 +553,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                                 /*  If statement created by ChatGPT.
                                     Prompt: Co má po @main správně pokračovat?  */
                                 if (isalnum((character = getchar())) || character == '_') {
-                                    //#TODO chyba: po @main je další neprázdný znak
+                                    error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
                                 }
                                 else if (character != EOF) {
                                     ungetc(character, stdin);
@@ -559,7 +564,7 @@ token_t first_special (int character, token_t token, lexeme_t *lexeme, scanner_c
                     }
                 }
                 if (token.type != T_AT_MAIN) {
-                    //#TODO... chyba: neplatný zápis lexému
+                    error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
                 }
                 break;
                 
