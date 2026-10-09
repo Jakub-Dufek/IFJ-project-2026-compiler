@@ -47,21 +47,28 @@ typedef struct bvs_node_t {
     symbol_data_t symbol_data;
     struct bvs_node_t *l_ptr;
     struct bvs_node_t *r_ptr;
-    //int weight;
+    int weight;
+    unsigned height;
 } bvs_node_t;   
 
 
 
-bvs_node_t * symtable_init();
+bvs_node_t *symtable_initialize();
 
-bvs_node_t *FindSymbol(bvs_node_t *rootPtr, char *k);
+bvs_node_t *find_symbol(bvs_node_t *rootPtr, char *k);
 
-bvs_node_t *CreateNode(char *key, symbol_data_t symb); // insert helper function
-bvs_node_t *Insert(bvs_node_t *rootPtr, char *key, symbol_data_t symb);
+bvs_node_t *create_node(char *key, symbol_data_t symb); // insert helper function
+bvs_node_t *insert(bvs_node_t *rootPtr, char *key, symbol_data_t symb);
 
-bvs_node_t *BVSMin(bvs_node_t *root_ptr); // bvs_delete helper function
-bvs_node_t *BVSDelete(bvs_node_t *root_ptr, char *k);
+int max(int n1, int n2);
+int height(bvs_node_t *ptr);
+bvs_node_t *left_rotate(bvs_node_t *y);
+bvs_node_t *right_rotate(bvs_node_t *y);
+/*
+bvs_node_t *bvs_min(bvs_node_t *root_ptr); // bvs_delete helper function
+bvs_node_t *bvs_delete(bvs_node_t *root_ptr, char *k);
 bvs_node_t *bvs_delete_match(bvs_node_t *root_ptr); // bvs_delete helper function
-//void table_dst();
+*/
+void symtable_destructor(bvs_node_t *root_ptr);
 
 #endif
