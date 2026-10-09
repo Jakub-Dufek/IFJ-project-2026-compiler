@@ -13,6 +13,7 @@
 
 //libraries
 #include "structures.h" ///////// necessary?????
+#include "stdbool.h"
 
 typedef enum { 
     TYPE_UNDEF = 0,
@@ -24,11 +25,11 @@ typedef enum {
 } DataType;
 
 typedef enum {
-    TYPE_UNDEF = 0, 
-    TYPE_VAL,
-    TYPE_VAR,
-    TYPE_FUNC,
-    TYPE_LABEL // <-- Come back to this
+    ID_UNDEF = 0, 
+    ID_VAL,
+    ID_VAR,
+    ID_FUNC,
+    ID_LABEL // <-- Come back to this
 } IdType;
 
 typedef struct symbol_data_t {
@@ -64,11 +65,7 @@ int max(int n1, int n2);
 int height(bvs_node_t *ptr);
 bvs_node_t *left_rotate(bvs_node_t *y);
 bvs_node_t *right_rotate(bvs_node_t *y);
-/*
-bvs_node_t *bvs_min(bvs_node_t *root_ptr); // bvs_delete helper function
-bvs_node_t *bvs_delete(bvs_node_t *root_ptr, char *k);
-bvs_node_t *bvs_delete_match(bvs_node_t *root_ptr); // bvs_delete helper function
-*/
+
 void symtable_destructor(bvs_node_t *root_ptr);
 
 #endif
