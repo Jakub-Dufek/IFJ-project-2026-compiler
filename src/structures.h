@@ -6,7 +6,7 @@
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
  * @date 27.09.2026
- * 
+ *
  * @details This file contains definitions of structures
  */
 
@@ -22,7 +22,7 @@
 typedef enum token_type {
     T_UNDEFINED = NO_VALUE,
 
-    //type keywords
+    // type keywords
     T_KEY_INT,
     T_KEY_DOUBLE,
     T_KEY_STRING,
@@ -30,7 +30,7 @@ typedef enum token_type {
     T_KEY_UNIT,
     T_NO_TYPE,
 
-    //keywords
+    // keywords
     T_KEY_DEF,
     T_KEY_DO,
     T_KEY_ELSE,
@@ -51,29 +51,29 @@ typedef enum token_type {
     T_KEY_TRUE,
     T_KEY_FALSE,
 
-    //operators
-    T_PLUS,     // '+'
-    T_MINUS,    // '-'
-    T_MULT,     // '*'
-    T_DIV,      // '/'
-    T_GT,       // '>'
-    T_GTE,      // '>='
-    T_LT,       // '<'
-    T_LTE,      // '<='
-    T_EQ,       // '=='
-    T_NEQ,      // '!='
-    T_ASSIGN,   // '='
-    
-    T_DOT,              // '.'
-    T_L_ROUND_BRACKET,  // '('
-    T_R_ROUND_BRACKET,  // ')'
+    // operators
+    T_PLUS,   // '+'
+    T_MINUS,  // '-'
+    T_MULT,   // '*'
+    T_DIV,    // '/'
+    T_GT,     // '>'
+    T_GTE,    // '>='
+    T_LT,     // '<'
+    T_LTE,    // '<='
+    T_EQ,     // '=='
+    T_NEQ,    // '!='
+    T_ASSIGN, // '='
 
-    T_LF,           // '\n'
-    T_COLON,        // ':'
-    T_COMMA,        // ','
-    T_SEMICOLON,    // ';'
-    T_EOF,          // 'EOF'
-    T_AT_MAIN,      // "@main"
+    T_DOT,             // '.'
+    T_L_ROUND_BRACKET, // '('
+    T_R_ROUND_BRACKET, // ')'
+
+    T_LF,        // '\n'
+    T_COLON,     // ':'
+    T_COMMA,     // ','
+    T_SEMICOLON, // ';'
+    T_EOF,       // 'EOF'
+    T_AT_MAIN,   // "@main"
     T_MORE_INDENT,
     T_LESS_INDENT,
 
@@ -87,27 +87,26 @@ typedef enum token_type {
 /**
  * @union token_value_t
  * @brief Union containing value of the token
- * 
+ *
  * This union holds the value of the token, depending on the type of the value
  */
 typedef union Token_value {
-    int int_value;                  /**<Storage for integer type of the token */
-    double double_value;            /**<Storage for double type of the token */
-    char string_value[MAX_LENGTH];  /**<Storage for string representation of the token */
+    int int_value;                 /**<Storage for integer type of the token */
+    double double_value;           /**<Storage for double type of the token */
+    char string_value[MAX_LENGTH]; /**<Storage for string representation of the token */
 } token_value_t;
 
 /**
  * @struct token_t
  * @brief Structure representing one token
- * 
+ *
  * This structure holds value of the token, its size and its type
  */
 typedef struct Token {
-    token_type type;        /**<Type of the token */
-    unsigned line_num;      /**<Line on which the token was found */
-    token_value_t value;    /**<Specific lexeme represented by this token, that was read from input */
-    unsigned size;          /**<Size of the token */
+    token_type type;     /**<Type of the token */
+    unsigned line_num;   /**<Line on which the token was found */
+    token_value_t value; /**<Specific lexeme represented by this token, that was read from input */
+    unsigned size;       /**<Size of the token */
 } token_t;
-
 
 #endif
