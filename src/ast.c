@@ -14,6 +14,7 @@
 #include "ast.h"
 
 
+
 //  MEMORY HANDLING
 
 static arena_t *ast_arena = NULL;
@@ -93,7 +94,23 @@ void ast_free_arena(void)
 }
 
 
-ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, token_type data_type, ast_node_t *expression)
+
+//  INSERT FUNCTIONS
+
+ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
+                                            token_type data_type, ast_node_t *expression)
 {
-    // TODO: implement
+    ast_node_t *current_node = ast_alloc_node(sizeof(ast_node_t));
+    current_node->data = ast_alloc_node(sizeof(ast_node_data_t));
+    current_node->next = NULL;
+
+    current_node->stmt_type = AST_DECLARATION;
+    current_node->line_num = line_num;
+
+    strcpy(current_node->data->declaration_node.id_val, value);
+    current_node->data->declaration_node.is_mutable = is_mutable;
+    current_node->data->declaration_node.data_type = data_type;
+    current_node->data->declaration_node.expression = expression;
+    
+    return current_node;
 }

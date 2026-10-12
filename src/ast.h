@@ -24,21 +24,6 @@ typedef struct arena arena_t;
 //  ENUM TYPES
 
 /**
- * @enum ast_data_type_t
- * @brief Enum for data types in nodes
- */
-typedef enum ast_data_type {
-    AST_NO_T = 0,   /// no type given
-
-    AST_INT_T,
-    AST_DOUBLE_T,
-    AST_STRING_T,
-    AST_UNIT_T,
-
-    AST_BOOL_T      /// BOOLTHEN extension
-} ast_data_type_t;
-
-/**
  * @enum ast_stmt_type_t
  * @brief Enum for statement types of nodes
  */
@@ -73,7 +58,7 @@ typedef enum ast_stmt_type {
 typedef struct {
     char id_val[MAX_LENGTH];
     bool is_mutable;
-    ast_data_type_t data_type;
+    token_type data_type;
     ast_node_t *expression;     /// another node (abstract tree)
 } ast_declaration_node_t;
 
@@ -145,7 +130,8 @@ struct ast_node {
  * 
  * @return AST node representing var/val declaration
  */
-ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, token_type data_type, ast_node_t *expression);
+ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
+                                            token_type data_type, ast_node_t *expression);
 
 
 
