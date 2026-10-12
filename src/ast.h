@@ -113,6 +113,8 @@ typedef union {
     ast_declaration_node_t declaration_node;
 
     expr_op_node_t op_node;
+    expr_id_leaf_node_t id_leaf_node;
+    expr_lit_leaf_node_t lit_leaf_node;
     // TODO: other structures
 } ast_node_data_t;
 
@@ -129,12 +131,29 @@ struct ast_node {
 
 
 
+//  MEMORY HANDLING 
+
+/**
+ * @brief Allocates 1 block of memory (1 arena)
+ * @return // TODO: specify, create struct
+ */
+void foo();
+
+
+
 //  AST FUNCTIONS
 
 /**
- * TODO: comment
+ * @brief Creates AST for var/val declaration (usually one line of code)
+ * 
+ * @param value Value of var/val (key)
+ * @param is_mutable Mutability of var/val
+ * @param data_type Data type given (or to be deduced)
+ * @param expression a sub-AST of expression
+ * 
+ * @return AST node representing var/val declaration
  */
-void ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, ast_data_type_t data_type, ast_node_t *expression);
+ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, token_type data_type, ast_node_t *expression);
 
 
 

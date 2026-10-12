@@ -12,7 +12,7 @@
 #include "ast.h"
 
 
-void ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, ast_data_type_t data_type, ast_node_t *expression)
+ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, token_type data_type, ast_node_t *expression)
 {
     // TODO: implement
 }
