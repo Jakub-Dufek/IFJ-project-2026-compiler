@@ -95,15 +95,25 @@ void ast_free_arena(void)
 
 
 
+//  HELPER FUNCTIONS
+
+ast_node_t *ast_node_init()
+{
+    ast_node_t *node = ast_alloc_node(sizeof(ast_node_t));
+    node->data = ast_alloc_node(sizeof(ast_node_data_t));
+    node->next = NULL;
+
+    return node;
+}
+
+
+
 //  INSERT FUNCTIONS
 
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression)
 {
-    ast_node_t *current_node = ast_alloc_node(sizeof(ast_node_t));
-    current_node->data = ast_alloc_node(sizeof(ast_node_data_t));
-    current_node->next = NULL;
-
+    ast_node_t *current_node = ast_node_init();
     current_node->stmt_type = AST_DECLARATION;
     current_node->line_num = line_num;
 
@@ -113,4 +123,17 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
     current_node->data->declaration_node.expression = expression;
     
     return current_node;
+}
+
+
+ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *left, ast_node_t *right)
+{
+    ast_node_t *op_node = ast_node_init();
+    op_node->line_num = line_num;
+    op_node->stmt_type = opr;
+
+    op_node->data->op_node.left = left;
+    op_node->data->op_node.right = right;
+
+    return op_node;
 }

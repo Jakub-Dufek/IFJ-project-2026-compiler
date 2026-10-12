@@ -133,6 +133,11 @@ struct ast_node {
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression);
 
+/**
+ * @brief Creates node for each operation in expr AST
+ */
+ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *left, ast_node_t *right);
+
 
 
 //  MEMORY HANDLING 
@@ -160,6 +165,9 @@ void ast_init_arena();
 
 /**
  * @brief Allocates 1 block of memory (1 arena)
+ * 
+ * @param size TODO: specify
+ * 
  * @return // TODO: specify, create struct
  */
 static void *ast_alloc_node(unsigned size);
