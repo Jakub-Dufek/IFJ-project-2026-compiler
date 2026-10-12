@@ -25,17 +25,23 @@ clean:
 
 help:
 	@echo ==================== HELP ====================
-	@echo make all 		- Compiles entire project
-	@echo make clean 	- Removes build/
-	@echo make help		- Shows help feed
+	@echo make all 			- Compiles entire project
+	@echo make clean 		- Removes build/
+	@echo make help			- Shows help feed
 	@echo 
-	@echo make test-err	- Tests error handling
+	@echo make test-err		- Tests error handling
+	@echo make test-scan	- Tests scanner module
 	@echo ==================== HELP ====================
+
 
 #		TEST COMMANDS
 test-err: build/err_test.o build/error.o
 	$(CC) $(CFLAGS+) $^ -o build/err_test
 	-./build/err_test
+
+test-scan: build/scanner_test.o build/scanner.o
+	$(CC) $(CFLAGS+) $^ -o build/scanner_test
+	-./build/scanner_test
 
 
 #		RULES
