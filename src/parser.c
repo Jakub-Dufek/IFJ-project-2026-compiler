@@ -88,6 +88,8 @@ void parse_next(token_t *current)
 
 int main()
 {
+    ast_init_arena();
+
     token_t *current;
     *current = get_next_token();
 

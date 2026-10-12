@@ -15,8 +15,10 @@
 
 #include "structures.h" // MAX_LENGTH
 
-typedef struct ast_node ast_node_t;
+#define ARENA_SIZE 1024 * 1024 // 1 MB
 
+typedef struct ast_node ast_node_t;
+typedef struct arena arena_t;
 
 
 //  ENUM TYPES
@@ -131,16 +133,6 @@ struct ast_node {
 
 
 
-//  MEMORY HANDLING 
-
-/**
- * @brief Allocates 1 block of memory (1 arena)
- * @return // TODO: specify, create struct
- */
-void foo();
-
-
-
 //  AST FUNCTIONS
 
 /**
@@ -154,6 +146,37 @@ void foo();
  * @return AST node representing var/val declaration
  */
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], bool is_mutable, token_type data_type, ast_node_t *expression);
+
+
+
+//  MEMORY HANDLING 
+
+/**
+ * @struct arena_t
+ * @brief struct representing 1 block of memory (1 MB)
+ */
+struct arena {
+    char arena[ARENA_SIZE];
+    unsigned offset;
+    arena_t *next;
+};
+
+/**
+ * @brief TODO: comment
+ */
+static unsigned align_size(unsigned size);
+
+/**
+ * @brief Initializes arena for AST
+ */
+void ast_init_arena();
+
+
+/**
+ * @brief Allocates 1 block of memory (1 arena)
+ * @return // TODO: specify, create struct
+ */
+static void *ast_alloc_node(unsigned size);
 
 
 
