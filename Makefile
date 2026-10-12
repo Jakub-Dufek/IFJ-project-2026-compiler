@@ -13,7 +13,8 @@
 
 #		FLAGS
 CC = gcc
-CFLAGS = -Isrc -MMD -MP #-pedantic -Wall -Wextra
+CFLAGS = -Isrc -MMD -MP
+CFLAGS+ = -Isrc -MMD -MP -pedantic -Wall -Wextra
 
 
 #		MAIN COMMANDS
@@ -33,7 +34,7 @@ help:
 
 #		TEST COMMANDS
 test-err: build/err_test.o build/error.o
-	$(CC) $(CFLAGS) $^ -o build/err_test
+	$(CC) $(CFLAGS+) $^ -o build/err_test
 	-./build/err_test
 
 
@@ -42,7 +43,7 @@ build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/%.o: tests/%.c | build
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS+) -c $< -o $@
 
 
 #		DEPENDENCIES

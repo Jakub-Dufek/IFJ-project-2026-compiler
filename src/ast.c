@@ -7,6 +7,8 @@
  * @date 3. 10. 2026
  */
 
+#include <stdlib.h>
+
 #include "ast.h"
 
 

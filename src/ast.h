@@ -11,6 +11,7 @@
 #define AST_H
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "structures.h" // MAX_LENGTH
 
@@ -40,8 +41,23 @@ typedef enum ast_data_type {
  * @brief Enum for statement types of nodes
  */
 typedef enum ast_stmt_type {
-    AST_DECLARATION
-    // TODO: other types
+    AST_DECLARATION,
+
+    /// operators falling under "expr_op_node_t"
+    EXPR_ADD,   // '+'
+    EXPR_SUB,   // '-'
+    EXPR_MULT,  // '*'
+    EXPR_DIV,   // '/'
+    EXPR_GT,    // '>'
+    EXPR_GTE,   // '>='
+    EXPR_LT,    // '<'
+    EXPR_LTE,   // '<='
+    EXPR_EQ,    // '=='
+    EXPR_NEQ,   // '!='
+
+    /// leaf nodes
+    EXPR_IDENTIFIER,
+    EXPR_LITERAL
 } ast_stmt_type_t;
 
 
@@ -59,6 +75,32 @@ typedef struct {
     ast_node_t *expression;     /// another node (abstract tree)
 } ast_declaration_node_t;
 
+/**
+ * @struct expr_op_node_t
+ * @brief Node for operators in expression module
+ */
+typedef struct {
+    ast_node_t *left;
+    ast_node_t *right;
+} expr_op_node_t;
+
+/**
+ * @struct expr_id_leaf_node_t
+ * @brief Node for AST leaf - identifier
+ */
+typedef struct {
+    char id_val[MAX_LENGTH];
+} expr_id_leaf_node_t;
+
+/**
+ * @struct expr_lit_leaf_node_t
+ * @brief Node for AST leaf - literal
+ */
+typedef struct {
+    token_type lit_type;
+    token_value_t lit_value;
+} expr_lit_leaf_node_t;
+
 
 
 //  MAIN NODE TYPES
@@ -69,6 +111,8 @@ typedef struct {
  */
 typedef union {
     ast_declaration_node_t declaration_node;
+
+    expr_op_node_t op_node;
     // TODO: other structures
 } ast_node_data_t;
 
