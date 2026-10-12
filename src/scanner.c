@@ -295,9 +295,7 @@ token_t first_alpha (int character, token_t token, lexeme_t *lexeme) {
         if (character != '_') { valid = true; }
 
         //note the lexeme's value
-        lexeme->value[lexeme->size] = (char)character;
-        lexeme->size++;
-        lexeme->value[lexeme->size] = '\0';
+        write_lexeme(character, lexeme);
 
     } while((isalnum(character = getchar()) || character == '_') && character != EOF);
 
@@ -352,9 +350,7 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
 
         if (valid) {
             //note the lexeme's value
-            lexeme->value[lexeme->size] = (char)character;
-            lexeme->size++;
-            lexeme->value[lexeme->size] = '\0';
+            write_lexeme(character, lexeme);
         }
         else { break; }
 
