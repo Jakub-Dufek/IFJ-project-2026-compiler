@@ -46,9 +46,11 @@ token_t new_token(unsigned line_num)
 
 void write_lexeme(int character, lexeme_t *lexeme)
 {
+    // Check size of the lexeme
     if (lexeme->size + 1 >= MAX_LENGTH) {
         error_exit(INTERNAL_ERR, current_line_num, "Too long lexeme value, lexeme buffer overflow.");
     }
+    // Write character value into the lexeme string
     lexeme->value[lexeme->size] = (char)character;
     lexeme->size++;
     lexeme->value[lexeme->size] = '\0';
@@ -63,9 +65,9 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
         // throw away contents of line comment
         while ((character = getchar()) != '\n' && character != EOF) {
         }
-        // create token for end of line
+        // handle end of line
         if (character == '\n') {
-            if (line_start == false) {
+            if (line_start == false) { // if line is not empty, create token for end of line
                 token.type = T_LF;
             } else {
                 indent_depth = NO_VALUE;
@@ -77,7 +79,7 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
         }
         break;
     case CASE_BLOCK_COMMENT: {
-        unsigned block_depth = 1;
+        unsigned block_depth = 1; // for handling nested comments
         bool multiline_block = false;
         while (block_depth > 0 && (character = getchar()) != EOF) {
             switch (character) {
@@ -142,16 +144,18 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
 
 void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
 {
+    // no condition inside of while because there are if statements inside of this cycle that exit the cycle
     while (true) {
         switch (character) {
         case '\n':
-            if (multiline == false) {
+            if (multiline == false) { // In case of one-line quotation, there can't be a symbol for end of the line
                 error_exit(LEX_ERR, current_line_num, "One-line string does not end on the same line.");
             } else {
                 write_lexeme(character, lexeme);
             }
             break;
         case '\\':
+            // Handle escape sequences inside of one-line quotation
             if (multiline == false) {
                 switch (character = getchar()) {
                 case 'n':
@@ -178,6 +182,7 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
             }
             break;
         case '"':
+            // Handle end of while cycle conditions
             if (multiline == true && (character = getchar()) == '"') {
                 if ((character = getchar()) == '"') {
                     return; // end multiline quotation
@@ -186,10 +191,10 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
                     write_lexeme('"', lexeme);
                     write_lexeme(character, lexeme);
                 }
-            } else if (multiline == true) { // write all read in lexeme, if quotations is not ending
+            } else if (multiline == true) { // write everything read into lexeme if quotations is not ending
                 write_lexeme('"', lexeme);
                 write_lexeme(character, lexeme);
-            } else if (multiline == false) { // end oneline quotation
+            } else if (multiline == false) { // end one-line quotation
                 return;
             }
             break;
@@ -200,7 +205,7 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
             write_lexeme(character, lexeme);
             break;
         }
-        character = getchar();
+        character = getchar(); // get next character
     }
 
     return;
@@ -224,7 +229,7 @@ token_t handle_white_spaces(int *character, token_t token)
                 token.type = T_LF;
             } else if (line_start == false && depth_of_brackets > 0) {
                 line_start = true;
-            } else if (line_start == true && tab_on_line_start == true) {
+            } else if (line_start == true && tab_on_line_start == true) { // If the line is empty, using tab is not a misstake
                 tab_on_line_start = false;
             }
             current_line_num++;
@@ -271,10 +276,13 @@ void handle_indent(token_t *token)
                     break;
                 }
             }
+            // In case current indent is not in the list of previous indents...
             if (token->type != T_LESS_INDENT && same_indent == false) {
+                // ...and the indent is lesser than the last indent, exit with error...
                 if (indent_depth < indent_values[last_indent_idx]) {
                     error_exit(SYNT_ERR, token->line_num, "Invalid indentation level.");
-                } else { // Note new indent value
+                    // ...otherwise, note new indent value.
+                } else {
                     if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
                         error_exit(INTERNAL_ERR, token->line_num, "Too many indentation levels, buffer overflow.");
                     } else {
@@ -285,7 +293,8 @@ void handle_indent(token_t *token)
                     }
                 }
             }
-        } else if (depth_of_brackets > 0 && indent_depth <= indent_values[last_indent_idx]) {
+        } else if (depth_of_brackets > 0 &&
+                   indent_depth <= indent_values[last_indent_idx]) { // Check indent for inside of brackets
             error_exit(LEX_ERR, token->line_num, "Lesser or equal indentation level inside of brackets than before them.");
         }
 
@@ -463,7 +472,13 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
                 if (line_start != true) {
                     depth_of_brackets++;
                 }
-                token.type = T_L_ROUND_BRACKET;
+                // If the whole expression is (), send it as a Unit literal
+                if ((character = getchar()) == ')') {
+                    token.type = T_UNIT_LITERAL;
+                } else {
+                    ungetc(character, stdin);
+                    token.type = T_L_ROUND_BRACKET;
+                }
                 break;
             case ')':
                 if (depth_of_brackets == 0) {
@@ -557,12 +572,13 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
             break;
 
         case CASE_AT:
+            // Only @main is correct construction for a token starting with '@'
             if (character == 'm') {
                 if ((character = getchar()) == 'a') {
                     if ((character = getchar()) == 'i') {
                         if ((character = getchar()) == 'n') {
                             /*  If statement created by ChatGPT.
-                                Prompt: Co má po @main správně pokračovat?  */
+                                Prompt: "Co má po @main správně pokračovat?"  */
                             if (isalnum((character = getchar())) || character == '_') {
                                 error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
                             } else if (character != EOF) {
@@ -585,6 +601,7 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
 
             if (character == '"') {
                 if ((character = getchar()) == '"') {
+                    // Handles multiline quotation
                     handle_quotation(character = getchar(), lexeme, true);
                 } else { // Token contains empty string literal
                     lexeme->size = NO_VALUE;
@@ -594,6 +611,7 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
                     }
                 }
             } else {
+                // Handles one-line quotation
                 handle_quotation(character, lexeme, false);
             }
             token.type = T_STRING_LITERAL;
@@ -605,9 +623,9 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
             break;
         }
         character = getchar();
-    } while (token.type == T_UNDEFINED &&
-             character != EOF); // #TODO... Better condition, this one does not handle everything (př. x+2)
+    } while (token.type == T_UNDEFINED && character != EOF);
 
+    // In case next character is EOF, switch will never go into CASE_SLASH and can't set type to T_DIV, so I have to do it here
     if (character == EOF && current_case == CASE_SLASH) {
         token.type = T_DIV;
     }

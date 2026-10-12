@@ -88,6 +88,7 @@ token_t handle_comment(int character, token_t token, scanner_case current_case);
  *
  * @param character Variable holding one character from stdin.
  * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it.
+ * @param multiline Variable indicating if the quotation is supposed to be multiline or not
  */
 void handle_quotation(int character, lexeme_t *lexeme, bool multiline);
 
