@@ -118,7 +118,7 @@ struct ast_node {
 
 
 
-//  AST FUNCTIONS
+//  INSERT FUNCTIONS
 
 /**
  * @brief Creates AST for var/val declaration (usually one line of code)

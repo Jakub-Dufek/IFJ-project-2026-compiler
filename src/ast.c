@@ -108,7 +108,7 @@ ast_node_t *ast_node_init()
 
 
 
-//  INSERT FUNCTIONS
+//  AST INSERT FUNCTIONS
 
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression)
@@ -126,6 +126,9 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
 }
 
 
+
+//  EXPR INSERT FUNCTIONS
+
 ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *left, ast_node_t *right)
 {
     ast_node_t *op_node = ast_node_init();
@@ -136,4 +139,29 @@ ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *l
     op_node->data->op_node.right = right;
 
     return op_node;
+}
+
+
+ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num)
+{
+    ast_node_t *leaf_node = ast_node_init();
+    leaf_node->stmt_type = EXPR_IDENTIFIER;
+
+    leaf_node->line_num = line_num;
+    strcpy(leaf_node->data->id_leaf_node.id_val, value);
+
+    return leaf_node;
+}
+
+
+ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type)
+{
+    ast_node_t *leaf_node = ast_node_init();
+    leaf_node->stmt_type = EXPR_LITERAL;
+
+    leaf_node->line_num = line_num;
+    leaf_node->data->lit_leaf_node.lit_type = lit_type;
+    leaf_node->data->lit_leaf_node.lit_value = lit_value;
+
+    return leaf_node;
 }
