@@ -118,7 +118,7 @@ struct ast_node {
 
 
 
-//  INSERT FUNCTIONS
+//  AST INSERT FUNCTIONS
 
 /**
  * @brief Creates AST for var/val declaration (usually one line of code)
@@ -133,14 +133,59 @@ struct ast_node {
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression);
 
+
+
+//  EXPR INSERT FUNCTIONS
+
 /**
- * @brief Creates node for each operation in expr AST
+ * @brief Creates node for given operation in expr AST
+ * 
+ * @param opr enum statement type for which operation to insert
+ * @param line_num
+ * @param left node of left child in AST
+ * @param right node of right child in AST
+ * 
+ * @return Allocated node for set operation
  */
 ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *left, ast_node_t *right);
 
 
+/**
+ * @brief Creates leaf node with identifier
+ * 
+ * @param value identifier key
+ * @param line_num
+ * 
+ * @return Allocated node for given identifier
+ */
+ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
 
-//  MEMORY HANDLING 
+
+/**
+ * @brief Creates leaf node with given literal
+ * 
+ * @param lit_value value of literal
+ * @param line_num
+ * @param lit_type type of literal
+ * 
+ * @return Allocated node for given literal
+ */
+ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type);
+
+
+
+//  HELPER FUNCTIONS
+
+/**
+ * @brief Allocates data for one ast_node_t and it's "data" component
+ * 
+ * @return Initialized node ready to use
+ */
+ast_node_t *ast_node_init();
+
+
+
+//  MEMORY HANDLING
 
 /**
  * @struct arena_t
@@ -153,7 +198,11 @@ struct arena {
 };
 
 /**
- * @brief TODO: comment
+ * @brief Aligns size in arena for 8-byte memory
+ * 
+ * @param size in bytes
+ * 
+ * @return aligned size
  */
 static unsigned align_size(unsigned size);
 
@@ -166,12 +215,14 @@ void ast_init_arena();
 /**
  * @brief Allocates 1 block of memory (1 arena)
  * 
- * @param size TODO: specify
- * 
- * @return // TODO: specify, create struct
+ * @param size in bytes
  */
 static void *ast_alloc_node(unsigned size);
 
 
+/**
+ * @brief Frees all allocated nodes in AST at once
+ */
+void ast_free_arena(void);
 
 #endif
