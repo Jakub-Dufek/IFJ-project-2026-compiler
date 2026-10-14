@@ -179,9 +179,12 @@ ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, tok
 /**
  * @brief Allocates data for one ast_node_t and it's "data" component
  * 
+ * @param stmt_type type of node
+ * @param line_num
+ *
  * @return Initialized node ready to use
  */
-ast_node_t *ast_node_init();
+ast_node_t *ast_node_init(ast_stmt_type_t stmt_type, unsigned line_num);
 
 
 
@@ -198,27 +201,9 @@ struct arena {
 };
 
 /**
- * @brief Aligns size in arena for 8-byte memory
- * 
- * @param size in bytes
- * 
- * @return aligned size
- */
-static unsigned align_size(unsigned size);
-
-/**
  * @brief Initializes arena for AST
  */
 void ast_init_arena();
-
-
-/**
- * @brief Allocates 1 block of memory (1 arena)
- * 
- * @param size in bytes
- */
-static void *ast_alloc_node(unsigned size);
-
 
 /**
  * @brief Frees all allocated nodes in AST at once
