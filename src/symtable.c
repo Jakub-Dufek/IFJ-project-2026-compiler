@@ -11,7 +11,7 @@
 
 //TODO : Upravit popisky,
 //       GetData funkce
-//       stejné identifikátory
+//       stejné identifikátory (řádek v insert!)
 //       volání funkcí před lexikální definicí?
 //       Spojit enumy s Kubou?
 //       popsat funkce, prejmenovat ?
@@ -26,17 +26,17 @@ bvs_node_t *symtable_initialize() {
     return NULL;
 }
 
-bvs_node_t *find_symbol(bvs_node_t *root_ptr, char *k){
+bvs_node_t *symtable_find_symbol(bvs_node_t *root_ptr, char *k){
     if (root_ptr == NULL){
         return NULL;
     }
     else {
         if (strcmp(root_ptr->key, k) != 0){
             if (strcmp(root_ptr->key, k) > 0){
-                return find_symbol(root_ptr->l_ptr, k);
+                return symtable_find_symbol(root_ptr->l_ptr, k);
             }
             else {
-                return find_symbol(root_ptr->r_ptr, k);
+                return symtable_find_symbol(root_ptr->r_ptr, k);
             }
         }
         else {
@@ -45,7 +45,7 @@ bvs_node_t *find_symbol(bvs_node_t *root_ptr, char *k){
     } 
 }
 
-bvs_node_t *create_node(char *key, symbol_data_t symb){
+bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
     bvs_node_t *new_node = (bvs_node_t *) malloc(sizeof(bvs_node_t));
     if (new_node == NULL){
         return NULL;
@@ -61,17 +61,17 @@ bvs_node_t *create_node(char *key, symbol_data_t symb){
     return new_node;
 }
 
-bvs_node_t *insert(bvs_node_t *root_ptr, char *key, symbol_data_t symb){
+bvs_node_t *symtable_insert(bvs_node_t *root_ptr, char *key, symbol_data_t symb){
     if (root_ptr == NULL){
-        return create_node(key, symb);
+        return symtable_create_node(key, symb);
     }
     else {
         if (strcmp(root_ptr->key, key) > 0){
-            root_ptr->l_ptr = insert(root_ptr->l_ptr, key, symb);
+            root_ptr->l_ptr = symtable_insert(root_ptr->l_ptr, key, symb);
         }
         else{
             if (strcmp(root_ptr->key, key) < 0){
-                root_ptr->r_ptr = insert(root_ptr->r_ptr, key, symb);
+                root_ptr->r_ptr = symtable_insert(root_ptr->r_ptr, key, symb);
             }
             else{
                 root_ptr->symbol_data = symb;
