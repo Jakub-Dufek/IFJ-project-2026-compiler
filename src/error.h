@@ -1,21 +1,21 @@
 /**
-* @file error.h
-* @internal Part of IFJ-project-2026-compiler, Team 274855
-*
-* @brief Header file for exitting with error message
-* @author Jakub Dufek (274855)
-* @date 26. 9. 2026
-*
-* Error code spec translation and enum value naming done with AI tools (Gemini flash 3.8)
-*
-*/
+ * @file error.h
+ * @internal Part of IFJ-project-2026-compiler, Team 274855
+ *
+ * @brief Header file for exitting with error message
+ * @author Jakub Dufek (274855)
+ * @date 26. 9. 2026
+ *
+ * Error code spec translation and enum value naming done with AI tools (Gemini flash 3.8)
+ *
+ */
 
 #ifndef ERROR_H
 #define ERROR_H
 
 /**
-* @brief Enum values for individual error codes
-*/
+ * @brief Enum values for individual error codes
+ */
 enum error_code {
     /// Lexical error - (invalid lexeme structure, comment, indentation)
     LEX_ERR = 1,
@@ -49,12 +49,12 @@ enum error_code {
 };
 
 /**
-* @brief Prints error with custom error message and exits with specified exit code
-*
-* @param err_code Exit/error code
-* @param line Line number where error occured
-* @param fmt Custom error message
-*/
+ * @brief Prints error with custom error message and exits with specified exit code
+ *
+ * @param err_code Exit/error code
+ * @param line Line number where error occured
+ * @param fmt Custom error message
+ */
 void error_exit(int err_code, unsigned line, const char *fmt, ...);
 
 #endif
