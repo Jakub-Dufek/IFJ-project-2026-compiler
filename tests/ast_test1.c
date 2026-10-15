@@ -9,34 +9,25 @@ int main()
 {
     ast_init_arena(); // DO NOT REMOVE, KEEP AT BEGINNING
 
-    // var x : Int =
-    ast_node_t *declaration = ast_node_init(AST_DECLARATION, LINE_NUM);
-    declaration->data->declaration_node.data_type = T_KEY_INT;
-    declaration->data->declaration_node.is_mutable = true;
-    char x_str[MAX_LENGTH] = "x";
-    strcpy(declaration->data->declaration_node.id_val, x_str);
-
     // z
-    ast_node_t *z = ast_node_init(EXPR_IDENTIFIER, LINE_NUM);
     char z_str[MAX_LENGTH] = "z";
-    strcpy(z->data->id_leaf_node.id_val, z_str);
+    ast_node_t *z_id = expr_insert_id_leaf(z_str, LINE_NUM);
 
     // 5
-    ast_node_t *five = ast_node_init(EXPR_LITERAL, LINE_NUM);
-    five->data->lit_leaf_node.lit_type = T_INT_LITERAL;
-    five->data->lit_leaf_node.lit_value.int_value = 5;
+    token_value_t five_int; five_int.int_value = 5;
+    ast_node_t *five_lit = expr_insert_lit_leaf(five_int, LINE_NUM, T_INT_LITERAL);
 
     // z + 5
-    ast_node_t *plus = ast_node_init(EXPR_ADD, LINE_NUM);
-    plus->data->op_node.left = z;
-    plus->data->op_node.right = five;
+    ast_node_t *plus = expr_insert_op(T_PLUS, LINE_NUM, z_id, five_lit);
+
 
     // var x : Int = z + 5
-    declaration->data->declaration_node.expression = plus;
+    char x_str[MAX_LENGTH] = "x";
+    ast_node_t *declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_KEY_INT, plus);
 
 
 
-    
+
     /*
                                 YOUR CODE HERE
         YOUR CODE HERE
@@ -44,7 +35,7 @@ int main()
         YOUR CODE HERE
                                 YOUR CODE HERE
     */
-
+    (void)declaration; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
 
 
 

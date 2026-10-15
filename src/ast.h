@@ -30,19 +30,7 @@ typedef struct arena arena_t;
 typedef enum ast_stmt_type {
     AST_DECLARATION,
 
-    /// operators falling under "expr_op_node_t"
-    EXPR_ADD,   // '+'
-    EXPR_SUB,   // '-'
-    EXPR_MULT,  // '*'
-    EXPR_DIV,   // '/'
-    EXPR_GT,    // '>'
-    EXPR_GTE,   // '>='
-    EXPR_LT,    // '<'
-    EXPR_LTE,   // '<='
-    EXPR_EQ,    // '=='
-    EXPR_NEQ,   // '!='
-
-    /// leaf nodes
+    EXPR_OPERATION,
     EXPR_IDENTIFIER,
     EXPR_LITERAL
 } ast_stmt_type_t;
@@ -67,6 +55,7 @@ typedef struct {
  * @brief Node for operators in expression module
  */
 typedef struct {
+    token_type op_type;
     ast_node_t *left;
     ast_node_t *right;
 } expr_op_node_t;
@@ -147,7 +136,7 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
  * 
  * @return Allocated node for set operation
  */
-ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *left, ast_node_t *right);
+ast_node_t *expr_insert_op(token_type opr, unsigned line_num, ast_node_t *left, ast_node_t *right);
 
 
 /**
@@ -166,7 +155,7 @@ ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
  * 
  * @param lit_value value of literal
  * @param line_num
- * @param lit_type type of literal
+ * @param lit_type type of literal (T_INT_LITERAL, T_UNIT_LITERAL, ...)
  * 
  * @return Allocated node for given literal
  */

@@ -143,10 +143,11 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
 
 //  EXPR INSERT FUNCTIONS
 
-ast_node_t *expr_insert_op(ast_stmt_type_t opr, unsigned line_num, ast_node_t *left, ast_node_t *right)
+ast_node_t *expr_insert_op(token_type opr, unsigned line_num, ast_node_t *left, ast_node_t *right)
 {
-    ast_node_t *op_node = ast_node_init(opr, line_num);
+    ast_node_t *op_node = ast_node_init(EXPR_OPERATION, line_num);
 
+    op_node->data->op_node.op_type = opr;
     op_node->data->op_node.left = left;
     op_node->data->op_node.right = right;
 
