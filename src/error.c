@@ -28,5 +28,8 @@ void error_exit(int err_code, unsigned line, const char *fmt, ...)
     fprintf(stderr, "\n");
 
     va_end(args);
+
+    ast_free_arena(); // Frees dynamic memory alloc in AST
+
     exit(err_code);
 }
