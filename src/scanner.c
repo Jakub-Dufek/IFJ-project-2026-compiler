@@ -51,18 +51,15 @@ char* allocate_arr()
     if (arr == NULL) {
         error_exit(INTERNAL_ERR, current_line_num, "Failed attempt for heap allocation.");
     }
-
     return arr;
 }
 
-void reallocate_arr(char *arr) 
+void reallocate_arr(char *arr, unsigned new_num_of_items) 
 {
-    heap_arr_length = 2 * heap_arr_length;
     realloc(arr, heap_arr_length * sizeof(char));
     if (arr == NULL) {
         error_exit(INTERNAL_ERR, current_line_num, "Failed attempt for heap allocation.");
     }
-
     return;
 }
 
@@ -74,8 +71,9 @@ void free_arr(char *arr) {
 void write_lexeme(int character, lexeme_t *lexeme)
 {
     // Check size of the lexeme
-    if (lexeme->size + 1 >= MAX_LENGTH) {
-        error_exit(INTERNAL_ERR, current_line_num, "Too long lexeme value, lexeme buffer overflow.");
+    if (lexeme->size + 1 >= heap_arr_length) {
+        heap_arr_length = heap_arr_length * 2;
+        reallocate_arr(lexeme->value, heap_arr_length);
     }
     // Write character value into the lexeme string
     lexeme->value[lexeme->size] = (char)character;
@@ -345,7 +343,7 @@ token_t first_alpha(int character, token_t token, lexeme_t *lexeme)
 { // TODO... INDENTIFIER: _
     do {
         // note the lexeme's value
-        lexeme->value[lexeme->size] = (char)character;
+        lexeme->value[lexeme->size] = (char)character;  //#TODO: Nahradit funkcí write_lexeme
         lexeme->size++;
         lexeme->value[lexeme->size] = '\0';
 
@@ -396,7 +394,7 @@ token_t first_digit(int character, token_t token, lexeme_t *lexeme, scanner_case
             }
 
             // note the lexeme's value
-            lexeme->value[lexeme->size] = (char)character;
+            lexeme->value[lexeme->size] = (char)character;  //#TODO: nahradit funkcí write_lexeme
             lexeme->size++;
             lexeme->value[lexeme->size] = '\0';
 
@@ -476,9 +474,6 @@ token_t first_digit(int character, token_t token, lexeme_t *lexeme, scanner_case
 token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_case current_case)
 {
     do {
-        // note the lexeme's value
-        write_lexeme(character, lexeme);
-
         switch (current_case) {
         case CASE_START:
             switch (character) {
@@ -495,14 +490,14 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
                 current_case = CASE_SLASH;
                 break;
             case '(':
-                // If we are at the start of the line, depth of brackets will be increased in handle_indent()
-                if (line_start != true) {
-                    depth_of_brackets++;
-                }
                 // If the whole expression is (), send it as a Unit literal
                 if ((character = getchar()) == ')') {
                     token.type = T_UNIT_LITERAL;
                 } else {
+                    // If we are at the start of the line, depth of brackets will be increased in handle_indent()
+                    if (line_start != true) {
+                        depth_of_brackets++;
+                    }
                     ungetc(character, stdin);
                     token.type = T_L_ROUND_BRACKET;
                 }
@@ -622,10 +617,7 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
             break;
 
         case CASE_QUOTATION_MARKS:
-            // Remove quotation marks from the literal's value
-            lexeme->size = NO_VALUE;
-            lexeme->value[lexeme->size] = '\0';
-
+            lexeme->value = allocate_arr();      //Allocate space for the value of the lexeme
             if (character == '"') {
                 if ((character = getchar()) == '"') {
                     // Handles multiline quotation
@@ -643,10 +635,12 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
             }
             token.type = T_STRING_LITERAL;
             token.size = lexeme->size;
-            strcpy(token.value.string_value, lexeme->value);
+            token.value.string_value = lexeme->value;
+            token.size = lexeme->size;
             break;
 
         default:
+            //#TODO: Chyba, nerozpoznaný stav?
             break;
         }
         character = getchar();

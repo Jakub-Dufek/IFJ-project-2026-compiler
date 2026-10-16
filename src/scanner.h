@@ -51,7 +51,7 @@ typedef struct keyword {
  * This structure holds value of the lexeme and its length
  */
 typedef struct Lexeme {
-    char value[MAX_LENGTH]; ///<String representation of the lexeme
+    char *value;            ///<String representation of the lexeme
     unsigned size;          ///<Size of the lexeme
 } lexeme_t;
 
@@ -66,8 +66,9 @@ char* allocate_arr();
  * @brief Reallocates space for an arrey of chararctes on the heap
  *
  * @param arr Pointer to the array that of chararctes is supposed to be reallocated
+ * @param new_num_of_items Number stating the number of items to reallocate the space for
  */
-void reallocate_arr(char *arr);
+void reallocate_arr(char *arr, unsigned new_num_of_items);
 
 /**
  * @brief Frees space allocated on the heap for an array of characters
