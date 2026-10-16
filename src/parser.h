@@ -13,19 +13,29 @@
 #include "ast.h"
 
 
-/**
- * @brief Calls individual parsing functions for each case of next_token
- *
- * @param current Current token
- */
-void parse_next(token_t *current);
+//  INDIVIDUAL PARSING FUNCTIONS
 
 /**
  * @brief Parses declaration of variables
  *
  * @param current Current token
+ * 
+ * @return pointer to top of syntax sub-tree
  */
-void parse_var_declaration(token_t *current);
+ast_node_t *parse_var_declaration(token_t *current);
+
+
+
+//  MAIN PARSING SWITCH
+
+/**
+ * @brief Calls individual parsing functions for each case of next_token
+ *
+ * @param current Current token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_next(token_t *current);
 
 
 #endif
