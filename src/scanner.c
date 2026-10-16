@@ -314,20 +314,17 @@ int compare(const void *string, const void *keyword_string)
     return (strcmp((const char *)string, new_keyword->string));
 }
 
-token_t first_alpha(int character, token_t token, lexeme_t *lexeme)
-{ // TODO... INDENTIFIER: _
+token_t first_alpha (int character, token_t token, lexeme_t *lexeme) {
+    bool valid = false;
     do {
-        // note the lexeme's value
-        lexeme->value[lexeme->size] = (char)character;
-        lexeme->size++;
-        lexeme->value[lexeme->size] = '\0';
+        if (character != '_') { valid = true; }
+
+        //note the lexeme's value
+        write_lexeme(character, lexeme);
 
     } while ((isalnum(character = getchar()) || character == '_') && character != EOF);
 
-    // Return last read character, that was not used
-    if (character != EOF) {
-        ungetc(character, stdin);
-    }
+    if (valid == false) { error_exit(LEX_ERR, current_line_num, "Invalid identifier."); }
 
     keyword *the_keyword = bsearch(lexeme->value, keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
     if (the_keyword == NULL) {
@@ -336,28 +333,28 @@ token_t first_alpha(int character, token_t token, lexeme_t *lexeme)
         token.type = the_keyword->type;
     }
 
+     //Return last read character, that was not used
+    if (character != EOF) { ungetc(character, stdin); }
+
     token.size = lexeme->size;
     strcpy(token.value.string_value, lexeme->value);
 
     return token;
 }
 
-token_t first_digit(int character, token_t token, lexeme_t *lexeme, scanner_case current_case)
-{ // TODO... There is at least one digit after e/E
-    int dot = 0;
-    bool validation = true;
+token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
+    int num_cnt_e, num_cnt_d = 0;
+    bool valid = true;
     char last_character = character;
     do {
-        if (character == '0') { /*TODO...*/
-        }
-
+        if (character == '_') { last_character = character; continue; }
+        
         switch (current_case) {
-        case CASE_INT_LITERAL:
-            if (character == '_') {
-                continue;
-            }
-            if (character == '-') {
-                validation = false;
+            case CASE_INT_LITERAL:
+                if (character == '.') { current_case = CASE_DOUBLE_LITERAL; }
+                else if (character == 'e' || character == 'E') { current_case = CASE_EXPONENT; }
+                else if (character == 'd' || character == 'D') { current_case = CASE_DOUBLE_LITERAL; valid = false; }
+                else if(!isdigit(character)) { valid = false; }
                 break;
             }
             if (character == '.') {
@@ -368,23 +365,19 @@ token_t first_digit(int character, token_t token, lexeme_t *lexeme, scanner_case
                 current_case = CASE_EXPONENT;
             }
 
-            // note the lexeme's value
-            lexeme->value[lexeme->size] = (char)character;
-            lexeme->size++;
-            lexeme->value[lexeme->size] = '\0';
-
-            break;
-
-        case CASE_DOUBLE_LITERAL:
-            if (character == '_') {
-                continue;
-            }
-            if (character == '-') {
-                validation = false;
+            case CASE_DOUBLE_LITERAL:
+                if ((character == 'e' || character == 'E') && isdigit(last_character)) { current_case = CASE_EXPONENT; }
+                else if (character == 'd' || character == 'D') { valid = false; }
+                else if(!isdigit(character)) { valid = false; }
+                if (isdigit(character)) {num_cnt_d++; }
                 break;
-            }
-            if (character == '.' && dot == 1) {
-                validation = false;
+
+            case CASE_EXPONENT:
+                if ((character == '-' || character == '+') && last_character != 'e' && last_character != 'E') { 
+                    valid = false; 
+                }
+                else if (!isdigit(character)) { valid = false; }
+                if (isdigit(character)) { num_cnt_e++; }
                 break;
             }
             if (character == 'e' || character == 'E') {
@@ -421,18 +414,28 @@ token_t first_digit(int character, token_t token, lexeme_t *lexeme, scanner_case
             break;
         }
 
+        if (valid) {
+            //note the lexeme's value
+            write_lexeme(character, lexeme);
+        }
+        else { break; }
+
         last_character = character;
-    } while ((isdigit(character = getchar()) || character == '.' || character == '_' || character == '-' || character == 'e' ||
-              character == 'E') &&
-             validation == true && character != EOF);
+    } while((isdigit(character = getchar()) || character == 'e' || character == 'E' || character == '-'
+                                            || character == '.' || character == '_'
+                                            || character == 'd' || character == 'D') && character != EOF);
 
-    if (current_case == CASE_INT_LITERAL) {
+    if ((current_case == CASE_EXPONENT && num_cnt_e == 0) || (current_case == CASE_DOUBLE_LITERAL && num_cnt_d == 0)) { 
+        error_exit(LEX_ERR, current_line_num, "Missing value after decimal point/exponent.");
+    }
+
+    if (current_case == CASE_INT_LITERAL) { 
         token.type = T_INT_LITERAL;
-
         token.value.int_value = atoi(lexeme->value);
-    } else if (current_case == CASE_DOUBLE_LITERAL) {
+    }
+    else if (current_case == CASE_DOUBLE_LITERAL || current_case == CASE_EXPONENT 
+                                                 || character == 'd' || character == 'D') {
         token.type = T_DOUBLE_LITERAL;
-
         token.value.double_value = atof(lexeme->value);
     }
 
@@ -644,6 +647,7 @@ token_t get_next_token()
     lexeme_t lexeme = {0};
     scanner_case current_case = CASE_START;
     int character;
+    char next_character;
 
     // Main loop for finding and creating token
     while (token.type == T_UNDEFINED && next_token.type == T_UNDEFINED) {
@@ -657,17 +661,22 @@ token_t get_next_token()
             token = first_alpha(character, token, &lexeme);
         } else if (isdigit(character) || character == '.') {
             if (character == '.') {
-                char next_character = getchar();
-                ungetc(next_character, stdin);
-                if (isdigit(next_character)) {
+                if (isdigit(next_character = getchar())) {
                     token = first_digit(character, token, &lexeme, CASE_DOUBLE_LITERAL);
                 } else {
                     token.type = T_DOT; // #TODO...
                 }
-            } else {
+                else {
+                    next_token = new_token(T_DOT);
+                    ungetc(next_character, stdin);
+                }
+            }
+            else if (character != '0') {
                 token = first_digit(character, token, &lexeme, CASE_INT_LITERAL);
             }
-        } else if (!isspace(character)) {
+            else { error_exit(LEX_ERR, current_line_num, "Non-Zero number starting with zero."); }
+        }
+        else if (!isspace(character)) {
             token = first_special(character, token, &lexeme, current_case);
         }
     }
