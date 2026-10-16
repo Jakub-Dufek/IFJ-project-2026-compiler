@@ -91,9 +91,9 @@ typedef enum token_type {
  * This union holds the value of the token, depending on the type of the value
  */
 typedef union Token_value {
-    int int_value;                 /**<Storage for integer type of the token */
-    double double_value;           /**<Storage for double type of the token */
-    char string_value[MAX_LENGTH]; /**<Storage for string representation of the token */
+    int int_value;                 ///<Storage for integer type of the token
+    double double_value;           ///<Storage for double type of the token
+    char string_value[MAX_LENGTH]; ///<Storage for string representation of the token
 } token_value_t;
 
 /**
@@ -103,10 +103,10 @@ typedef union Token_value {
  * This structure holds value of the token, its size and its type
  */
 typedef struct Token {
-    token_type type;     /**<Type of the token */
-    unsigned line_num;   /**<Line on which the token was found */
-    token_value_t value; /**<Specific lexeme represented by this token, that was read from input */
-    unsigned size;       /**<Size of the token */
+    token_type type;     ///<Type of the token
+    unsigned line_num;   ///<Line on which the token was found
+    token_value_t value; ///<Specific lexeme represented by this token, that was read from input
+    unsigned size;       ///<Size of the token
 } token_t;
 
 #endif

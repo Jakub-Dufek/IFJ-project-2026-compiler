@@ -50,8 +50,8 @@ typedef struct keyword {
  * This structure holds value of the lexeme and its length
  */
 typedef struct Lexeme {
-    char value[MAX_LENGTH]; /**<String representation of the lexeme */
-    unsigned size;          /**<Size of the lexeme */
+    char value[MAX_LENGTH]; ///<String representation of the lexeme
+    unsigned size;          ///<Size of the lexeme
 } lexeme_t;
 
 /**
