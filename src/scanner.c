@@ -356,8 +356,7 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
                 else if (character == 'd' || character == 'D') { current_case = CASE_DOUBLE_LITERAL; valid = false; }
                 else if(!isdigit(character)) { valid = false; }
                 break;
-            
-
+        
             case CASE_DOUBLE_LITERAL:
                 if ((character == 'e' || character == 'E') && isdigit(last_character)) { current_case = CASE_EXPONENT; }
                 else if (character == 'd' || character == 'D') { valid = false; }
@@ -372,43 +371,10 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
                 else if (!isdigit(character)) { valid = false; }
                 if (isdigit(character)) { num_cnt_e++; }
                 break;
-<<<<<<< HEAD
-=======
-            }
-            if (character == 'e' || character == 'E') {
-                current_case = CASE_EXPONENT;
-                continue;
-            }
 
-            lexeme->value[lexeme->size] = (char)character;
-            lexeme->size++;
-            lexeme->value[lexeme->size] = '\0';
-
-            break;
-
-        case CASE_EXPONENT:
-            if (character == '_') {
-                continue;
-            }
-            if (character == '.') {
-                validation = false;
+            default:
                 break;
             }
-            if (character == '-' && (last_character != 'e' && last_character != 'E')) {
-                validation = false;
-                break;
-            }
-
-            lexeme->value[lexeme->size] = (char)character;
-            lexeme->size++;
-            lexeme->value[lexeme->size] = '\0';
-
-            break;
->>>>>>> 9711b78fe753e80a7feea605a4f91bef6dfba916
-
-        default:
-            break;
-        }
 
         if (valid) {
             //note the lexeme's value
