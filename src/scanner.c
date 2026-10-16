@@ -27,6 +27,7 @@ static unsigned last_indent_idx = NO_VALUE;
 static token_t next_token = {0};
 static unsigned current_line_num = 1;
 static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
+static unsigned heap_arr_length = MAX_LENGTH;
 
 // dictionary
 keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
@@ -42,6 +43,32 @@ token_t new_token(unsigned line_num)
     token_t new_token = {NO_VALUE};
     new_token.line_num = line_num;
     return new_token;
+}
+
+char* allocate_arr() 
+{
+    char *arr = malloc(heap_arr_length * sizeof(char));
+    if (arr == NULL) {
+        error_exit(INTERNAL_ERR, current_line_num, "Failed attempt for heap allocation.");
+    }
+
+    return arr;
+}
+
+void reallocate_arr(char *arr) 
+{
+    heap_arr_length = 2 * heap_arr_length;
+    realloc(arr, heap_arr_length * sizeof(char));
+    if (arr == NULL) {
+        error_exit(INTERNAL_ERR, current_line_num, "Failed attempt for heap allocation.");
+    }
+
+    return;
+}
+
+void free_arr(char *arr) {
+    free (arr);
+    return;
 }
 
 void write_lexeme(int character, lexeme_t *lexeme)
