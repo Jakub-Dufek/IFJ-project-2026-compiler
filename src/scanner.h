@@ -32,6 +32,7 @@ typedef enum {
     CASE_EXPONENT,
 } scanner_case;
 
+
 /**
  * @struct keyword
  * @brief Structure representing a single keyword in the keywords dictionary
@@ -53,6 +54,27 @@ typedef struct Lexeme {
     char value[MAX_LENGTH]; ///<String representation of the lexeme
     unsigned size;          ///<Size of the lexeme
 } lexeme_t;
+
+/**
+ * @brief Allocates space for an arrey of characters on the heap
+ * 
+ * @return Pointer to the allocated array of characters
+ */
+char* allocate_arr();
+
+/**
+ * @brief Reallocates space for an arrey of chararctes on the heap
+ *
+ * @param arr Pointer to the array that of chararctes is supposed to be reallocated
+ */
+void reallocate_arr(char *arr);
+
+/**
+ * @brief Frees space allocated on the heap for an array of characters
+ *
+ * @param arr Pointer to the array that of chararctes is supposed to be freed
+ */
+void free_arr(char *arr);
 
 /**
  * @brief Creates new token and initialises it
