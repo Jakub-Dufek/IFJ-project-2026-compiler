@@ -31,6 +31,7 @@ help:
 	@echo 
 	@echo make test-err		- Tests error handling
 	@echo make test-scan	- Tests scanner module
+	@echo make test-ast1	- Tests ast insert module
 	@echo ==================== HELP ====================
 
 
@@ -42,6 +43,10 @@ test-err: build/err_test.o build/error.o
 test-scan: build/scanner_test.o build/scanner.o
 	$(CC) $(CFLAGS+) $^ -o build/scanner_test
 	-./build/scanner_test
+
+test-ast1: build/ast_test1.o build/ast.o build/semantic_anal.o build/symtable.o build/error.o
+	$(CC) $(CFLAGS+) $^ -o build/ast_test1
+	./build/ast_test1
 
 
 #		RULES
