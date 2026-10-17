@@ -139,6 +139,7 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
         break;
     }
 
+    token.line_num = current_line_num;
     return token;
 } // end of handle_comment()
 
@@ -242,6 +243,10 @@ token_t handle_white_spaces(int *character, token_t token)
 
     if (*character == EOF) {
         token.type = T_EOF;
+    }
+
+    if (token.type != T_LF) {
+        token.line_num = current_line_num;
     }
     return token;
 }
@@ -350,7 +355,7 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
         if (character == '_') { last_character = character; continue; }
         
         switch (current_case) {
-            case CASE_INT_LITERAL:
+            case CASE_INT_LITERAL: 
                 if (character == '.') { current_case = CASE_DOUBLE_LITERAL; }
                 else if (character == 'e' || character == 'E') { current_case = CASE_EXPONENT; }
                 else if (character == 'd' || character == 'D') { current_case = CASE_DOUBLE_LITERAL; valid = false; }
@@ -433,14 +438,14 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
                 current_case = CASE_SLASH;
                 break;
             case '(':
-                // If we are at the start of the line, depth of brackets will be increased in handle_indent()
-                if (line_start != true) {
-                    depth_of_brackets++;
-                }
                 // If the whole expression is (), send it as a Unit literal
                 if ((character = getchar()) == ')') {
                     token.type = T_UNIT_LITERAL;
                 } else {
+                    // If we are at the start of the line, depth of brackets will be increased in handle_indent()
+                    if (line_start != true) {
+                        depth_of_brackets++;
+                    }
                     ungetc(character, stdin);
                     token.type = T_L_ROUND_BRACKET;
                 }
@@ -557,6 +562,7 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
             if (token.type != T_AT_MAIN) {
                 error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
             }
+            token.line_num = current_line_num;
             break;
 
         case CASE_QUOTATION_MARKS:
