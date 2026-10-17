@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ast.h"
 #include "error.h"
+#include "memory.h"
+#include "ast.h"
+
 
 void error_exit(int err_code, unsigned line, const char *fmt, ...)
 {
