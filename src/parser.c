@@ -21,44 +21,44 @@
 
 // INDIVIDUAL PARSING FUNCTIONS
 
-ast_node_t *parse_var_declaration(token_t *current)
+ast_node_t *parse_var_declaration(token_t current)
 {
     // collect data from var/val token  
     bool is_mutable = false;
-    if(current->type == T_KEY_VAR) {
+    if(current.type == T_KEY_VAR) {
         is_mutable = true;
     }
 
-    *current = get_next_token();
-    if(current->type != T_IDENTIFIER) {
-        error_exit(SYNT_ERR, current->line_num, "Expected identifier");
+    current = get_next_token();
+    if(current.type != T_IDENTIFIER) {
+        error_exit(SYNT_ERR, current.line_num, "Expected identifier");
     }
 
     // collect data from id token
     char value[MAX_LENGTH];
-    strcpy(value, current->value.string_value);
-    unsigned line_num = current->line_num;
+    strcpy(value, current.value.string_value);
+    unsigned line_num = current.line_num;
 
     // determine whether to define data type or not
-    *current = get_next_token();
+    current = get_next_token();
     token_type data_type;
 
     // no type specified
-    if(current->type == T_ASSIGN) {
+    if(current.type == T_ASSIGN) {
         data_type = T_NO_TYPE;
     }
-    else if(current->type == T_COLON) {
-        *current = get_next_token();
+    else if(current.type == T_COLON) {
+        current = get_next_token();
         // if next token anything but data type keyword
-        if(current->type <= T_KEY_INT || current->type >= T_KEY_UNIT) {
-            error_exit(SYNT_ERR, current->line_num, "Expected data type");
+        if(current.type <= T_KEY_INT || current.type >= T_KEY_UNIT) {
+            error_exit(SYNT_ERR, current.line_num, "Expected data type");
         }
         else {
-            data_type = current->type;
+            data_type = current.type;
         }
     }
     else {
-        error_exit(SYNT_ERR, current->line_num, "Expected assign or colon");
+        error_exit(SYNT_ERR, current.line_num, "Expected assign or colon");
     }
 
     ast_node_t *expression = parse_expression();
@@ -69,9 +69,9 @@ ast_node_t *parse_var_declaration(token_t *current)
 
 //  MAIN PARSING SWITCH
 
-ast_node_t *parse_next(token_t *current)
+ast_node_t *parse_next(token_t current)
 {
-    switch(current->type) {
+    switch(current.type) {
         case T_KEY_VAR: // fall through below
         case T_KEY_VAL:
             return parse_var_declaration(current);
@@ -82,18 +82,27 @@ ast_node_t *parse_next(token_t *current)
 }
 
 
+//  MAIN PARSER LOOP
 
-//  TEMP MAIN
-
-int main()
+ast_node_t *build_ast()
 {
-    ast_init_arena();
+    token_t current_token = get_next_token();
+    ast_node_t *head = NULL;    // ptr pointing to start of ast
+    ast_node_t *tail = NULL;    // ptr pointing to current node in ast building process (end)
 
-    token_t *current_token;
-    ast_node_t *ast;
+    while(current_token.type != T_EOF) {
+        // setting head at beginning
+        if(head == NULL) {
+            tail = parse_next(current_token);
+            head = tail;
+        }
+        else {
+            tail->next = parse_next(current_token);
+            tail = tail->next;
+        }
 
-    do {
-        *current_token = get_next_token();
-        parse_next(current_token);
-    } while(false);
+        current_token = get_next_token();
+    }
+
+    return head;
 }

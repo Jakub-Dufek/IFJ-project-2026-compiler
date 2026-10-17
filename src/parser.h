@@ -22,7 +22,7 @@
  * 
  * @return pointer to top of syntax sub-tree
  */
-ast_node_t *parse_var_declaration(token_t *current);
+ast_node_t *parse_var_declaration(token_t current);
 
 
 
@@ -35,7 +35,7 @@ ast_node_t *parse_var_declaration(token_t *current);
  * 
  * @return pointer to top of syntax sub-tree
  */
-ast_node_t *parse_next(token_t *current);
+ast_node_t *parse_next(token_t current);
 
 
 #endif
