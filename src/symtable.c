@@ -2,31 +2,61 @@
 * @file symtable.c
 * @internal Part of IFJ-project-2026-compiler
 *
-* @brief symbol table structure
+* @brief symbol table with structure implementation
 * @author Ondřej Kycl (xkyclon00) 
 * @date 04.10.2026
 * 
-* @details This file contains symbol table binary tree along with the user functions
+* @details This file contains a symbol table implemented with height self-balancing binary tree data structure
 */
 
 //TODO : Upravit popisky,
+//       .clang-format,
 //       GetData funkce
-//       stejné identifikátory (řádek v insert!)
+//       stejné identifikátory 
 //       volání funkcí před lexikální definicí?
-//       Spojit enumy s Kubou?
-//       popsat funkce, prejmenovat ?
-//       MAX_LENGTH pro Key/symbol?
+//       line on which error ocurred in ifj26, stejné identifikátory (řádek v insert!)
 
-// libraries
 #include "symtable.h"
-#include <stdlib.h>
-#include <string.h> 
 
-bvs_node_t *symtable_initialize() {
+symtable_bvs_node_t *symtable_initialize() {
     return NULL;
 }
 
-bvs_node_t *symtable_find_symbol(bvs_node_t *root_ptr, char *k){
+int bvs_max(int n1, int n2){ 
+    if (n1 > n2) {
+        return n1;
+    }
+    return n2;
+}
+int bvs_height(symtable_bvs_node_t *ptr){
+    if (ptr == NULL) {
+        return 0;
+    }
+    return ptr->height;
+}
+
+symtable_bvs_node_t *left_rotate(symtable_bvs_node_t *y){
+    symtable_bvs_node_t *x = y->r_ptr;
+    y->r_ptr = x->l_ptr;
+    x->l_ptr = y;
+    // switched nodes weight correction
+    y->height = bvs_max(bvs_height(y->l_ptr), bvs_height(y->r_ptr)) + 1;
+    x->height = bvs_max(bvs_height(x->l_ptr), bvs_height(x->r_ptr)) + 1;
+
+    return x;
+}
+symtable_bvs_node_t *right_rotate(symtable_bvs_node_t *y){
+    symtable_bvs_node_t *x = y->l_ptr;
+    y->l_ptr = x->r_ptr;
+    x->r_ptr = y;
+    // switched nodes height correction
+    y->height = bvs_max(bvs_height(y->l_ptr), bvs_height(y->r_ptr)) + 1;
+    x->height = bvs_max(bvs_height(x->l_ptr), bvs_height(x->r_ptr)) + 1;
+
+    return x;
+}
+
+symtable_bvs_node_t *symtable_find_symbol(symtable_bvs_node_t *root_ptr, char *k){
     if (root_ptr == NULL){
         return NULL;
     }
@@ -45,8 +75,8 @@ bvs_node_t *symtable_find_symbol(bvs_node_t *root_ptr, char *k){
     } 
 }
 
-bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
-    bvs_node_t *new_node = (bvs_node_t *) malloc(sizeof(bvs_node_t));
+symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
+    symtable_bvs_node_t *new_node = (symtable_bvs_node_t *) malloc(sizeof(symtable_bvs_node_t));
     if (new_node == NULL){
         return NULL;
     }
@@ -61,7 +91,7 @@ bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
     return new_node;
 }
 
-bvs_node_t *symtable_insert(bvs_node_t *root_ptr, char *key, symbol_data_t symb){
+symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, symbol_data_t symb){
     if (root_ptr == NULL){
         return symtable_create_node(key, symb);
     }
@@ -75,13 +105,13 @@ bvs_node_t *symtable_insert(bvs_node_t *root_ptr, char *key, symbol_data_t symb)
             }
             else{
                 root_ptr->symbol_data = symb;
+                error_exit(SEM_REDEF_ERR, 0, "Redefinition of variable"); // <-- return to this
                 //return NULL ?;
-                //error
             }
         }
 
-        root_ptr->height = max(height(root_ptr->l_ptr), height(root_ptr->r_ptr)) + 1;
-        root_ptr->weight = height(root_ptr->r_ptr) - height(root_ptr->l_ptr);
+        root_ptr->height = bvs_max(bvs_height(root_ptr->l_ptr), bvs_height(root_ptr->r_ptr)) + 1;
+        root_ptr->weight = bvs_height(root_ptr->r_ptr) - bvs_height(root_ptr->l_ptr);
         
         if (root_ptr->weight == -2){
             if (strcmp(root_ptr->l_ptr->key, key) > 0){
@@ -106,41 +136,7 @@ bvs_node_t *symtable_insert(bvs_node_t *root_ptr, char *key, symbol_data_t symb)
     }
 }
 
-int max(int n1, int n2){ 
-    if (n1 > n2) {
-        return n1;
-    }
-    return n2;
-}
-int height(bvs_node_t *ptr){
-    if (ptr == NULL) {
-        return 0;
-    }
-    return ptr->height;
-}
-
-bvs_node_t *left_rotate(bvs_node_t *y){
-    bvs_node_t *x = y->r_ptr;
-    y->r_ptr = x->l_ptr;
-    x->l_ptr = y;
-    // switched nodes weight correction
-    y->height = max(height(y->l_ptr), height(y->r_ptr)) + 1;
-    x->height = max(height(x->l_ptr), height(x->r_ptr)) + 1;
-
-    return x;
-}
-bvs_node_t *right_rotate(bvs_node_t *y){
-    bvs_node_t *x = y->l_ptr;
-    y->l_ptr = x->r_ptr;
-    x->r_ptr = y;
-    // switched nodes height correction
-    y->height = max(height(y->l_ptr), height(y->r_ptr)) + 1;
-    x->height = max(height(x->l_ptr), height(x->r_ptr)) + 1;
-
-    return x;
-}
-
-void symtable_destructor(bvs_node_t *root_ptr){
+void symtable_destructor(symtable_bvs_node_t *root_ptr){
     if(root_ptr == NULL){
         return;
     }
