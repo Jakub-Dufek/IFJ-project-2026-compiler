@@ -19,46 +19,89 @@
 #include <string.h>
 
 
-// INDIVIDUAL PARSING FUNCTIONS
 
-ast_node_t *parse_var_declaration(token_t current)
+//  PROLOGUE PARSING
+
+void parse_prologue()
+{
+    // import
+    token_t current_token = get_next_token();
+    if(current_token.type != T_KEY_IMPORT) {
+        error_exit(SYNT_ERR, 0, "Programme missing prologue");
+    }
+
+    // ifj26
+    current_token = get_next_token();
+    if(current_token.type != T_UNDEFINED) { //TODO: switch for ifj26 keyword
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+    }
+
+    // .
+    current_token = get_next_token();
+    if(current_token.type != T_DOT) {
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+    }
+
+    // *
+    current_token = get_next_token();
+    if(current_token.type != T_MULT) {
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+    }
+
+    //TODO: end of line
+}
+
+
+
+//  GLOBAL OPARSING FUNCTIONS
+
+ast_node_t *parse_fn_definition()
+{
+    // TODO: implement
+}
+
+
+
+//  INSIDE-BLOCK PARSING FUNCTIONS
+
+ast_node_t *parse_var_declaration(token_t current_token)
 {
     // collect data from var/val token  
     bool is_mutable = false;
-    if(current.type == T_KEY_VAR) {
+    if(current_token.type == T_KEY_VAR) {
         is_mutable = true;
     }
 
-    current = get_next_token();
-    if(current.type != T_IDENTIFIER) {
-        error_exit(SYNT_ERR, current.line_num, "Expected identifier");
+    current_token = get_next_token();
+    if(current_token.type != T_IDENTIFIER) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected identifier");
     }
 
     // collect data from id token
     char value[MAX_LENGTH];
-    strcpy(value, current.value.string_value);
-    unsigned line_num = current.line_num;
+    strcpy(value, current_token.value.string_value);
+    unsigned line_num = current_token.line_num;
 
     // determine whether to define data type or not
-    current = get_next_token();
+    current_token = get_next_token();
     token_type data_type;
 
     // no type specified
-    if(current.type == T_ASSIGN) {
+    if(current_token.type == T_ASSIGN) {
         data_type = T_NO_TYPE;
     }
-    else if(current.type == T_COLON) {
-        current = get_next_token();
+    else if(current_token.type == T_COLON) {
+        current_token = get_next_token();
         // if next token anything but data type keyword
-        if(current.type <= T_KEY_INT || current.type >= T_KEY_UNIT) {
-            error_exit(SYNT_ERR, current.line_num, "Expected data type");
+        if(current_token.type <= T_KEY_INT || current_token.type >= T_KEY_UNIT) {
+            error_exit(SYNT_ERR, current_token.line_num, "Expected data type");
         }
         else {
-            data_type = current.type;
+            data_type = current_token.type;
         }
     }
     else {
-        error_exit(SYNT_ERR, current.line_num, "Expected assign or colon");
+        error_exit(SYNT_ERR, current_token.line_num, "Expected assign or colon");
     }
 
     ast_node_t *expression = parse_expression();
@@ -69,12 +112,15 @@ ast_node_t *parse_var_declaration(token_t current)
 
 //  MAIN PARSING SWITCH
 
-ast_node_t *parse_next(token_t current)
+// TODO: split into 2 functions
+ast_node_t *parse_next(token_t current_token)
 {
-    switch(current.type) {
+    switch(current_token.type) {
         case T_KEY_VAR: // fall through below
         case T_KEY_VAL:
-            return parse_var_declaration(current);
+            return parse_var_declaration(current_token);
+        case T_KEY_DEF:
+            return parse_fn_definition();
         // TODO: OTHER CASES
         default:
             // TODO: some kind of error
@@ -82,10 +128,13 @@ ast_node_t *parse_next(token_t current)
 }
 
 
+
 //  MAIN PARSER LOOP
 
 ast_node_t *build_ast()
 {
+    parse_prologue();
+    
     token_t current_token = get_next_token();
     ast_node_t *head = NULL;    // ptr pointing to start of ast
     ast_node_t *tail = NULL;    // ptr pointing to current node in ast building process (end)

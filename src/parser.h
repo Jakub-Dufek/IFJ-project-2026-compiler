@@ -13,6 +13,14 @@
 #include "ast.h"
 
 
+//  PROLOGUE PARSING
+
+/**
+ * @brief Parses prologue, is called at beginning of programme
+ */
+void parse_prologue();
+
+
 //  INDIVIDUAL PARSING FUNCTIONS
 
 /**
@@ -24,6 +32,13 @@
  */
 ast_node_t *parse_var_declaration(token_t current);
 
+
+/**
+ * @brief Parses definition of function
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_fn_definition();
 
 
 //  MAIN PARSING SWITCH
