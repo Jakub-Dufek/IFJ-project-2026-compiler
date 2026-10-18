@@ -51,7 +51,7 @@ test-scan: build/scanner_test.o build/scanner.o
 	$(CC) $(CFLAGS+) $^ -o build/scanner_test
 	-./build/scanner_test
 
-test-ast1: build/ast_test1.o build/ast.o build/semantic_anal.o build/symtable.o build/error.o
+test-ast1: build/ast_test1.o build/ast.o build/semantic_anal.o build/symtable.o build/error.o build/memory.o
 	$(CC) $(CFLAGS+) $^ -o build/ast_test1
 	./build/ast_test1
 
