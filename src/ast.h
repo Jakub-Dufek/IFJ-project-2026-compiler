@@ -12,7 +12,7 @@
 
 #include <stdbool.h>
 #include <string.h>
-
+#include "symtable.h"
 #include "structures.h"
 
 typedef struct ast_node ast_node_t;

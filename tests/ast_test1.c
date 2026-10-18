@@ -1,5 +1,6 @@
 #include "../src/ast.h"
-#include <memory.h>
+#include "memory.h"
+#include "semantic_anal.h"
 
 #define LINE_NUM 999
 
@@ -25,17 +26,22 @@ int main()
     // var x : Int = z + 5
     char x_str[MAX_LENGTH] = "x";
     ast_node_t *declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_KEY_INT, plus);
+    
+    // 1. Vytvoříme si tabulku symbolů speciálně pro tento test
+    symtable_bvs_node_t *symtable = symtable_initialize();
 
+    // 2. Ručně do ní vložíme proměnnou 'z' (např. typu Int), aby test prošel
+    symbol_data_t z_sym;
+    z_sym.data_type = T_KEY_INT;
+    z_sym.id_type = ID_VAR; // nebo ID_VAL
+    symtable = symtable_insert(symtable, "z", z_sym);
 
+    // 3. Spustíme naši rekurzivní sémantickou analýzu a PŘEDÁME jí naši tabulku
+    sem_anal(declaration, &symtable);
 
+    // 4. Uklidíme
+    symtable_destructor(symtable);
 
-    /*
-                                YOUR CODE HERE
-        YOUR CODE HERE
-                                YOUR CODE HERE
-        YOUR CODE HERE
-                                YOUR CODE HERE
-    */
     (void)declaration; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
 
 

@@ -112,7 +112,7 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, s
             else{
                 root_ptr->symbol_data = symb;
                 error_exit(SEM_REDEF_ERR, 0, "Redefinition of variable"); // <-- return to this
-                //return NULL ?;
+                //return NULL;
             }
         }
 
