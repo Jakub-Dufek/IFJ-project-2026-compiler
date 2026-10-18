@@ -6,18 +6,19 @@
 * @author Ondřej Kycl (xkyclon00) 
 * @date 04.10.2026
 * 
-* @details This file contains definitions and descriptions of functions used in symtable.c
+* @details This file contains declarations and descriptions of functions used in symtable.c
 */
-#ifndef SYMTABLE
-#define SYMTABLE
+#ifndef SYMTABLE_H
+#define SYMTABLE_H
 
-//libraries
+//libraries:
 #include "structures.h"
 #include "../src/error.h"
 #include "stdbool.h"
 #include <stdlib.h>
 #include <string.h> 
 
+//definitions:
 /* 
  description of data types with enum from "structures.h":
  0-6 - (T_UNDEFINED = NO_VALUE = 0, T_KEY_INT = 1, T_KEY_DOUBLE = 2,

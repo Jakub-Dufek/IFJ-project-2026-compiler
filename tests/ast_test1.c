@@ -1,4 +1,5 @@
 #include "../src/ast.h"
+#include <memory.h>
 
 #define LINE_NUM 999
 

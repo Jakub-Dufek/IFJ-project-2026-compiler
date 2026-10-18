@@ -78,9 +78,15 @@ symtable_bvs_node_t *symtable_find_symbol(symtable_bvs_node_t *root_ptr, char *k
 symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
     symtable_bvs_node_t *new_node = (symtable_bvs_node_t *) malloc(sizeof(symtable_bvs_node_t));
     if (new_node == NULL){
-        return NULL;
+        error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
+        //return NULL;
     }
     new_node->key = (char *)malloc((strlen(key) + 1) * sizeof(char));
+    if (new_node->key == NULL) {
+        free(new_node);
+        error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
+        //return NULL;
+    }
     strcpy(new_node->key, key);
 
     new_node->symbol_data = symb;
