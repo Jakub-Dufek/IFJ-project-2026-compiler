@@ -48,21 +48,15 @@ void parse_prologue()
         error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
     }
 
-    //TODO: end of line
+    current_token = get_next_token();
+    if(current_token.type != T_EOF && current_token.type != T_LF) {
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+    }
 }
 
 
 
-//  GLOBAL OPARSING FUNCTIONS
-
-ast_node_t *parse_fn_definition()
-{
-    // TODO: implement
-}
-
-
-
-//  INSIDE-BLOCK PARSING FUNCTIONS
+//  LOCAL PARSING FUNCTIONS
 
 ast_node_t *parse_var_declaration(token_t current_token)
 {
@@ -110,20 +104,39 @@ ast_node_t *parse_var_declaration(token_t current_token)
 
 
 
-//  MAIN PARSING SWITCH
+//  GLOBAL PARSING FUNCTIONS
 
-// TODO: split into 2 functions
-ast_node_t *parse_next(token_t current_token)
+ast_node_t *parse_fn_definition()
+{
+    // TODO: implement
+}
+
+
+
+//  MAIN PARSING SWITCHES
+
+ast_node_t *parse_next_local(token_t current_token)
 {
     switch(current_token.type) {
         case T_KEY_VAR: // fall through below
         case T_KEY_VAL:
             return parse_var_declaration(current_token);
-        case T_KEY_DEF:
-            return parse_fn_definition();
         // TODO: OTHER CASES
         default:
-            // TODO: some kind of error
+            error_exit(SYNT_ERR, current_token.line_num, "Unexpected token at local level");
+    }
+}
+
+
+ast_node_t *parse_next_global(token_t current_token)
+{
+    switch(current_token.type) {
+        case T_KEY_DEF:
+            return parse_fn_definition();
+        case T_AT_MAIN:
+            //TODO: parse main
+        default:
+            error_exit(SYNT_ERR, current_token.line_num, "Unexpected token at global level");
     }
 }
 
@@ -135,18 +148,18 @@ ast_node_t *build_ast()
 {
     parse_prologue();
     
-    token_t current_token = get_next_token();
+    token_t current_token = get_next_token(); //TODO: stay?? because EOF could happen before this loop
     ast_node_t *head = NULL;    // ptr pointing to start of ast
     ast_node_t *tail = NULL;    // ptr pointing to current node in ast building process (end)
 
     while(current_token.type != T_EOF) {
         // setting head at beginning
         if(head == NULL) {
-            tail = parse_next(current_token);
+            tail = parse_next_global(current_token);
             head = tail;
         }
         else {
-            tail->next = parse_next(current_token);
+            tail->next = parse_next_global(current_token);
             tail = tail->next;
         }
 

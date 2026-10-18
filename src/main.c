@@ -10,7 +10,8 @@
 #include "memory.h"
 #include "parser.h"
 
-int main() {
+int main()
+{
     ast_init_arena();
 
     ast_free_arena();

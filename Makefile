@@ -47,7 +47,7 @@ test-err: build/err_test.o build/error.o
 	$(CC) $(CFLAGS+) $^ -o build/err_test
 	-./build/err_test
 
-test-scan: build/scanner_test.o build/scanner.o
+test-scan: build/scanner_test.o build/scanner.o build/error.o build/memory.o
 	$(CC) $(CFLAGS+) $^ -o build/scanner_test
 	-./build/scanner_test
 

@@ -21,7 +21,19 @@
 void parse_prologue();
 
 
-//  INDIVIDUAL PARSING FUNCTIONS
+
+//  LOCAL PARSING FUNCTIONS
+
+/**
+ * @brief Parses definition of function
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_fn_definition();
+
+
+
+//  GLOBAL PARSING FUNCTIONS
 
 /**
  * @brief Parses declaration of variables
@@ -33,24 +45,38 @@ void parse_prologue();
 ast_node_t *parse_var_declaration(token_t current);
 
 
-/**
- * @brief Parses definition of function
- * 
- * @return pointer to top of syntax sub-tree
- */
-ast_node_t *parse_fn_definition();
 
-
-//  MAIN PARSING SWITCH
+//  GLOBAL PARSING SWITCHES
 
 /**
- * @brief Calls individual parsing functions for each case of next_token
+ * @brief Calls individual parsing functions for each case of next_token within block
  *
- * @param current Current token
+ * @param current_token
  * 
  * @return pointer to top of syntax sub-tree
  */
-ast_node_t *parse_next(token_t current);
+ast_node_t *parse_next_local(token_t current_token);
+
+
+/**
+ * @brief Calls individual parsing functions for each case of next_token within block
+ *
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_next_global(token_t current);
+
+
+
+//  MAIN PARSER LOOP
+
+/**
+ * @brief Parses entire programme and builds AST for further analysis and compiling
+ * 
+ * @return pointer to top of AST
+ */
+ast_node_t *build_ast();
 
 
 #endif
