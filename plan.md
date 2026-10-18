@@ -63,3 +63,16 @@ Deadline xgreges00:
 
 Deadline xkyclon00:
 - 18\. 10. 2026: Sync symtable nodes with AST, go through tree, type deduction?
+
+# 18. 10. 2026
+Deadline xlehots00:
+- 25\. 10. 2026: Fight with brackets
+
+Deadline xgreges00:
+- 25\. 10. 2026: Attempt to translate main fn() into assembly + var x ...
+
+Deadline xkyclon00:
+- 25\. 10. 2026: Semi-finish symtable, try to analyze main fn(), sync with code generator
+
+Deadline 274855:
+- 25\. 10. 2026: Parse functions, insert fns into ast, define global and local switches
