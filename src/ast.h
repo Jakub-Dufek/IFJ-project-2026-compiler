@@ -12,7 +12,7 @@
 
 #include <stdbool.h>
 #include <string.h>
-
+#include "symtable.h"
 #include "structures.h"
 
 typedef struct ast_node ast_node_t;
@@ -63,6 +63,7 @@ typedef struct {
  */
 typedef struct {
     char id_val[MAX_LENGTH];
+    symbol_data_t symbol_data;
 } expr_id_leaf_node_t;
 
 /**
