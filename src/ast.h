@@ -12,13 +12,10 @@
 
 #include <stdbool.h>
 #include <string.h>
-
-#include "structures.h" // MAX_LENGTH
-
-#define ARENA_SIZE 1024 * 1024 // 1 MB
+#include "symtable.h"
+#include "structures.h"
 
 typedef struct ast_node ast_node_t;
-typedef struct arena arena_t;
 
 
 //  ENUM TYPES
@@ -66,6 +63,7 @@ typedef struct {
  */
 typedef struct {
     char id_val[MAX_LENGTH];
+    symbol_data_t symbol_data;
 } expr_id_leaf_node_t;
 
 /**
@@ -162,41 +160,5 @@ ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
 ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type);
 
 
-
-//  HELPER FUNCTIONS
-
-/**
- * @brief Allocates data for one ast_node_t and it's "data" component
- * 
- * @param stmt_type type of node
- * @param line_num
- *
- * @return Initialized node ready to use
- */
-ast_node_t *ast_node_init(ast_stmt_type_t stmt_type, unsigned line_num);
-
-
-
-//  MEMORY HANDLING
-
-/**
- * @struct arena_t
- * @brief struct representing 1 block of memory (1 MB)
- */
-struct arena {
-    char arena[ARENA_SIZE];
-    unsigned offset;
-    arena_t *next;
-};
-
-/**
- * @brief Initializes arena for AST
- */
-void ast_init_arena();
-
-/**
- * @brief Frees all allocated nodes in AST at once
- */
-void ast_free_arena(void);
 
 #endif
