@@ -141,6 +141,7 @@ int main (void) {
     while ((output = get_next_token()).type != T_EOF) {
         print_token(output);
     }
-    
+    print_token(output);
+
     return 0;
 }
