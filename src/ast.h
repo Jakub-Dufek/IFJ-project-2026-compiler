@@ -33,7 +33,8 @@ typedef enum ast_stmt_type {
 
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
-    EXPR_LITERAL
+    EXPR_LITERAL,
+    EXPR_INT2FLOAT
 } ast_stmt_type_t;
 
 
@@ -90,6 +91,13 @@ typedef struct {
     token_value_t lit_value;
 } expr_lit_leaf_node_t;
 
+/**
+ * @struct expr_imp_leaf_node_t
+ * @brief Node for implicit conversion
+ */
+typedef struct {
+    ast_node_t *operand; //Pointer to converted operand
+} expr_imp_conversion_t;
 
 
 //  MAIN NODE TYPES
@@ -116,6 +124,7 @@ typedef union {
     expr_op_node_t op_node;
     expr_id_leaf_node_t id_leaf_node;
     expr_lit_leaf_node_t lit_leaf_node;
+    expr_imp_conversion_t imp_conversion;
     // TODO: other structures
 } ast_node_data_t;
 
@@ -186,6 +195,15 @@ ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
  */
 ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type);
 
+// IMPLICIT CONVERSION FUNCTION
 
+/**
+ * @brief Creates subnode in ast for implicit conversion
+ * 
+ * @param inner_node 
+ * 
+ * @return New subnode which contains the new conversion and the operand for conversion
+ */
+ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
 
 #endif

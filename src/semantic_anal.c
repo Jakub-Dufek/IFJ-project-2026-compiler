@@ -11,7 +11,6 @@
 
 //TODO: 
 //      Jak tu přesně funguje symtable?
-//      Implicitní konverze
 //      Volání funkcí: Sedí počet a typy předaných argumentů s definicí funkce?
 //      Typ návratové hodnoty u funkce
 //      Automatické přiřazení typu, když není zadán? (možná to dělá už syntax)
@@ -32,7 +31,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_bvs_node_t **symtable_root){
 
             }
             else if (var_type == T_KEY_DOUBLE && expr_type == T_KEY_INT){
-
+                ast_node->data->declaration_node.expression = ast_convert_int2float(ast_node->data->declaration_node.expression);
             }
             else if (var_type == T_KEY_INT && expr_type == T_KEY_DOUBLE){
                 error_exit(SEM_TYPE_ERR, ast_node->line_num, "Cannot convert Double to Int");
@@ -60,10 +59,13 @@ data_type sem_anal(ast_node_t *ast_node, symtable_bvs_node_t **symtable_root){
             if (left_type == right_type){
                 return left_type;
             }
-            else if ((left_type == T_KEY_DOUBLE && right_type == T_KEY_INT)
-                    || (left_type == T_KEY_INT && right_type == T_KEY_DOUBLE))              
-            {
+            else if (left_type == T_KEY_INT && right_type == T_KEY_DOUBLE){
+                ast_node->data->op_node.left = ast_convert_int2float(ast_node->data->op_node.left);
                 return T_KEY_DOUBLE; 
+            }
+            else if (left_type == T_KEY_DOUBLE && right_type == T_KEY_INT){
+                ast_node->data->op_node.right = ast_convert_int2float(ast_node->data->op_node.right);
+                return T_KEY_DOUBLE;
             }
             else {
                 error_exit(SEM_TYPE_ERR, ast_node->line_num, "Types of operation not matching"); // <-- Come back to this
