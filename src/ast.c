@@ -90,3 +90,15 @@ ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, tok
 
     return leaf_node;
 }
+
+
+
+// IMPLICIT CONVERSION FUNCTION
+
+ast_node_t *ast_convert_int2float(ast_node_t *inner_node) {
+    ast_node_t *conv_node = ast_node_init(EXPR_INT2FLOAT, inner_node->line_num);
+
+    conv_node->data->imp_conversion.operand = inner_node;
+
+    return conv_node;
+}
