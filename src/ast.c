@@ -4,6 +4,7 @@
  *
  * @brief Source file for Abstract Syntax Tree building
  * @author Jakub Dufek (274855)
+ * @author Ondřej Kycl (xkyclon00)
  * @date 3. 10. 2026
  */
 
@@ -37,6 +38,15 @@ static ast_node_t *ast_node_init(ast_stmt_type_t stmt_type, unsigned line_num)
     node->line_num = line_num;
 
     return node;
+}
+
+
+ast_node_t *ast_convert_int2float(ast_node_t *inner_node) {
+    ast_node_t *conv_node = ast_node_init(EXPR_INT2FLOAT, inner_node->line_num);
+
+    conv_node->data->imp_conversion.operand = inner_node;
+
+    return conv_node;
 }
 
 
@@ -103,16 +113,4 @@ ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, tok
     leaf_node->data->lit_leaf_node.lit_value = lit_value;
 
     return leaf_node;
-}
-
-
-
-// IMPLICIT CONVERSION FUNCTION
-
-ast_node_t *ast_convert_int2float(ast_node_t *inner_node) {
-    ast_node_t *conv_node = ast_node_init(EXPR_INT2FLOAT, inner_node->line_num);
-
-    conv_node->data->imp_conversion.operand = inner_node;
-
-    return conv_node;
 }

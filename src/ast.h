@@ -4,6 +4,7 @@
  *
  * @brief Header file for Abstract Syntax Tree building
  * @author Jakub Dufek (274855)
+ * @author Ondřej Kycl (xkyclon00)
  * @date 3. 10. 2026
  */
 
@@ -34,6 +35,7 @@ typedef enum ast_stmt_type {
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
     EXPR_LITERAL,
+
     EXPR_INT2FLOAT
 } ast_stmt_type_t;
 
@@ -59,7 +61,7 @@ typedef struct {
 typedef struct {
     char id_val[MAX_LENGTH];
     token_type data_type;
-    ast_node_t *first_param;  /// param->next is next param, if NULL no param
+    ast_node_t *first_param;    /// param->next is next param, if NULL no param
     ast_node_t *block;
 } ast_definition_node_t;
 
@@ -96,8 +98,9 @@ typedef struct {
  * @brief Node for implicit conversion
  */
 typedef struct {
-    ast_node_t *operand; //Pointer to converted operand
+    ast_node_t *operand;    /// pointer to converted operand
 } expr_imp_conversion_t;
+
 
 
 //  MAIN NODE TYPES
@@ -107,7 +110,7 @@ typedef struct {
  * @brief Node representing block
  */
 struct ast_block_node {
-    ast_node_t *first;  /// first statement of block
+    ast_node_t *first;  /// Unit literal if empty block
     ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
 };
 
@@ -141,6 +144,19 @@ struct ast_node {
 
 
 
+//  HELPER FUNCTIONS
+
+/**
+ * @brief Creates subnode in ast for implicit conversion
+ * 
+ * @param inner_node 
+ * 
+ * @return New subnode which contains the new conversion and the operand for conversion
+ */
+ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
+
+
+
 //  AST INSERT FUNCTIONS
 
 /**
@@ -155,6 +171,19 @@ struct ast_node {
  */
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression);
+
+/**
+ * @brief Creates AST for function definition
+ * 
+ * @param value
+ * @param line_num
+ * @param data_type
+ * @param block
+ * @param first_param
+ * 
+ */
+ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
+                                        ast_node_t *block, ast_node_t *first_param);
 
 
 
@@ -195,15 +224,5 @@ ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
  */
 ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type);
 
-// IMPLICIT CONVERSION FUNCTION
-
-/**
- * @brief Creates subnode in ast for implicit conversion
- * 
- * @param inner_node 
- * 
- * @return New subnode which contains the new conversion and the operand for conversion
- */
-ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
 
 #endif
