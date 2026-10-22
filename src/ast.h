@@ -63,7 +63,10 @@ typedef struct {
     token_type data_type;
     ast_node_t *first_param;    /// param->next is next param, if NULL no param
     ast_node_t *block;
+    bool is_main;
 } ast_definition_node_t;
+
+
 
 /**
  * @struct expr_op_node_t
@@ -127,6 +130,7 @@ typedef union {
     expr_op_node_t op_node;
     expr_id_leaf_node_t id_leaf_node;
     expr_lit_leaf_node_t lit_leaf_node;
+    
     expr_imp_conversion_t imp_conversion;
     // TODO: other structures
 } ast_node_data_t;
@@ -160,6 +164,19 @@ ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
 //  AST INSERT FUNCTIONS
 
 /**
+ * @brief Creates node for new block
+ * 
+ * @param first ptr to first stmt
+ * @param line_num
+ * @param last ptr to last stmt (for insertion purposes)
+ * 
+ * @return AST node representing block
+ */
+ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *last);
+
+
+
+/**
  * @brief Creates AST for var/val declaration (usually one line of code)
  * 
  * @param value Value of var/val (key)
@@ -181,9 +198,10 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
  * @param block
  * @param first_param
  * 
+ * @return AST node representing function definition
  */
 ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
-                                        ast_node_t *block, ast_node_t *first_param);
+                                        ast_node_t *block, ast_node_t *first_param, bool is_main);
 
 
 
