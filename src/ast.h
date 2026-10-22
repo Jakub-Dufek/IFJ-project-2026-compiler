@@ -16,6 +16,7 @@
 #include "structures.h"
 
 typedef struct ast_node ast_node_t;
+typedef struct ast_block_node ast_block_node_t;
 
 
 //  ENUM TYPES
@@ -25,7 +26,10 @@ typedef struct ast_node ast_node_t;
  * @brief Enum for statement types of nodes
  */
 typedef enum ast_stmt_type {
+    AST_BLOCK,
+
     AST_DECLARATION,
+    AST_DEFINITION,
 
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
@@ -44,8 +48,19 @@ typedef struct {
     char id_val[MAX_LENGTH];
     bool is_mutable;
     token_type data_type;
-    ast_node_t *expression;     /// another node (abstract tree)
+    ast_node_t *expression;     /// expression subtree
 } ast_declaration_node_t;
+
+/**
+ * @struct ast_definition_node_t
+ * @brief Node for function definition
+ */
+typedef struct {
+    char id_val[MAX_LENGTH];
+    token_type data_type;
+    ast_node_t *first_param;  /// param->next is next param, if NULL no param
+    ast_node_t *block;
+} ast_definition_node_t;
 
 /**
  * @struct expr_op_node_t
@@ -80,11 +95,23 @@ typedef struct {
 //  MAIN NODE TYPES
 
 /**
+ * @struct ast_block_node_t
+ * @brief Node representing block
+ */
+struct ast_block_node {
+    ast_node_t *first;  /// first statement of block
+    ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
+};
+
+/**
  * @union ast_node_data_t
  * @brief Union of different nodes for different types of expressions
  */
 typedef union {
+    ast_block_node_t block_node;
+
     ast_declaration_node_t declaration_node;
+    ast_definition_node_t definition_node;
 
     expr_op_node_t op_node;
     expr_id_leaf_node_t id_leaf_node;
