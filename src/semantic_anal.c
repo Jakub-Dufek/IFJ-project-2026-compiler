@@ -10,97 +10,107 @@
  */
 
 //TODO: 
-//      Jak tu přesně funguje symtable?
-//      Volání funkcí: Sedí počet a typy předaných argumentů s definicí funkce?
+//      Popsat implicitní konverzi jako AI generated?
+//      Volání funkcí: Sedí počet a typy předaných argumentů s definicí funkce? , volání před lexikální definicí?
 //      Typ návratové hodnoty u funkce
-//      Automatické přiřazení typu, když není zadán? (možná to dělá už syntax)
 //      Synchronize Symtable, AST, 
+//      error_exit() leaks!!
 
 #include "semantic_anal.h"
 
-data_type sem_anal(ast_node_t *ast_node, symtable_bvs_node_t **symtable_root){
-    if (ast_node == NULL) {
-        return T_NO_TYPE;
-    }
-    switch (ast_node->stmt_type){
-        case AST_DECLARATION: {
-            data_type expr_type = sem_anal(ast_node->data->declaration_node.expression, symtable_root);
-            data_type var_type = ast_node->data->declaration_node.data_type;
+data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
+    while (ast_node != NULL) {
+        switch (ast_node->stmt_type){
+            case AST_DECLARATION: {
+                data_type expr_type = sem_anal(ast_node->data->declaration_node.expression, stack);
+                data_type var_type = ast_node->data->declaration_node.data_type;
 
-            if (var_type == expr_type){
+                // Static type deduction
+                if (var_type == T_NO_TYPE){
+                    if (expr_type == T_UNDEFINED){
+                        error_exit(SEM_TYPE_ERR, ast_node->line_num, "Static type deduction not possible for this expression"); // Jak se dostat sem??
+                    }
+                    var_type = expr_type;
+                    ast_node->data->declaration_node.data_type = var_type;
+                }
+            
+                // Node compatibility check in assignment
+                if (var_type == expr_type){
+                    //Everything good
+                }
+                else if (var_type == T_KEY_DOUBLE && expr_type == T_KEY_INT){
+                    ast_node->data->declaration_node.expression = ast_convert_int2float(ast_node->data->declaration_node.expression);
+                }
+                else if (var_type == T_KEY_INT && expr_type == T_KEY_DOUBLE){
+                    error_exit(SEM_TYPE_ERR, ast_node->line_num, "Cannot convert Double to Int");
+                }
+                else{
+                    error_exit(SEM_TYPE_ERR, ast_node->line_num, "Incompatible types assignment");
+                }
+                // Preparation for inserting into symtable
+                symbol_data_t new_symbol;
+                new_symbol.data_type = ast_node->data->declaration_node.data_type;
+                if (ast_node->data->declaration_node.is_mutable) {
+                    new_symbol.id_type = ID_VAR; 
+                }
+                else {
+                    new_symbol.id_type = ID_VAL;
+                }
+                // other attributes .... <--
+                stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->declaration_node.id_val, new_symbol);
+                break;
+            }
+            case EXPR_OPERATION: {
+                data_type left_type = sem_anal(ast_node->data->op_node.left, stack);
+                data_type right_type = sem_anal(ast_node->data->op_node.right, stack);
 
+                if (left_type == right_type){
+                    return left_type;
+                }
+                else if (left_type == T_KEY_INT && right_type == T_KEY_DOUBLE){
+                    ast_node->data->op_node.left = ast_convert_int2float(ast_node->data->op_node.left);
+                    return T_KEY_DOUBLE; 
+                }
+                else if (left_type == T_KEY_DOUBLE && right_type == T_KEY_INT){
+                    ast_node->data->op_node.right = ast_convert_int2float(ast_node->data->op_node.right);
+                    return T_KEY_DOUBLE;
+                }
+                else {
+                    error_exit(SEM_TYPE_ERR, ast_node->line_num, "Types of operation not matching"); // <-- Come back to this
+                }
+                break; 
             }
-            else if (var_type == T_KEY_DOUBLE && expr_type == T_KEY_INT){
-                ast_node->data->declaration_node.expression = ast_convert_int2float(ast_node->data->declaration_node.expression);
-            }
-            else if (var_type == T_KEY_INT && expr_type == T_KEY_DOUBLE){
-                error_exit(SEM_TYPE_ERR, ast_node->line_num, "Cannot convert Double to Int");
-            }
-            else{
-                error_exit(SEM_TYPE_ERR, ast_node->line_num, "Incompatible types assignment");
-            }
-            symbol_data_t new_symbol;
-            new_symbol.data_type = ast_node->data->declaration_node.data_type;
-            if (ast_node->data->declaration_node.is_mutable) {
-                new_symbol.id_type = ID_VAR; 
-            }
-            else {
-                new_symbol.id_type = ID_VAL;
-            }
-            // other attributes .... <--
+            case EXPR_LITERAL:
+                int lit_type = ast_node->data->lit_leaf_node.lit_type;
+                if (lit_type == T_DOUBLE_LITERAL){
+                    return T_KEY_DOUBLE;
+                }
+                else if (lit_type == T_INT_LITERAL){
+                    return T_KEY_INT;
+                }
+                else if (lit_type == T_STRING_LITERAL){
+                    return T_KEY_STRING;
+                }
+                else if (lit_type == T_UNIT_LITERAL){
+                    error_exit(SEM_TYPE_ERR, ast_node->line_num, "Cannot use Unit type in an expression");
+                }
+                else {                  // Maybe Boolean?
+                    return lit_type;
+                }
 
-            *symtable_root = symtable_insert(*symtable_root, ast_node->data->declaration_node.id_val, new_symbol);
-            break;
-        }
-        case EXPR_OPERATION: {
-            data_type left_type = sem_anal(ast_node->data->op_node.left, symtable_root);
-            data_type right_type = sem_anal(ast_node->data->op_node.right, symtable_root);
-
-            if (left_type == right_type){
-                return left_type;
+            case EXPR_IDENTIFIER: {
+                symtable_bvs_node_t *symtable_node = symtable_search_stack(stack, ast_node->data->id_leaf_node.id_val);
+                if(symtable_node == NULL){
+                    error_exit(SEM_UNDEF_ERR, ast_node->line_num, "Using non existing identifier");                     // <---- Come back to this
+                }
+                else{
+                    return symtable_node->symbol_data.data_type;
+                }
             }
-            else if (left_type == T_KEY_INT && right_type == T_KEY_DOUBLE){
-                ast_node->data->op_node.left = ast_convert_int2float(ast_node->data->op_node.left);
-                return T_KEY_DOUBLE; 
-            }
-            else if (left_type == T_KEY_DOUBLE && right_type == T_KEY_INT){
-                ast_node->data->op_node.right = ast_convert_int2float(ast_node->data->op_node.right);
-                return T_KEY_DOUBLE;
-            }
-            else {
-                error_exit(SEM_TYPE_ERR, ast_node->line_num, "Types of operation not matching"); // <-- Come back to this
-            }
-            break; 
-        }
-        case EXPR_LITERAL:
-            int lit_type = ast_node->data->lit_leaf_node.lit_type;
-            if (lit_type == T_DOUBLE_LITERAL){
-                return T_KEY_DOUBLE;
-            }
-            else if (lit_type == T_INT_LITERAL){
-                return T_KEY_INT;
-            }
-            else if (lit_type == T_STRING_LITERAL){
-                return T_KEY_STRING;
-            }
-            else if (lit_type == T_UNIT_LITERAL){
-                error_exit(SEM_TYPE_ERR, ast_node->line_num, "Cannot use Unit type in an expression");
-            }
-            else {                  // Maybe Boolean?
-                return lit_type;
-            }
-
-        case EXPR_IDENTIFIER: {
-            symtable_bvs_node_t *symtable_node;
-            if((symtable_node = symtable_find_symbol(*symtable_root, ast_node->data->id_leaf_node.id_val)) == NULL){
-                error_exit(SEM_UNDEF_ERR, ast_node->line_num, "Using non existing identifier");                     // <---- Come back to this
-            }
-            else{
-                return symtable_node->symbol_data.data_type;
-            }
-        }
-        default:
-            break;
+            default:
+                break;
+        }   
+        ast_node = ast_node->next;
     }
     return T_NO_TYPE;
  }
@@ -108,12 +118,17 @@ data_type sem_anal(ast_node_t *ast_node, symtable_bvs_node_t **symtable_root){
 
 
 void run_sem_anal(ast_node_t *ast_node) {
-    symtable_bvs_node_t *symtable = symtable_initialize();
+    symtable_stack_t symtable_stack;
+    symtable_stack_initialize(&symtable_stack);
 
-    sem_anal(ast_node, &symtable);
-    /*if (sem_anal(ast_node, &symtable) == T_NO_TYPE){
+    symtable_stack_push(&symtable_stack);
+
+    sem_anal(ast_node, &symtable_stack);
+
+    symtable_stack_pop(&symtable_stack);
+
+    /*if (sem_anal(ast_node, &symtable) == !!!!!!!!!!-->T_NO_TYPE<--------){
         error_exit(SEM_UNDEF_ERR, 0, "Main function not defined"); //<-- COme back to this
     }*/
-
-    symtable_destructor(symtable);
+    
 }

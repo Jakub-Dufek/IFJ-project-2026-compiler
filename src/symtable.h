@@ -19,6 +19,10 @@
 #include <string.h> 
 
 //definitions:
+
+
+//SYMTABLE STRUCTURES
+
 /* 
  description of data types with enum from "structures.h":
  0-6 - (T_UNDEFINED = NO_VALUE = 0, T_KEY_INT = 1, T_KEY_DOUBLE = 2,
@@ -31,26 +35,30 @@ typedef token_type data_type; //
  id_type description of an id type of a symbol with enum
 */
 typedef enum {
-    ID_UNDEF = 0, 
     ID_VAL,
     ID_VAR,
     ID_FUNC,
-    ID_LABEL // <-- Come back to this
+    //ID_LABEL // <-- Come back to this
 } id_type;
+/*
 
-
+*/
+typedef struct {
+    unsigned param_num;
+    data_type *param_types; // TODO dynamické pole parametrů
+    bool is_defined;
+    /// is @main ??? <-- Come back to this
+} func_info_t;
 /* 
  symbol_data_t is a structure for storage of data related to a symbol
 */
-typedef struct symbol_data_t {
+typedef struct {
     data_type data_type; 
     id_type id_type;
-    unsigned index; //var, val <-- Come back to this
-    bool defined; //func <-- Come back to this
 
-    /// int value;? <-- Come back to this
-    ///func PARAMETERS and its types !!! <-- Come back to this
-    /// is @main ??? <-- Come back to this
+    func_info_t func_info;
+    // index - ukazatel do paměti var, val <-- Come back to this
+
     //// label ??? <-- Come back to this
 } symbol_data_t;
 
@@ -65,6 +73,26 @@ typedef struct symtable_bvs_node_t {
     int weight;
     unsigned height;
 } symtable_bvs_node_t;   
+
+
+//STACK STRUCTURES
+
+/*
+ a symtable instance on the stack
+*/
+typedef struct symtable_instance_t{
+    symtable_bvs_node_t *symtable;
+    struct symtable_instance_t *next;
+} symtable_instance_t;
+/*
+ stack of symtables
+*/
+typedef struct {
+    symtable_instance_t *top;
+} symtable_stack_t;
+
+
+//SYMTABLE FUNCTIONS
 
 /*
  initialization of the symbol table
@@ -107,4 +135,32 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *rootPtr, char *key, sy
 
 void symtable_destructor(symtable_bvs_node_t *root_ptr);
 
+
+//STACK FUNTIONS
+
+/*
+ initialization of the symbol table stack
+*/
+void symtable_stack_initialize(symtable_stack_t *stack);
+/*
+ puts new symbol table instance on top of the stack 
+*/
+void symtable_stack_push(symtable_stack_t *stack);
+/*
+ deletes the symbol table instance from top of the stack
+*/
+void symtable_stack_pop(symtable_stack_t *stack);
+/*
+ obtains a pointer to an instance on top of the stack
+*/
+symtable_bvs_node_t *symtable_stack_top(symtable_stack_t *stack);
+/*
+ checks if there are any instances on the stack
+*/
+bool symtable_stack_empty(symtable_stack_t *stack); 
+
+/*
+ function searches for a symbol in all instances on the stack, returns location
+*/
+symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key);
 #endif

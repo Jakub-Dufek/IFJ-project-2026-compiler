@@ -10,13 +10,16 @@
 */
 
 //TODO : Upravit popisky,
+//       Popsat Stack search jako AI funkci?
 //       .clang-format,
-//       GetData funkce
+//       GetData, funkce
 //       stejné identifikátory 
-//       volání funkcí před lexikální definicí?
 //       line on which error ocurred in ifj26, stejné identifikátory (řádek v insert!)
 
 #include "symtable.h"
+
+
+// SYMTABLE
 
 symtable_bvs_node_t *symtable_initialize() {
     return NULL;
@@ -156,3 +159,51 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr){
     free(root_ptr);
 }
 
+
+// STACK
+
+void symtable_stack_initialize(symtable_stack_t *stack){
+    stack->top = NULL;
+}
+
+void symtable_stack_push(symtable_stack_t *stack){
+    symtable_instance_t *new_instance = malloc(sizeof(symtable_instance_t));
+    
+    new_instance->symtable = symtable_initialize();
+    new_instance->next = stack->top;
+    stack->top = new_instance;
+}
+
+void symtable_stack_pop(symtable_stack_t *stack){
+    if (stack->top != NULL){
+        symtable_instance_t *old_top = stack->top;
+        stack->top = stack->top->next;
+
+        symtable_destructor(old_top->symtable);
+        free(old_top);
+    }
+}
+
+symtable_bvs_node_t *symtable_stack_top(symtable_stack_t *stack){
+    if (stack->top == NULL){
+        return NULL;  //chybovy kod 40/99
+    }
+    return stack->top->symtable;
+}
+
+bool symtable_stack_empty(symtable_stack_t *stack){ // Nutné??
+    return (stack->top == NULL);
+}
+
+
+symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
+    symtable_instance_t *current = stack->top;
+    while (current != NULL){
+        symtable_bvs_node_t *found = symtable_find_symbol(current->symtable, key);
+        if (found != NULL){
+            return found;
+        }
+        current = current->next;
+    }
+    return NULL;
+}

@@ -23,7 +23,7 @@
 /*
  
 */
-data_type sem_anal(ast_node_t *ast_node, symtable_bvs_node_t **symtable_root);
+data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack);
 
 void run_sem_anal(ast_node_t *ast_node);
 #endif
