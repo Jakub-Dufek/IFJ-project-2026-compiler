@@ -66,10 +66,10 @@ for file in *.c; do
             expected_output=""
             expect_empty=1
             ;;
-        "example_err_unknown_type")
-            expected_exit=1
-            expected_output="unknown type"
-            expect_empty=0
+        "ast_test2")
+            expected_exit=0
+            expected_output=""
+            expect_empty=1
             ;;
         "example_err_silent_fail")
             expected_exit=1
