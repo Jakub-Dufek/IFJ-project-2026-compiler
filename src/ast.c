@@ -94,6 +94,12 @@ ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, 
 }
 
 
+ast_node_t *ast_insert_param(ast_node_t *next)
+{
+    //TODO: ast_insert_param
+}
+
+
 
 //  EXPR INSERT FUNCTIONS
 

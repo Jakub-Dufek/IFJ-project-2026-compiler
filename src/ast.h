@@ -203,6 +203,13 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
 ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
                                         ast_node_t *block, ast_node_t *first_param, bool is_main);
 
+/**
+ * @brief Creates AST for function parameter
+ * 
+ * @return AST node representing param list
+ */
+ast_node_t *ast_insert_param(ast_node_t *next);
+
 
 
 //  EXPR INSERT FUNCTIONS
