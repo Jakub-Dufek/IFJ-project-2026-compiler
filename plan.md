@@ -76,3 +76,6 @@ Deadline xkyclon00:
 
 Deadline 274855:
 - 25\. 10. 2026: Parse functions, insert fns into ast, define global and local switches
+
+# 25. 10. 2026 - Change of plans
+- Moved deadlines to 1. 11.
