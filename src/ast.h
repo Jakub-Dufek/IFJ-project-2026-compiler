@@ -4,6 +4,7 @@
  *
  * @brief Header file for Abstract Syntax Tree building
  * @author Jakub Dufek (274855)
+ * @author Ondřej Kycl (xkyclon00)
  * @date 3. 10. 2026
  */
 
@@ -16,6 +17,7 @@
 #include "structures.h"
 
 typedef struct ast_node ast_node_t;
+typedef struct ast_block_node ast_block_node_t;
 
 
 //  ENUM TYPES
@@ -25,11 +27,16 @@ typedef struct ast_node ast_node_t;
  * @brief Enum for statement types of nodes
  */
 typedef enum ast_stmt_type {
+    AST_BLOCK,
+
     AST_DECLARATION,
+    AST_DEFINITION,
 
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
-    EXPR_LITERAL
+    EXPR_LITERAL,
+
+    EXPR_INT2FLOAT
 } ast_stmt_type_t;
 
 
@@ -44,8 +51,22 @@ typedef struct {
     char id_val[MAX_LENGTH];
     bool is_mutable;
     token_type data_type;
-    ast_node_t *expression;     /// another node (abstract tree)
+    ast_node_t *expression;     /// expression subtree
 } ast_declaration_node_t;
+
+/**
+ * @struct ast_definition_node_t
+ * @brief Node for function definition
+ */
+typedef struct {
+    char id_val[MAX_LENGTH];
+    token_type data_type;
+    ast_node_t *first_param;    /// param->next is next param, if NULL no param
+    ast_node_t *block;
+    bool is_main;
+} ast_definition_node_t;
+
+
 
 /**
  * @struct expr_op_node_t
@@ -75,20 +96,42 @@ typedef struct {
     token_value_t lit_value;
 } expr_lit_leaf_node_t;
 
+/**
+ * @struct expr_imp_leaf_node_t
+ * @brief Node for implicit conversion
+ */
+typedef struct {
+    ast_node_t *operand;    /// pointer to converted operand
+} expr_imp_conversion_t;
+
 
 
 //  MAIN NODE TYPES
+
+/**
+ * @struct ast_block_node_t
+ * @brief Node representing block
+ */
+struct ast_block_node {
+    ast_node_t *first;  /// Unit literal if empty block
+    ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
+};
 
 /**
  * @union ast_node_data_t
  * @brief Union of different nodes for different types of expressions
  */
 typedef union {
+    ast_block_node_t block_node;
+
     ast_declaration_node_t declaration_node;
+    ast_definition_node_t definition_node;
 
     expr_op_node_t op_node;
     expr_id_leaf_node_t id_leaf_node;
     expr_lit_leaf_node_t lit_leaf_node;
+    
+    expr_imp_conversion_t imp_conversion;
     // TODO: other structures
 } ast_node_data_t;
 
@@ -105,7 +148,33 @@ struct ast_node {
 
 
 
+//  HELPER FUNCTIONS
+
+/**
+ * @brief Creates subnode in ast for implicit conversion
+ * 
+ * @param inner_node 
+ * 
+ * @return New subnode which contains the new conversion and the operand for conversion
+ */
+ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
+
+
+
 //  AST INSERT FUNCTIONS
+
+/**
+ * @brief Creates node for new block
+ * 
+ * @param first ptr to first stmt
+ * @param line_num
+ * @param last ptr to last stmt (for insertion purposes)
+ * 
+ * @return AST node representing block
+ */
+ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *last);
+
+
 
 /**
  * @brief Creates AST for var/val declaration (usually one line of code)
@@ -119,6 +188,20 @@ struct ast_node {
  */
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression);
+
+/**
+ * @brief Creates AST for function definition
+ * 
+ * @param value
+ * @param line_num
+ * @param data_type
+ * @param block
+ * @param first_param
+ * 
+ * @return AST node representing function definition
+ */
+ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
+                                        ast_node_t *block, ast_node_t *first_param, bool is_main);
 
 
 
@@ -158,7 +241,6 @@ ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
  * @return Allocated node for given literal
  */
 ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type);
-
 
 
 #endif

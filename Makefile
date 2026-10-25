@@ -9,7 +9,7 @@
 
 
 #		.PHONY
-.PHONY: all pack clean help test-err test-scan test-ast1
+.PHONY: all pack clean help test test-err test-scan test-ast
 
 #		FLAGS
 CC = gcc
@@ -29,6 +29,7 @@ all: build/compiler
 
 clean:
 	rm -rf build/
+	rm -rf tests/test_logs/
 
 help:
 	@echo ==================== HELP ====================
@@ -36,31 +37,33 @@ help:
 	@echo make clean 		- Removes build/
 	@echo make help			- Shows help feed
 	@echo 
-	@echo make test-err		- Tests error handling
+	@echo make test			- Tests entire compiler
+	@echo make test-err		- Tests error module
 	@echo make test-scan	- Tests scanner module
-	@echo make test-ast1	- Tests ast insert module
+	@echo make test-ast		- Tests ast insert module
 	@echo ==================== HELP ====================
 
 
 #		TEST COMMANDS
-test-err: build/err_test.o build/error.o
+test: build/compiler
+	@bash tests/compiler_tests/runtests.sh
+
+test-err: build/err_test.o build/error.o build/memory.o build/ast.o
 	$(CC) $(CFLAGS+) $^ -o build/err_test
 	-./build/err_test
 
-test-scan: build/scanner_test.o build/scanner.o
-	$(CC) $(CFLAGS+) $^ -o build/scanner_test
-	-./build/scanner_test
+test-scan: build/scanner_test
+	@bash tests/scanner_tests/runtests.sh
 
-test-ast1: build/ast_test1.o build/ast.o build/semantic_anal.o build/symtable.o build/error.o build/memory.o
-	$(CC) $(CFLAGS+) $^ -o build/ast_test1
-	./build/ast_test1
+test-ast: build/ast.o build/semantic_anal.o build/symtable.o build/error.o build/memory.o
+	@bash tests/ast_tests/runtests.sh
 
 
 #		RULES
 build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build/%.o: tests/%.c | build
+build/%.o: tests/error_tests/%.c | build
 	$(CC) $(CFLAGS+) -c $< -o $@
 
 
@@ -70,6 +73,9 @@ build:
 
 build/compiler: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
+
+build/scanner_test: tests/scanner_tests/scanner_test.c build/scanner.o build/error.o build/memory.o
+	$(CC) $(CFLAGS+) $^ -o $@
 
 
 #		HEADER FILE UPDATE HANDLING

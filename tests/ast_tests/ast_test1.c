@@ -1,4 +1,4 @@
-#include "../src/ast.h"
+#include "../../src/ast.h"
 #include "memory.h"
 #include "semantic_anal.h"
 
