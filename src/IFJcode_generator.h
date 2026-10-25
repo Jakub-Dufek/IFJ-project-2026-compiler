@@ -12,8 +12,26 @@
 #ifndef IFJCODE_GENERATOR_H
 #define IFJCODE_GENERATOR_H
 
+#include "ast.h"
 
 
+void generate_block(ast_node_t *node);
+
+void generate_declaration(ast_node_t *node);
+
+void generate_function(ast_node_t *node);
+
+void generate_operation(ast_node_t *node);
+
+void generate_identifier(ast_node_t *node);
+
+void generate_literal(ast_node_t *node, char *print_before);
+
+
+
+void process_node(ast_node_t *node, char *message_before);
+
+void generate_IFJcode26(ast_node_t *root);
 
 
 #endif
