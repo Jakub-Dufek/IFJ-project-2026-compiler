@@ -15,17 +15,38 @@
 
 
 token_type find_operand_type (ast_node_t *node) {
-    token_type type;
-    if (node->stmt_type == EXPR_LITERAL && node->data->lit_leaf_node.lit_type == T_INT_LITERAL) {
-        type = T_KEY_INT;
-    }
-    else if (node->stmt_type == EXPR_LITERAL && node->data->lit_leaf_node.lit_type == T_DOUBLE_LITERAL) {
-        type = T_KEY_DOUBLE;
-    }
-    else if (node->stmt_type == EXPR_IDENTIFIER) {
+    token_type type = T_UNDEFINED;
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        switch (node->data->lit_leaf_node.lit_type)
+        {
+        case T_INT_LITERAL:
+            type = T_KEY_INT;
+            break;
+
+        case T_DOUBLE_LITERAL:
+            type = T_KEY_DOUBLE;
+            break;
+
+        case T_STRING_LITERAL:
+            type = T_KEY_STRING;
+            break;
+        
+        default:
+            break;
+        }
+        break;
+    
+    case EXPR_IDENTIFIER:
         type = node->data->id_leaf_node.symbol_data.data_type;
-    }
-    else if (node->stmt_type == EXPR_OPERATION) {
+        break;
+
+    case EXPR_INT2FLOAT:
+        type = T_KEY_DOUBLE;
+        break;
+    
+    case EXPR_OPERATION:
         token_type type_left = find_operand_type(node->data->op_node.left);
         token_type type_right = find_operand_type(node->data->op_node.right);
         if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
@@ -35,8 +56,12 @@ token_type find_operand_type (ast_node_t *node) {
             type = T_KEY_DOUBLE;
         }
         else {
-            // #TODO chyba??? je mozne delat operace nad stringy nebo Units?
+            // #TODO pro stringy, kdyby bylo potřeba
         }
+        break;
+
+    default:
+        break;
     }
 
     return type;
@@ -51,6 +76,7 @@ void generate_operation(ast_node_t *node) {
     {
     case T_PLUS:
         printf("ADDS\n");
+        // #TODO dodělat konkatenaci, můžu použít find_operand_type()
         break;
 
     case T_MINUS:
@@ -66,6 +92,9 @@ void generate_operation(ast_node_t *node) {
         }
         else if (div_type_left == T_KEY_DOUBLE || div_type_right == T_KEY_DOUBLE) {
             printf("DIVS\n");
+        }
+        else {
+            // #TODO chyba, nejde dělit nic jiného než INT nebo DOUBLE
         }
         break;
 
@@ -123,15 +152,15 @@ void generate_literal(ast_node_t *node, char *print_before) {
     switch (node->data->lit_leaf_node.lit_type)
     {
     case T_STRING_LITERAL:
-        printf("string@%s ", node->data->lit_leaf_node.lit_value.string_value);
+        printf("string@%s\n", node->data->lit_leaf_node.lit_value.string_value);
         break;
     
     case T_INT_LITERAL:
-        printf("int@%i ", node->data->lit_leaf_node.lit_value.int_value);
+        printf("int@%i\n", node->data->lit_leaf_node.lit_value.int_value);
         break;
 
     case T_DOUBLE_LITERAL:
-        printf("float@%lf ", node->data->lit_leaf_node.lit_value.double_value);
+        printf("float@%a\n", node->data->lit_leaf_node.lit_value.double_value);
         break;
 
     case T_UNIT_LITERAL:
