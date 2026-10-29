@@ -437,13 +437,7 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
                 if (line_start != true) {
                     depth_of_brackets++;
                 }
-                // If the whole expression is (), send it as a Unit literal
-                if ((character = getchar()) == ')') {
-                    token.type = T_UNIT_LITERAL;
-                } else {
-                    ungetc(character, stdin);
-                    token.type = T_L_ROUND_BRACKET;
-                }
+                token.type = T_L_ROUND_BRACKET;
                 break;
             case ')':
                 if (depth_of_brackets == 0) {
