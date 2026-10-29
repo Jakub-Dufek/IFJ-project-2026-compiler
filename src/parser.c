@@ -60,6 +60,75 @@ void parse_prologue()
 
 
 
+//  HELPER PARSERS
+
+/**
+ * TODO: comment
+ */
+static ast_node_t *parse_block();
+
+/**
+ * @brief Parses [: type] in declaration (call after recieving T_COLON)
+ * 
+ * @return data type
+ */
+static token_type parse_optional_type_def()
+{
+    token_t current_token = get_next_token();
+    token_type data_type;
+
+    // if next token anything but data type keyword
+    if(current_token.type <= T_KEY_INT || current_token.type >= T_KEY_UNIT) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected data type");
+    }
+    else {
+        data_type = current_token.type;
+    }
+}
+
+
+/**
+ * @brief Parses parameters through recursion
+ * 
+ * @param current_token
+ * 
+ * @return pointer to first param, ptr->next is next param, NULL if no param
+ */
+static ast_node_t *parse_param(token_t current_token) // TODO: check end recursion logic
+{
+    // end of recursion
+    if(current_token.type == T_R_ROUND_BRACKET) {
+        return NULL;
+    }
+
+    // id
+    if(current_token.type != T_IDENTIFIER) {
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect function parameter format");
+    }
+    char value[MAX_LENGTH];
+    strcpy(value, current_token.value.string_value);
+
+    unsigned line_num = current_token.line_num;
+
+    // [: type]
+    current_token = get_next_token();
+    token_type data_type = T_NO_TYPE;
+
+    if(current_token.type == T_COLON) {
+        data_type = parse_optional_type_def();
+        current_token = get_next_token();
+    }
+
+    // ,
+    if(current_token.type == T_COMMA) {
+        current_token = get_next_token();
+    }
+
+    return ast_insert_param(value, line_num, data_type, parse_param(current_token)); // recursive calling
+}
+
+
+
 //  LOCAL PARSING FUNCTIONS
 
 ast_node_t *parse_var_declaration(token_t current_token)
@@ -161,55 +230,6 @@ ast_node_t *parse_fn_definition()
 
 
 
-//  HELPER PARSERS
-
-ast_node_t *parse_param(token_t current_token)
-{
-    // end of recursion
-    if(current_token.type == T_R_ROUND_BRACKET) {
-        return NULL;
-    }
-    // id
-    if(current_token.type != T_IDENTIFIER) {
-        error_exit(SYNT_ERR, current_token.line_num, "Incorrect function parameter format");
-    }
-    char value[MAX_LENGTH];
-    strcpy(value, current_token.value.string_value);
-
-    //TODO: SYNC PART BELOW WITH VAR DECLARATION THROUGH SHARED FUNCTION
-
-    // [: type]
-    current_token = get_next_token();
-    token_type data_type;
-
-    if(current_token.type == T_ASSIGN) {
-        data_type = T_NO_TYPE;
-    }
-    else if(current_token.type == T_COLON) {
-        current_token = get_next_token();
-        // if next token anything but data type keyword
-        if(current_token.type <= T_KEY_INT || current_token.type >= T_KEY_UNIT) {
-            error_exit(SYNT_ERR, current_token.line_num, "Expected data type");
-        }
-        else {
-            data_type = current_token.type;
-        }
-    }
-
-    // ,
-    current_token = get_next_token();
-    if(current_token.type == T_COMMA) {
-        current_token = get_next_token();
-    }
-
-    // recursive calling
-    ast_node_t *param = ast_insert_param(parse_param(current_token)); // TODO: ast_insert_param function
-
-    return param;
-}
-
-
-
 //  MAIN PARSING SWITCHES
 
 ast_node_t *parse_next_local(token_t current_token)
@@ -245,12 +265,6 @@ ast_node_t *parse_next_global(token_t current_token)
 
 
 //  MAIN PARSER LOOPS
-
-ast_node_t *parse_block()
-{
-    //TODO: block parsing
-}
-
 
 ast_node_t *build_ast()
 {

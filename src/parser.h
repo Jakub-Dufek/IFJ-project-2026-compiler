@@ -53,13 +53,6 @@ ast_node_t *parse_fn_definition();
 
 
 
-//  HELPER PARSERS
-
-//TODO: comment
-ast_node_t *parse_param(token_t current_token);
-
-
-
 //  MAIN PARSING SWITCHES
 
 /**
@@ -83,10 +76,7 @@ ast_node_t *parse_next_global(token_t current_token);
 
 
 
-//  MAIN PARSER LOOPS
-
-//TODO: comment
-ast_node_t *parse_block();
+//  MAIN PARSER LOOP
 
 /**
  * @brief Parses entire programme and builds AST for further analysis and compiling

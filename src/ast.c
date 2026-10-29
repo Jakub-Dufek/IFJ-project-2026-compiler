@@ -64,6 +64,12 @@ ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *l
 }
 
 
+ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_type data_type, ast_node_t *next)
+{
+    //TODO: ast_insert_param
+}
+
+
 
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression)
@@ -91,12 +97,6 @@ ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, 
     current_node->data->definition_node.is_main = is_main;
 
     return current_node;
-}
-
-
-ast_node_t *ast_insert_param(ast_node_t *next)
-{
-    //TODO: ast_insert_param
 }
 
 
