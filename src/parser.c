@@ -235,7 +235,7 @@ ast_node_t *parse_fn_definition()
 
     //TODO: INDENT DEDENT
 
-    return ast_insert_fn_definition(value, line_num, T_KEY_UNIT, NULL, NULL, true); //TODO: everything past T_KEY_UNIT
+    return ast_insert_fn_definition(value, line_num, data_type, NULL, param, false); //TODO: block AND determine whether block or change it
 }
 
 
