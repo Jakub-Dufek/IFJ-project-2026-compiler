@@ -66,7 +66,13 @@ ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *l
 
 ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_type data_type, ast_node_t *next)
 {
-    //TODO: ast_insert_param
+    ast_node_t *current_node = ast_node_init(AST_PARAM, line_num);
+
+    current_node->next = next;
+    current_node->data->param_node.data_type = data_type;
+    strcpy(current_node->data->param_node.id_val, value);
+
+    return current_node;
 }
 
 
