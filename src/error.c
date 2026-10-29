@@ -16,7 +16,7 @@
 #include "ast.h"
 
 
-void error_exit(int err_code, unsigned line, const char *fmt, ...)
+void error_exit(err_code_t err_code, unsigned line, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

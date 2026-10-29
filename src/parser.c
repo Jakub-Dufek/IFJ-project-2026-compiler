@@ -65,7 +65,10 @@ void parse_prologue()
 /**
  * TODO: comment
  */
-static ast_node_t *parse_block();
+static ast_node_t *parse_block()
+{
+    //TODO: block parsing
+}
 
 /**
  * @brief Parses [: type] in declaration (call after recieving T_COLON)
@@ -94,7 +97,7 @@ static token_type parse_optional_type_def()
  * 
  * @return pointer to first param, ptr->next is next param, NULL if no param
  */
-static ast_node_t *parse_param(token_t current_token) // TODO: check end recursion logic
+static ast_node_t *parse_param(token_t current_token)
 {
     // end of recursion
     if(current_token.type == T_R_ROUND_BRACKET) {
@@ -107,7 +110,6 @@ static ast_node_t *parse_param(token_t current_token) // TODO: check end recursi
     }
     char value[MAX_LENGTH];
     strcpy(value, current_token.value.string_value);
-
     unsigned line_num = current_token.line_num;
 
     // [: type]
@@ -133,43 +135,36 @@ static ast_node_t *parse_param(token_t current_token) // TODO: check end recursi
 
 ast_node_t *parse_var_declaration(token_t current_token)
 {
-    // collect data from var/val token  
+    // var/val
     bool is_mutable = false;
     if(current_token.type == T_KEY_VAR) {
         is_mutable = true;
     }
 
+    // id
     current_token = get_next_token();
     if(current_token.type != T_IDENTIFIER) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected identifier");
     }
-
-    // collect data from id token
     char value[MAX_LENGTH];
     strcpy(value, current_token.value.string_value);
     unsigned line_num = current_token.line_num;
 
-    // determine whether to define data type or not
+    // [: type]
     current_token = get_next_token();
-    token_type data_type;
+    token_type data_type = T_NO_TYPE;
 
-    // no type specified
-    if(current_token.type == T_ASSIGN) {
-        data_type = T_NO_TYPE;
-    }
-    else if(current_token.type == T_COLON) {
+    if(current_token.type == T_COLON) {
+        data_type = parse_optional_type_def();
         current_token = get_next_token();
-
-        // if next token anything but data type keyword
-        if(current_token.type <= T_KEY_INT || current_token.type >= T_KEY_UNIT) {
-            error_exit(SYNT_ERR, current_token.line_num, "Expected data type");
-        }
-        data_type = current_token.type;
     }
-    else {
+
+    // =
+    if(current_token.type != T_ASSIGN) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected assign or colon");
     }
 
+    // expression
     ast_node_t *expression = parse_expression();
     return ast_insert_var_declaration(value, line_num, is_mutable, data_type, expression);
 }
@@ -210,17 +205,32 @@ ast_node_t *parse_fn_definition()
     strcpy(value, current_token.value.string_value);
     unsigned line_num = current_token.line_num;
 
-    // parameters
+    // (
     current_token = get_next_token();
     if(current_token.type != T_L_ROUND_BRACKET) {
         error_exit(SYNT_ERR, current_token.line_num, "Incorrect function definition format");
     }
+
+    // params )
     current_token = get_next_token();
     ast_node_t *param = parse_param(current_token);
 
-    //TODO: [: type]
-    //TODO: =
-    //TODO: '\n'
+    // [: type]
+    current_token = get_next_token();
+    token_type data_type = T_NO_TYPE;
+
+    if(current_token.type == T_COLON) {
+        data_type = parse_optional_type_def();
+        current_token = get_next_token();
+    }
+
+    // =
+    current_token = get_next_token();
+    if(current_token.type != T_ASSIGN) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected colon or assign");
+    }
+    
+    // TODO: giant if elif else part with determining if stmt or call or block with newline etc
 
 
     //TODO: INDENT DEDENT
