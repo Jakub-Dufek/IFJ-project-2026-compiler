@@ -29,15 +29,11 @@ int main()
     // (INDENT) var x : Int = 10 + 55
     ast_node_t *block = ast_insert_block(declaration, LINE_NUM, declaration);
 
-    // ()
-    token_value_t null_lit = {0};
-    ast_node_t *unit_lit = expr_insert_lit_leaf(null_lit, LINE_NUM, T_KEY_UNIT);
-
 /*  @main
     def main(): Unit =
         var x : Int = 10 + 55   */
     char main_str[MAX_LENGTH] = "main";
-    ast_node_t *definition = ast_insert_fn_definition(main_str, LINE_NUM, T_KEY_UNIT, block, unit_lit, true);
+    ast_node_t *definition = ast_insert_fn_definition(main_str, LINE_NUM, T_KEY_UNIT, block, NULL, true);
 
 
 
