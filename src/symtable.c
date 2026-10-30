@@ -168,7 +168,10 @@ void symtable_stack_initialize(symtable_stack_t *stack){
 
 void symtable_stack_push(symtable_stack_t *stack){
     symtable_instance_t *new_instance = malloc(sizeof(symtable_instance_t));
-    
+    if (new_instance == NULL){
+        error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
+        //return;
+    }
     new_instance->symtable = symtable_initialize();
     new_instance->next = stack->top;
     stack->top = new_instance;
@@ -206,4 +209,44 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
         current = current->next;
     }
     return NULL;
+}
+
+
+// LINKED LIST
+
+void param_type_list_initialize(param_type_list_t *l){
+    l->first = NULL;
+    l->last = NULL;
+}
+
+void param_type_list_insert(param_type_list_t *l, data_type type){
+    if (l->last != NULL){
+        param_type_t *new_param_type = (param_type_t *) malloc(sizeof(param_type_t));
+        if (new_param_type == NULL){
+            error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
+            //return;
+        }
+        new_param_type->type = type;
+        new_param_type->next_ptr = NULL;
+
+        if (l->first == NULL){
+            l->first = new_param_type;
+            l->last = new_param_type;
+        }
+        else {
+            l->last->next_ptr = new_param_type;
+            l->last = new_param_type;
+        }
+    }
+}
+
+void param_list_destroy(param_type_list_t *l) {
+    param_type_t *current;
+
+    while (l->first != NULL) {
+        current = l->first;
+        l->first = l->first->next_ptr; 
+        free(current);
+    }
+    l->last = NULL; 
 }
