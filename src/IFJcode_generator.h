@@ -14,6 +14,10 @@
 
 #include "ast.h"
 
+void print_string_literal(char *string);
+
+token_type find_operand_type (ast_node_t *node);
+
 
 void generate_block(ast_node_t *node);
 
@@ -23,7 +27,7 @@ void generate_function(ast_node_t *node);
 
 void generate_operation(ast_node_t *node);
 
-void generate_identifier(ast_node_t *node);
+void generate_identifier(ast_node_t *node, char *print_before);
 
 void generate_literal(ast_node_t *node, char *print_before);
 

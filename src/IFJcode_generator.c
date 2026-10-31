@@ -14,6 +14,19 @@
 #include <stdio.h>
 
 
+void print_string_literal(char *string) {
+    printf("string@");
+    for (char idx; string[idx] != '\0'; idx++) {
+        if (string[idx] <= 32 || string[idx] == '#' || string[idx] == '\\') {
+            printf("\\%03u", (unsigned)string[idx]);
+        }
+        else {
+            putchar(string[idx]);
+        }
+    }
+    putchar('\n');
+}
+
 token_type find_operand_type (ast_node_t *node) {
     token_type type = T_UNDEFINED;
     switch (node->stmt_type)
@@ -34,6 +47,7 @@ token_type find_operand_type (ast_node_t *node) {
             break;
         
         default:
+            type = T_UNDEFINED;
             break;
         }
         break;
@@ -65,6 +79,19 @@ token_type find_operand_type (ast_node_t *node) {
     }
 
     return type;
+}
+
+
+void generate_block(ast_node_t *node) {
+
+}
+
+void generate_declaration(ast_node_t *node) {
+    
+}
+
+void generate_function(ast_node_t *node) {
+
 }
 
 void generate_operation(ast_node_t *node) {
@@ -138,7 +165,7 @@ void generate_operation(ast_node_t *node) {
     return;
 }
 
-void generate_identifier(ast_node_t *node) {
+void generate_identifier(ast_node_t *node, char *print_before) {
     // #TODO implementace
 
     return;
@@ -152,7 +179,8 @@ void generate_literal(ast_node_t *node, char *print_before) {
     switch (node->data->lit_leaf_node.lit_type)
     {
     case T_STRING_LITERAL:
-        printf("string@%s\n", node->data->lit_leaf_node.lit_value.string_value);
+        print_string_literal(node->data->lit_leaf_node.lit_value.string_value);
+        //printf("string@%s\n", node->data->lit_leaf_node.lit_value.string_value);
         break;
     
     case T_INT_LITERAL:
@@ -195,7 +223,7 @@ void process_node(ast_node_t *node, char *message_before) {
         break;
 
     case EXPR_IDENTIFIER:
-        generate_identifier(node);
+        generate_identifier(node, message_before);
         break;
 
     case EXPR_LITERAL:
@@ -203,7 +231,8 @@ void process_node(ast_node_t *node, char *message_before) {
         break;
 
     case EXPR_INT2FLOAT:
-        /* code */
+        process_node(node->data->imp_conversion.operand, "PUSHS ");
+        printf("INT2FLOATS\n");
         break;
     
     default:
