@@ -45,9 +45,9 @@ typedef enum {
 */
 typedef struct {
     unsigned param_num;
-    data_type *param_types; // TODO dynamické pole parametrů
+    param_type_list_t *param_types;
     bool is_defined;
-    /// is @main ??? <-- Come back to this
+    bool is_main;// <-- Come back to this
 } func_info_t;
 /* 
  symbol_data_t is a structure for storage of data related to a symbol

@@ -21,6 +21,57 @@
 data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
     while (ast_node != NULL) {
         switch (ast_node->stmt_type){
+            case AST_DEFINITION: {
+                symbol_data_t new_symbol;
+                new_symbol.data_type = ast_node->data->definition_node.data_type;
+                new_symbol.id_type = ID_FUNC; // ID_VAL !!
+                param_type_list_t param_type_list;
+                param_type_list_initialize(&param_type_list);
+                unsigned param_counter = 0;
+                ast_node_t *parameter = ast_node->data->definition_node.first_param;
+                while (parameter != NULL){
+                    param_type_list_insert(&param_type_list, parameter->data->declaration_node.data_type);
+                    param_counter++;
+                    parameter = parameter->next;
+                }
+                new_symbol.func_info.is_defined = true;
+                new_symbol.func_info.param_types = param_type_list;
+                new_symbol.func_info.param_num = param_counter;
+                new_symbol.func_info.is_main = ast_node->data->definition_node.is_main;
+                stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->definition_node.id_val, new_symbol);
+
+                symtable_stack_push(stack);
+                
+                parameter = ast_node->data->definition_node.first_param;
+                while (parameter != NULL){
+                    // Preparing parameter for getting inserted into symtable
+                    symbol_data_t new_symbol;
+                    new_symbol.data_type = parameter->data->declaration_node.data_type;
+                    if (parameter->data->declaration_node.is_mutable) {
+                        new_symbol.id_type = ID_VAR; 
+                    }
+                    else {
+                        new_symbol.id_type = ID_VAL;
+                    }
+                    // other attributes .... <--
+                    stack->top->symtable = symtable_insert(stack->top->symtable, parameter->data->declaration_node.id_val, new_symbol);
+
+                    parameter = parameter->next;
+                }
+
+                sem_anal(ast_node->data->block_node.first, stack);
+
+                symtable_stack_pop(stack);
+                break;
+            }
+            case AST_BLOCK:
+                symtable_stack_push(stack);
+
+                sem_anal(ast_node->data->block_node.first, stack);
+                
+                symtable_stack_pop(stack);
+                break;
+
             case AST_DECLARATION: {
                 data_type expr_type = sem_anal(ast_node->data->declaration_node.expression, stack);
                 data_type var_type = ast_node->data->declaration_node.data_type;
@@ -110,7 +161,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             default:
                 break;
         }   
-        ast_node = ast_node->next;
+        ast_node = ast_node->next; //Move to next line in block
     }
     return T_NO_TYPE;
  }
