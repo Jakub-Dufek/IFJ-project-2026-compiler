@@ -214,9 +214,14 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
 
 // LINKED LIST
 
-void param_type_list_initialize(param_type_list_t *l){
+param_type_list_t *param_type_list_initialize(void) {
+    param_type_list_t *l = malloc(sizeof(param_type_list_t));
+    if (l == NULL) {
+        error_exit(INTERNAL_ERR, 0, "Internal allocation fault");
+    }
     l->first = NULL;
     l->last = NULL;
+    return l;
 }
 
 void param_type_list_insert(param_type_list_t *l, data_type type){
@@ -249,4 +254,5 @@ void param_list_destroy(param_type_list_t *l) {
         free(current);
     }
     l->last = NULL; 
+    free(l);
 }

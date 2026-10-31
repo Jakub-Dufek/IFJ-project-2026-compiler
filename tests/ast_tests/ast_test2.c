@@ -1,6 +1,6 @@
 #include "../../src/ast.h"
 #include "memory.h"
-#include "semantic_anal.h"
+#include "../../src/semantic_anal.h"
 
 #define LINE_NUM 999
 
@@ -43,7 +43,7 @@ int main()
                 // INSERT CODE HERE
             // INSERT CODE HERE
         // INSERT CODE HERE
-    // INSERT CODE HERE
+    run_sem_anal(definition);
     // INSERT CODE HERE
         // INSERT CODE HERE
             // INSERT CODE HERE

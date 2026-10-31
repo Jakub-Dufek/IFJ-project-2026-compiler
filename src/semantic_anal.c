@@ -12,7 +12,7 @@
 //TODO: 
 //      Popsat implicitní konverzi jako AI generated?
 //      Volání funkcí: Sedí počet a typy předaných argumentů s definicí funkce? , volání před lexikální definicí?
-//      Typ návratové hodnoty u funkce
+//      Typ návratové hodnoty u funkce --> ID_VAL?
 //      Synchronize Symtable, AST, 
 //      error_exit() leaks!!
 
@@ -24,13 +24,12 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             case AST_DEFINITION: {
                 symbol_data_t new_symbol;
                 new_symbol.data_type = ast_node->data->definition_node.data_type;
-                new_symbol.id_type = ID_FUNC; // ID_VAL !!
-                param_type_list_t param_type_list;
-                param_type_list_initialize(&param_type_list);
+                new_symbol.id_type = ID_FUNC; // <-- Come back to this>
+                param_type_list_t *param_type_list = param_type_list_initialize(); // <-- Later destroy this ! 
                 unsigned param_counter = 0;
                 ast_node_t *parameter = ast_node->data->definition_node.first_param;
                 while (parameter != NULL){
-                    param_type_list_insert(&param_type_list, parameter->data->declaration_node.data_type);
+                    param_type_list_insert(param_type_list, parameter->data->declaration_node.data_type);
                     param_counter++;
                     parameter = parameter->next;
                 }
@@ -150,7 +149,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                 }
 
             case EXPR_IDENTIFIER: {
-                symtable_bvs_node_t *symtable_node = symtable_search_stack(stack, ast_node->data->id_leaf_node.id_val);
+                symtable_bvs_node_t *symtable_node = symtable_stack_search(stack, ast_node->data->id_leaf_node.id_val);
                 if(symtable_node == NULL){
                     error_exit(SEM_UNDEF_ERR, ast_node->line_num, "Using non existing identifier");                     // <---- Come back to this
                 }

@@ -40,8 +40,30 @@ typedef enum {
     ID_FUNC,
     //ID_LABEL // <-- Come back to this
 } id_type;
-/*
 
+
+//LINKED LIST STRUCTURES
+
+/*
+ element of linked list - data_type
+*/
+typedef struct param_type {
+    data_type type;
+    struct param_type *next_ptr;
+} param_type_t;
+
+/*
+ linked list constisting of function parameter's data types
+*/
+typedef struct param_type_list {
+    param_type_t *first;
+    param_type_t *last;
+} param_type_list_t;
+
+
+//SYMBOL INFORMATION STRUCTURES
+/*
+ information about a function
 */
 typedef struct {
     unsigned param_num;
@@ -90,25 +112,6 @@ typedef struct symtable_instance_t {
 typedef struct {
     symtable_instance_t *top;
 } symtable_stack_t;
-
-
-//LINKED LIST STRUCTURES
-
-/*
- element of linked list - data_type
-*/
-typedef struct param_type {
-    data_type type;
-    struct param_type *next_ptr;
-} param_type_t;
-
-/*
- linked list constisting of function parameter's data types
-*/
-typedef struct param_type_list {
-    param_type_t *first;
-    param_type_t *last;
-} param_type_list_t;
 
 
 
@@ -190,7 +193,7 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key);
 /*
  initialization of the parameter list
 */
-void param_type_list_initialize(param_type_list_t *l);
+param_type_list_t *param_type_list_initialize(void);
 /*
  inserts and allocates new parameter's data type as the last element
 */
