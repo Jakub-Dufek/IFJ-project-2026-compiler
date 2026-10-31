@@ -16,7 +16,7 @@
 
 void print_string_literal(char *string) {
     printf("string@");
-    for (char idx; string[idx] != '\0'; idx++) {
+    for (unsigned idx = 0; string[idx] != '\0'; idx++) {
         if (string[idx] <= 32 || string[idx] == '#' || string[idx] == '\\') {
             printf("\\%03u", (unsigned)string[idx]);
         }
@@ -90,14 +90,31 @@ void generate_block(ast_node_t *node) {
     }
 }
 
-void generate_declaration(ast_node_t *node) {
-    printf("DEFVAR FL@%s\n", node->data->declaration_node.id_val);
+void generate_declaration(ast_node_t *node, char *frame) {
+    printf("DEFVAR %s@%s\n", frame, node->data->declaration_node.id_val);
     process_node(node->data->declaration_node.expression, "PUSHS ");
-    printf("POPS FL@%s\n", node->data->declaration_node.id_val);
+    printf("POPS %s@%s\n", frame, node->data->declaration_node.id_val);
 }
 
 void generate_function(ast_node_t *node) {
+    ast_definition_node_t def_node = node->data->definition_node;
+    printf("LABEL $%s\n", def_node.id_val);
+    
+    if (def_node.is_main) {
+        printf("CREATEFRAME\n");
+    }
 
+    printf("PUSHFRAME\n");
+
+    generate_block(def_node.block);
+
+    printf("POPFRAME\n");
+    if (def_node.is_main) {
+        printf("EXIT int@0");
+    }
+    else {
+        printf("RETURN\n");
+    }
 }
 
 void generate_operation(ast_node_t *node) {
@@ -217,7 +234,7 @@ void process_node(ast_node_t *node, char *message_before) {
         break;
 
     case AST_DECLARATION:
-        generate_declaration(node);
+        generate_declaration(node, "LF");   //mozna neni vzdy LF
         break;
 
     case AST_DEFINITION:

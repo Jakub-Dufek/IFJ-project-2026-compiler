@@ -21,7 +21,7 @@ token_type find_operand_type (ast_node_t *node);
 
 void generate_block(ast_node_t *node);
 
-void generate_declaration(ast_node_t *node);
+void generate_declaration(ast_node_t *node, char *frame);
 
 void generate_function(ast_node_t *node);
 

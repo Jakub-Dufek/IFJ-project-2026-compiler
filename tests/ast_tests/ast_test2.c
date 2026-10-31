@@ -1,6 +1,7 @@
 #include "../../src/ast.h"
 #include "memory.h"
 #include "semantic_anal.h"
+#include "../../src/IFJcode_generator.h"
 
 #define LINE_NUM 999
 
@@ -12,11 +13,11 @@ int main()
     ast_init_arena(); // DO NOT REMOVE, KEEP AT BEGINNING
 
     // 10
-    token_value_t ten_int; ten_int.int_value = 5;
+    token_value_t ten_int; ten_int.int_value = 10;
     ast_node_t *ten_lit = expr_insert_lit_leaf(ten_int, LINE_NUM, T_INT_LITERAL);
 
     // 55
-    token_value_t fifty_five_int; fifty_five_int.int_value = 5;
+    token_value_t fifty_five_int; fifty_five_int.int_value = 55;
     ast_node_t *fifty_five_lit = expr_insert_lit_leaf(fifty_five_int, LINE_NUM, T_INT_LITERAL);
 
     // 10 + 55
@@ -54,8 +55,8 @@ int main()
 
 
 
-    (void)definition; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
-
+    //(void)definition; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
+    generate_IFJcode26(definition);
 
 
     ast_free_arena(); // DO NOT REMOVE, KEEP AT END
