@@ -83,11 +83,17 @@ token_type find_operand_type (ast_node_t *node) {
 
 
 void generate_block(ast_node_t *node) {
-
+    ast_node_t *block_node = node->data->block_node.first;
+    while (block_node != NULL) {
+        process_node(block_node, NULL);
+        block_node = block_node->next;
+    }
 }
 
 void generate_declaration(ast_node_t *node) {
-    
+    printf("DEFVAR FL@%s\n", node->data->declaration_node.id_val);
+    process_node(node->data->declaration_node.expression, "PUSHS ");
+    printf("POPS FL@%s\n", node->data->declaration_node.id_val);
 }
 
 void generate_function(ast_node_t *node) {
