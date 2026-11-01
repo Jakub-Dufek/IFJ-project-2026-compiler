@@ -60,7 +60,7 @@ token_type find_operand_type (ast_node_t *node) {
         type = T_KEY_DOUBLE;
         break;
     
-    case EXPR_OPERATION:
+    case EXPR_OPERATION: {
         token_type type_left = find_operand_type(node->data->op_node.left);
         token_type type_right = find_operand_type(node->data->op_node.right);
         if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
@@ -73,7 +73,7 @@ token_type find_operand_type (ast_node_t *node) {
             // #TODO pro stringy, kdyby bylo potřeba
         }
         break;
-
+    }
     default:
         break;
     }
@@ -110,7 +110,7 @@ void generate_function(ast_node_t *node) {
 
     printf("POPFRAME\n");
     if (def_node.is_main) {
-        printf("EXIT int@0");
+        printf("EXIT int@0\n");
     }
     else {
         printf("RETURN\n");
