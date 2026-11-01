@@ -3,7 +3,7 @@
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
 * @brief TODO
-* @author Jakub Dufek (274855)
+* @author Samuel Vít Lehotský (xlehots00)
 * @date 3. 10. 2026
 */
 
@@ -12,8 +12,27 @@
 
 #include "ast.h"
 
+typedef enum {
+    P_ADD_SUB,
+    P_MUL_DIV,
+    P_L_ROUND_BRACKET,
+    P_R_ROUND_BRACKET,
+    P_ID,
+    P_DOLLAR,
 
-ast_node_t *parse_expression();
+    PRECEDENCE_TABLE_SIZE
+} precedence_table_index;
 
+/* typedef struct token_array {
+    token_t *tokens;
+    int current;
+    int max;
+} TToken_array; */
+
+precedence_table_index table_index(token_type type);
+
+ast_node_t *parse_expression(token_t token);
+
+void grammar_check(TStack *stack, TStack_Element *array, int array_counter);
 
 #endif
