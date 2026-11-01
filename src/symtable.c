@@ -155,6 +155,9 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr){
     if (root_ptr->r_ptr != NULL){
         symtable_destructor(root_ptr->r_ptr);
     }
+    if (root_ptr->symbol_data.func_info.param_types != NULL) {
+        param_list_destroy(root_ptr->symbol_data.func_info.param_types);  // <--let it be for now
+    }
     free(root_ptr->key);
     free(root_ptr);
 }

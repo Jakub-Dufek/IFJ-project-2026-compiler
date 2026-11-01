@@ -175,7 +175,7 @@ void run_sem_anal(ast_node_t *ast_node) {
     symtable_stack_push(&symtable_stack);
 
     sem_anal(ast_node, &symtable_stack);
-
+    
     symtable_stack_pop(&symtable_stack);
 
     /*if (sem_anal(ast_node, &symtable) == !!!!!!!!!!-->T_NO_TYPE<--------){
