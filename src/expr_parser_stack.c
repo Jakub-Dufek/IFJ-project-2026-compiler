@@ -11,6 +11,7 @@
 #include "ast.h"
 #include "scanner.h"
 #include "expr_parser_stack.h"
+#include "error.h"
 
 void stack_init(TStack *stack) {
     stack->top = NULL;
@@ -18,19 +19,19 @@ void stack_init(TStack *stack) {
 
 void stack_push(TStack *stack, token_t *token) {
     TStack_Element *new_element = (TStack_ElementPtr)malloc(sizeof(TStack_Element));
-    if (new_element == NULL) { error_code(INTERNAL_ERR); }
+    if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, ""); }
     new_element->token = *token;
     new_element->next = stack->top;
     stack->top = new_element;
 }
 
-void stack_push_after_top_terminal(TStack *stack, token_t *token) { //TODO
+void stack_push_after_top_terminal(TStack *stack, token_t *token) {
     TStack_ElementPtr temp_element = stack->top;
     TStack_ElementPtr prev_element = temp_element;
-    while (temp_element->token.type != NULL) {
+    while (temp_element != NULL) {
         if (temp_element->token.type != EP_EXPR) {
             TStack_Element *new_element = (TStack_ElementPtr)malloc(sizeof(TStack_Element));
-            if (new_element == NULL) { error_code(INTERNAL_ERR); }
+            if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, ""); }
             if (temp_element == stack->top) {
                 new_element->next = stack->top;
                 stack->top = new_element;
@@ -57,12 +58,12 @@ void stack_pop(TStack *stack) {
 }
 
 token_t top(TStack *stack) {
-    if (empty(stack)) { error_code(INTERNAL_ERR); } //?
+    if (empty(stack)) {  } //TODO
     return (stack->top->token);
 }
 
 token_t top_terminal(TStack *stack) {
-    if (empty(stack)) { error_code(INTERNAL_ERR); } //?
+    if (empty(stack)) {  } //TODO
     TStack_ElementPtr temp_element = stack->top;
     while (temp_element->token.type != EP_EXPR) {
         if (temp_element->token.value.ast_node_ptr == NULL) {
