@@ -13,19 +13,77 @@
 #include "ast.h"
 
 
+//  PROLOGUE PARSING
+
 /**
- * @brief Calls individual parsing functions for each case of next_token
- *
- * @param current Current token
+ * @brief Parses prologue, is called at beginning of programme
  */
-void parse_next(token_t *current);
+void parse_prologue();
+
+
+
+//  LOCAL PARSING FUNCTIONS
 
 /**
  * @brief Parses declaration of variables
  *
- * @param current Current token
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
  */
-void parse_var_declaration(token_t *current);
+ast_node_t *parse_var_declaration(token_t current_token);
+
+
+
+//  GLOBAL PARSING FUNCTIONS
+
+/**
+ * @brief Parses @main and calls main fn parsing function
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_main_fn_definition();
+
+/**
+ * @brief Parses definition of function
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_fn_definition();
+
+
+
+//  MAIN PARSING SWITCHES
+
+/**
+ * @brief Calls individual parsing functions for each case of next_token within block
+ *
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_next_local(token_t current_token);
+
+
+/**
+ * @brief Calls individual parsing functions for each case of next_token within block
+ *
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_next_global(token_t current_token);
+
+
+
+//  MAIN PARSER LOOP
+
+/**
+ * @brief Parses entire programme and builds AST for further analysis and compiling
+ * 
+ * @return pointer to top of AST
+ */
+ast_node_t *build_ast();
 
 
 #endif

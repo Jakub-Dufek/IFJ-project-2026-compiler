@@ -2,12 +2,12 @@
  * @file scanner.h
  * @internal Part of IFJ-project-2026-compiler
  *
- * @brief Library file containing structures
+ * @brief Scanner library file containing structures
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 27.09.2026
+ * @date 25.10.2026
  *
- * @details This file contains definitions of functions used in scanner.c
+ * @details This file contains macros, structures and definitions of functions used in scanner.c
  */
 
 #ifndef SCANNER_H
@@ -68,7 +68,6 @@ token_t new_token(unsigned line_num);
  *
  * @param character Variable holding one character from stdin.
  * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- *
  */
 void write_lexeme(int character, lexeme_t *lexeme);
 

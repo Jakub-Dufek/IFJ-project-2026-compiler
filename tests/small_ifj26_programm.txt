@@ -1,9 +1,0 @@
-//import ifj26.*
-
-@main
-def main(): Unit =
-    val x = 10
-    print("Hello")
-    ()
-        val = 4 + 5
-end()
