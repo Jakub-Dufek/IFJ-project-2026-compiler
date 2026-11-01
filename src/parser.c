@@ -208,7 +208,7 @@ ast_node_t *parse_var_declaration(token_t current_token)
     }
 
     // expression
-    ast_node_t *expression = parse_expression();
+    ast_node_t *expression = parse_expression(get_next_token());
     return ast_insert_var_declaration(value, line_num, is_mutable, data_type, expression);
 }
 
