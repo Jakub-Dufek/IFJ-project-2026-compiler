@@ -92,14 +92,14 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
 
 
 ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
-                                        ast_node_t *block, ast_node_t *first_param, bool is_main)
+                                        ast_node_t *first_param, ast_node_t *body, bool is_main)
 {
     ast_node_t *current_node = ast_node_init(AST_DEFINITION, line_num);
 
     strcpy(current_node->data->definition_node.id_val, value);
     current_node->data->definition_node.data_type = data_type;
     current_node->data->definition_node.first_param = first_param;
-    current_node->data->definition_node.block = block;
+    current_node->data->definition_node.body = body;
     current_node->data->definition_node.is_main = is_main;
 
     return current_node;

@@ -32,6 +32,7 @@ typedef enum ast_stmt_type {
 
     AST_DECLARATION,
     AST_DEFINITION,
+    AST_CALL,
 
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
@@ -83,7 +84,7 @@ typedef struct {
     char id_val[MAX_LENGTH];
     token_type data_type;
     ast_node_t *first_param;    /// param->next is next param, if NULL no param
-    ast_node_t *block;
+    ast_node_t *body;           /// expression, call or block
     bool is_main;
 } ast_definition_node_t;
 
@@ -225,7 +226,7 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
  * @return AST node representing function definition
  */
 ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
-                                        ast_node_t *block, ast_node_t *first_param, bool is_main);
+                                        ast_node_t *first_param, ast_node_t *body, bool is_main);
 
 
 

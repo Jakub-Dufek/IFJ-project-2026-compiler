@@ -63,14 +63,6 @@ void parse_prologue()
 //  HELPER PARSERS
 
 /**
- * TODO: comment
- */
-static ast_node_t *parse_block()
-{
-    //TODO: block parsing
-}
-
-/**
  * @brief Parses [: type] in declaration (call after recieving T_COLON)
  * 
  * @return data type
@@ -81,12 +73,63 @@ static token_type parse_optional_type_def()
     token_type data_type;
 
     // if next token anything but data type keyword
-    if(current_token.type <= T_KEY_INT || current_token.type >= T_KEY_UNIT) {
+    if(current_token.type < T_KEY_INT || current_token.type > T_KEY_UNIT) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected data type");
     }
     else {
         data_type = current_token.type;
     }
+
+    return data_type;
+}
+
+
+/**
+ * @brief Determines whether upcoming tokens are expr or fn-call
+ * 
+ * @return subtree of expr or call
+ */
+static ast_node_t *parse_expr_or_call()
+{
+    //TODO: parse_expr_or_call
+}
+
+
+
+//  DISCRETE PARSERS
+
+/**
+ * @brief Parses block under function, if or while; call after recieving newline
+ * 
+ * @return subtree of upcoming block with ptr->first being first stmt in block
+ */
+static ast_node_t *parse_block()
+{
+    // indent
+    token_t current_token = get_next_token();
+    unsigned line_num = current_token.line_num;
+    if(current_token.type != T_MORE_INDENT) {
+        error_exit(SYNT_ERR, current_token.line_num, "Missing indent at beginning of block");
+    }
+
+    // parse local stmts
+    current_token = get_next_token();
+    ast_node_t *first = parse_next_local(current_token);
+    ast_node_t *last = first;
+
+    current_token = get_next_token();
+    while(current_token.type != T_LESS_INDENT && current_token.type != T_EOF) {
+        // newline
+        if(current_token.type == T_LF) {
+            current_token = get_next_token();
+            continue;
+        }
+        last->next = parse_next_local(current_token);
+        last = last->next;
+        current_token = get_next_token();
+    }
+
+    return ast_insert_block(first, line_num, last);
 }
 
 
@@ -229,13 +272,18 @@ ast_node_t *parse_fn_definition()
     if(current_token.type != T_ASSIGN) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected colon or assign");
     }
-    
-    // TODO: giant if elif else part with determining if stmt or call or block with newline etc
 
+    // expr, call or block
+    current_token = get_next_token();
+    ast_node_t *body;
+    if(current_token.type == T_LF) {
+        body = parse_block();
+    }
+    else {
+        body = parse_expr_or_call();
+    }
 
-    //TODO: INDENT DEDENT
-
-    return ast_insert_fn_definition(value, line_num, data_type, NULL, param, false); //TODO: block AND determine whether block or change it
+    return ast_insert_fn_definition(value, line_num, data_type, param, body, false);
 }
 
 
@@ -257,16 +305,11 @@ ast_node_t *parse_next_local(token_t current_token)
 
 ast_node_t *parse_next_global(token_t current_token)
 {
-    bool is_main = false;
     switch(current_token.type) {
         case T_AT_MAIN:
             return parse_main_fn_definition();
         case T_KEY_DEF:
             return parse_fn_definition();
-        case T_LF:
-            break;
-        case T_EOF:
-            break;
         default:
             error_exit(SYNT_ERR, current_token.line_num, "Unexpected token at global level");
     }
@@ -285,6 +328,12 @@ ast_node_t *build_ast()
     ast_node_t *tail = NULL;    // ptr pointing to current node in ast building process (end)
 
     while(current_token.type != T_EOF) {
+        // newline handling
+        if(current_token.type == T_LF) {
+            current_token = get_next_token();
+            continue;
+        }
+
         // setting head at beginning
         if(head == NULL) {
             tail = parse_next_global(current_token);
