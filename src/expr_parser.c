@@ -48,7 +48,7 @@ precedence_table_index table_index(token_type type) {
     }
 }
 
-static inline bool is_operator(TStack_Element *array, int array_counter){
+bool is_operator(TStack_Element *array, int array_counter){
     return array[array_counter].token.type == T_PLUS   || array[array_counter].token.type == T_MINUS 
         || array[array_counter].token.type == T_MULT   || array[array_counter].token.type == T_DIV
         || array[array_counter].token.type == T_GT     || array[array_counter].token.type == T_GTE
