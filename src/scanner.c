@@ -2,7 +2,7 @@
  * @file scanner.c
  * @internal Part of IFJ-project-2026-compiler
  *
- * @brief Library file containing structures
+ * @brief FSM for scanner
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
  * @date 27.09.2026
