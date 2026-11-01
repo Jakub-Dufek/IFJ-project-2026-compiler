@@ -28,13 +28,13 @@ int main()
     ast_node_t *declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_KEY_INT, plus);
 
     // (INDENT) var x : Int = 10 + 55
-    ast_node_t *block = ast_insert_block(declaration, LINE_NUM, declaration);
+    ast_node_t *body = ast_insert_block(declaration, LINE_NUM, declaration);
 
 /*  @main
     def main(): Unit =
         var x : Int = 10 + 55   */
     char main_str[MAX_LENGTH] = "main";
-    ast_node_t *definition = ast_insert_fn_definition(main_str, LINE_NUM, T_KEY_UNIT, block, NULL, true);
+    ast_node_t *definition = ast_insert_fn_definition(main_str, LINE_NUM, T_KEY_UNIT, NULL, body, true);
 
 
 
