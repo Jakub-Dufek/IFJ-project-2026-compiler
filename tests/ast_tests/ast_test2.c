@@ -44,7 +44,7 @@ int main()
                 // INSERT CODE HERE
             // INSERT CODE HERE
         // INSERT CODE HERE
-    //run_sem_anal(definition);
+    run_sem_anal(definition);
     // INSERT CODE HERE
         // INSERT CODE HERE
             // INSERT CODE HERE
@@ -56,7 +56,7 @@ int main()
 
 
     //(void)definition; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
-    generate_IFJcode26(definition);
+    //generate_IFJcode26(definition);
 
 
     ast_free_arena(); // DO NOT REMOVE, KEEP AT END

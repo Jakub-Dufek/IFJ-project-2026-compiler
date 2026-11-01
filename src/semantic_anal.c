@@ -24,7 +24,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             case AST_DEFINITION: {
                 symbol_data_t new_symbol;
                 new_symbol.data_type = ast_node->data->definition_node.data_type;
-                new_symbol.id_type = ID_FUNC; // <-- Come back to this>
+                new_symbol.id_type = ID_FUNC; // <-- Come back to this>ID_VAL
                 param_type_list_t *param_type_list = param_type_list_initialize(); // <-- Later destroy this ! 
                 unsigned param_counter = 0;
                 ast_node_t *parameter = ast_node->data->definition_node.first_param;
@@ -57,8 +57,8 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
 
                     parameter = parameter->next;
                 }
-
-                sem_anal(ast_node->data->block_node.first, stack);
+                //může být i volání nebo výraz!! -> sem_anal(   node.body->data->block_node    NEBO    node.body->data->expression / node.body->data->func_call   ) 
+                sem_anal(ast_node->data->definition_node.body->data->block_node.first, stack);
 
                 symtable_stack_pop(stack);
                 break;
@@ -147,6 +147,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                 else {                  // Maybe Boolean?
                     return lit_type;
                 }
+                break;
 
             case EXPR_IDENTIFIER: {
                 symtable_bvs_node_t *symtable_node = symtable_stack_search(stack, ast_node->data->id_leaf_node.id_val);

@@ -1,6 +1,6 @@
 #include "../../src/ast.h"
-#include "memory.h"
-#include "semantic_anal.h"
+#include "../../src/memory.h"
+#include "../../src/semantic_anal.h"
 
 #define LINE_NUM 999
 
@@ -27,20 +27,22 @@ int main()
     char x_str[MAX_LENGTH] = "x";
     ast_node_t *declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_KEY_INT, plus);
     
-    // 1. Vytvoříme si tabulku symbolů speciálně pro tento test
-    symtable_bvs_node_t *symtable = symtable_initialize();
+    // 1. Lokální inicializace zásobníku
+    symtable_stack_t stack;
+    symtable_stack_initialize(&stack); 
+    symtable_stack_push(&stack); // Globální scope
 
-    // 2. Ručně do ní vložíme proměnnou 'z' (např. typu Int), aby test prošel
+    // 2. Ruční vložení 'z', aby test nevyhodil Error 3
     symbol_data_t z_sym;
     z_sym.data_type = T_KEY_INT;
-    z_sym.id_type = ID_VAR; // nebo ID_VAL
-    symtable = symtable_insert(symtable, "z", z_sym);
+    z_sym.id_type = ID_VAR; 
+    stack.top->symtable = symtable_insert(stack.top->symtable, "z", z_sym);
 
-    // 3. Spustíme naši rekurzivní sémantickou analýzu a PŘEDÁME jí naši tabulku
-    sem_anal(declaration, &symtable);
+    // 3. Spuštění analýzy s předaným zásobníkem
+    sem_anal(declaration, &stack);
 
-    // 4. Uklidíme
-    symtable_destructor(symtable);
+    // 4. Úklid
+    symtable_stack_pop(&stack);
 
     (void)declaration; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
 
