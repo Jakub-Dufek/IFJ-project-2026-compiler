@@ -1,12 +1,7 @@
 #include "../../src/ast.h"
-<<<<<<< HEAD
-#include "memory.h"
-#include "../../src/semantic_anal.h"
-=======
 #include "../../src/memory.h"
 #include "../../src/semantic_anal.h"
 #include "../../src/IFJcode_generator.h"
->>>>>>> IFJcodegen_1.0
 
 #define LINE_NUM 999
 
