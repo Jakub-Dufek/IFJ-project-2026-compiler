@@ -14,9 +14,10 @@
 #define ERROR_H
 
 /**
- * @brief Enum values for individual error codes
+ * @enum err_code_t
+ * @brief enum values for individual error codes
  */
-enum error_code {
+typedef enum error_code {
     /// Lexical error - (invalid lexeme structure, comment, indentation)
     LEX_ERR = 1,
 
@@ -46,7 +47,7 @@ enum error_code {
 
     /// Internal compiler error - (memory allocation failure)
     INTERNAL_ERR = 99
-};
+} err_code_t;
 
 /**
  * @brief Prints error with custom error message and exits with specified exit code
@@ -55,6 +56,6 @@ enum error_code {
  * @param line Line number where error occured
  * @param fmt Custom error message
  */
-void error_exit(int err_code, unsigned line, const char *fmt, ...);
+void error_exit(err_code_t err_code, unsigned line, const char *fmt, ...);
 
 #endif

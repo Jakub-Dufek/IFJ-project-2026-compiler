@@ -28,9 +28,11 @@ typedef struct ast_block_node ast_block_node_t;
  */
 typedef enum ast_stmt_type {
     AST_BLOCK,
+    AST_PARAM,
 
     AST_DECLARATION,
     AST_DEFINITION,
+    AST_CALL,
 
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
@@ -42,6 +44,26 @@ typedef enum ast_stmt_type {
 
 
 //  INDIVIDUAL NODE TYPES
+
+/**
+ * @struct ast_block_node_t
+ * @brief Node representing block
+ */
+struct ast_block_node {
+    ast_node_t *first;  /// Unit literal if empty block
+    ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
+};
+
+/**
+ * @struct ast_param_node_t
+ * @brief Parameter node
+ */
+typedef struct {
+    char id_val[MAX_LENGTH];
+    token_type data_type;
+} ast_param_node_t;
+
+
 
 /**
  * @struct ast_declaration_node_t
@@ -62,7 +84,7 @@ typedef struct {
     char id_val[MAX_LENGTH];
     token_type data_type;
     ast_node_t *first_param;    /// param->next is next param, if NULL no param
-    ast_node_t *block;
+    ast_node_t *body;           /// expression, call or block
     bool is_main;
 } ast_definition_node_t;
 
@@ -109,20 +131,12 @@ typedef struct {
 //  MAIN NODE TYPES
 
 /**
- * @struct ast_block_node_t
- * @brief Node representing block
- */
-struct ast_block_node {
-    ast_node_t *first;  /// Unit literal if empty block
-    ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
-};
-
-/**
  * @union ast_node_data_t
  * @brief Union of different nodes for different types of expressions
  */
 typedef union {
     ast_block_node_t block_node;
+    ast_param_node_t param_node;
 
     ast_declaration_node_t declaration_node;
     ast_definition_node_t definition_node;
@@ -174,6 +188,17 @@ ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
  */
 ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *last);
 
+/**
+ * @brief Creates AST for function parameter
+ * 
+ * @param value name of id
+ * @param data_type
+ * @param next param right after
+ * 
+ * @return AST node representing param list
+ */
+ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_type data_type, ast_node_t *next);
+
 
 
 /**
@@ -201,7 +226,7 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
  * @return AST node representing function definition
  */
 ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
-                                        ast_node_t *block, ast_node_t *first_param, bool is_main);
+                                        ast_node_t *first_param, ast_node_t *body, bool is_main);
 
 
 
