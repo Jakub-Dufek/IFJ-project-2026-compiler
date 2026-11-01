@@ -8,9 +8,9 @@
 */
 
 #include "expr_parser.h"
-#include "expr_parser_stack.h"
 #include "ast.h"
 #include "scanner.h"
+#include "error.h"
 
 #define ELEMENT_ARRAY_SIZE 4
 
@@ -81,7 +81,9 @@ ast_node_t *parse_expression(token_t token)
 
         switch (precedence_table[row][colm]) {
             case '<':
-                stack_push_after_top_terminal(&stack, EP_LT_MARKER);
+                token_t token;
+                token.type = EP_LT_MARKER;
+                stack_push_after_top_terminal(&stack, &token);
                 stack_push(&stack, &next_token);
                 next_token = get_next_token();
                 break;
@@ -106,7 +108,7 @@ ast_node_t *parse_expression(token_t token)
                     return(top(&stack).value.ast_node_ptr);
                 }
                 else {
-                    error_code(SYNT_ERR); //TODO ERROR
+                    error_exit(SYNT_ERR, next_token.line_num, ""); //TODO ERROR
                 }
         } 
     } 
@@ -127,7 +129,7 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, array[0].token.type);
                 stack_push(stack, &new_token);
             }
-            else { error_code (SYNT_ERR); } //TODO ERROR
+            else { error_exit (SYNT_ERR, new_token.line_num, ""); } //TODO ERROR
             break;
 
         case 2:
@@ -135,7 +137,7 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, T_UNIT_LITERAL);
                 stack_push(stack, &new_token);
             }
-            else { error_code (SYNT_ERR); } //TODO ERROR
+            else { error_exit (SYNT_ERR, new_token.line_num, ""); } //TODO ERROR
             break;
 
         case 3:
@@ -147,11 +149,11 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = array[1].token.value.ast_node_ptr;
                 stack_push(stack, &new_token);
             }
-            else { error_code (SYNT_ERR); } //TODO ERROR
+            else { error_exit (SYNT_ERR, new_token.line_num, ""); } //TODO ERROR
             break;
 
         default:
-            error_code(INTERNAL_ERR); //TODO ERROR
+            error_exit(SYNT_ERR, new_token.line_num, ""); //TODO ERROR
             break;
     }
 }

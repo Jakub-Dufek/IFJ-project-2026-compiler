@@ -14,7 +14,7 @@
 
 typedef struct tstack_element {
     token_t token;
-    TStack_Element *next;
+    struct tstack_element *next;
 } TStack_Element, *TStack_ElementPtr;
 
 typedef struct tstack {

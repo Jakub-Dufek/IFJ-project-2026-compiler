@@ -98,7 +98,7 @@ typedef union Token_value {
     int int_value;                      /**<Storage for integer type of the token */
     double double_value;                /**<Storage for double type of the token */
     char string_value[MAX_LENGTH];      /**<Storage for string representation of the token */
-    struct ast_node_t *ast_node_ptr;    /**<Storage for pointer to AST node  */
+    struct ast_node *ast_node_ptr;      /**<Storage for pointer to AST node  */
 } token_value_t;
 
 /**

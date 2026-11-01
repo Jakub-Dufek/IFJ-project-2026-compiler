@@ -11,6 +11,7 @@
 #define EXPR_PARSER_H
 
 #include "ast.h"
+#include "expr_parser_stack.h"
 
 typedef enum {
     P_ADD_SUB,
