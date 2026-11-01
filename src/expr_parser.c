@@ -14,8 +14,6 @@
 
 #define ELEMENT_ARRAY_SIZE 4
 
-//PRECEDENCE TABLE METHODS
-
 static const char precedence_table[PRECEDENCE_TABLE_SIZE][PRECEDENCE_TABLE_SIZE] = {
     /*        +-    /*   (    )    i    $   */
     /*  +- */{'>', '<', '<', '>', '<', '>'},
@@ -51,8 +49,12 @@ precedence_table_index table_index(token_type type) {
 }
 
 inline bool is_operator(TStack_Element *array, int array_counter){
-    return array[array_counter].token.type == T_PLUS || array[array_counter].token.type == T_MINUS 
-        || array[array_counter].token.type == T_MULT || array[array_counter].token.type == T_DIV;
+    return array[array_counter].token.type == T_PLUS   || array[array_counter].token.type == T_MINUS 
+        || array[array_counter].token.type == T_MULT   || array[array_counter].token.type == T_DIV
+        || array[array_counter].token.type == T_GT     || array[array_counter].token.type == T_GTE
+        || array[array_counter].token.type == T_LT     || array[array_counter].token.type == T_LTE
+        || array[array_counter].token.type == T_EQ     || array[array_counter].token.type == T_NEQ
+        || array[array_counter].token.type == T_ASSIGN;
 }
 
 //EXPRESSION PARSING
@@ -68,7 +70,6 @@ ast_node_t *parse_expression(token_t token)
     bottom.type = EP_DOLLAR;
     stack_push(&stack, &bottom);
 
-    //
     TStack_Element array[ELEMENT_ARRAY_SIZE];
     int array_counter;
     
@@ -124,6 +125,15 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
             }
             else if (array[0].token.type == T_INT_LITERAL || array[0].token.type == T_DOUBLE_LITERAL) {
                 new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, array[0].token.type);
+                stack_push(stack, &new_token);
+            }
+            else { error_code (SYNT_ERR); } //TODO ERROR
+            break;
+
+        case 2:
+            if (array[0].token.type == T_R_ROUND_BRACKET && array[1].token.type == T_L_ROUND_BRACKET) {
+                new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, T_UNIT_LITERAL);
+                stack_push(stack, &new_token);
             }
             else { error_code (SYNT_ERR); } //TODO ERROR
             break;
