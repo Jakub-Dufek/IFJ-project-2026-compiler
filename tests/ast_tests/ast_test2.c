@@ -44,7 +44,7 @@ int main()
                 // INSERT CODE HERE
             // INSERT CODE HERE
         // INSERT CODE HERE
-    run_sem_anal(definition);
+    //run_sem_anal(definition);
     // INSERT CODE HERE
         // INSERT CODE HERE
             // INSERT CODE HERE
