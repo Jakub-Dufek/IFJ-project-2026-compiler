@@ -9,4 +9,3 @@ def main(): Unit =
     var x = 10
     var y = 20
     var result = add(x, y)
-    print(result)
