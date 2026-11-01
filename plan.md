@@ -79,3 +79,14 @@ Deadline 274855:
 
 # 25. 10. 2026 - Change of plans
 - Moved deadlines to 1. 11.
+
+# 1. 11. 2026
+Deadline 274855:
+- 2\. 11. 2026: Testing framework + merge main + synchronization
+- 8\. 11. 2026: Assign, fn call, return + if?
+Deadline xkyclon00:
+- 8\. 11. 2026: Print ast fn, assign, fn call, return
+Deadline xgreges00:
+- 8\. 11. 2026: boolean for scanner + 2 other extensions, return
+Deadline xlehots00:
+- 8\. 11. 2026: Docs skeleton + info, project defence streams?? (tactics), boolean
