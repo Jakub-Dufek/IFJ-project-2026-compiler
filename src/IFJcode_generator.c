@@ -106,7 +106,7 @@ void generate_function(ast_node_t *node) {
 
     printf("PUSHFRAME\n");
 
-    generate_block(def_node.block);
+    generate_block(def_node.body);
 
     printf("POPFRAME\n");
     if (def_node.is_main) {
