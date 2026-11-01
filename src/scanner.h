@@ -68,7 +68,6 @@ token_t new_token(unsigned line_num);
  *
  * @param character Variable holding one character from stdin.
  * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- *
  */
 void write_lexeme(int character, lexeme_t *lexeme);
 
