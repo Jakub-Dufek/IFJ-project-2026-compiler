@@ -41,6 +41,8 @@ precedence_table_index table_index(token_type type) {
             return P_R_ROUND_BRACKET;
 
         case T_IDENTIFIER:
+        case T_INT_LITERAL:
+        case T_DOUBLE_LITERAL:
             return P_ID;
 
         default:
@@ -66,22 +68,26 @@ ast_node_t *parse_expression(token_t token)
     stack_init(&stack);
 
     //Adding $ character to sign the bottom of the stack
-    token_t bottom;
+    token_t bottom = {0};
     bottom.type = EP_DOLLAR;
     stack_push(&stack, &bottom);
 
     TStack_Element array[ELEMENT_ARRAY_SIZE];
     int array_counter;
     
-    token_t next_token = token;
+    token_t next_token = {0};
+    next_token = token;
 
-    while (true) {
+    ast_node_t *tree = NULL;
+
+    bool value = true;
+    while (value) {
         int row = table_index(top_terminal(&stack).type);
         int colm = table_index(next_token.type);
 
         switch (precedence_table[row][colm]) {
             case '<':
-                token_t token;
+                token_t token = {0};
                 token.type = EP_LT_MARKER;
                 stack_push_after_top_terminal(&stack, &token);
                 stack_push(&stack, &next_token);
@@ -90,7 +96,7 @@ ast_node_t *parse_expression(token_t token)
 
             case '>':
                 array_counter = 0;
-                while(top(&stack).type != EP_LT_MARKER) { // '<'
+                while(top(&stack).type != EP_LT_MARKER && array_counter < ELEMENT_ARRAY_SIZE) { // '<'
                     array[array_counter++] = *stack.top;
                     stack_pop(&stack);
                 }
@@ -104,8 +110,10 @@ ast_node_t *parse_expression(token_t token)
                 break;
 
             default:
-                if(top_terminal(&stack).type == EP_DOLLAR && next_token.type == T_EOF) { //TODO next_token
-                    return(top(&stack).value.ast_node_ptr);
+                if(top_terminal(&stack).type == EP_DOLLAR && (next_token.type == T_EOF || next_token.type == T_LF)) {
+                    tree = top(&stack).value.ast_node_ptr;
+                    value = false;
+                    break;
                 }
                 else {
                     error_exit(SYNT_ERR, next_token.line_num, ""); //TODO ERROR
@@ -114,10 +122,11 @@ ast_node_t *parse_expression(token_t token)
     } 
 
     stack_dispose(&stack);
+    return tree;
 }
 
 void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
-    token_t new_token;
+    token_t new_token = {0};
     new_token.type = EP_EXPR;
     switch(array_counter) {
         case 1:

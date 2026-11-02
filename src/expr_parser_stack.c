@@ -29,7 +29,7 @@ void stack_push_after_top_terminal(TStack *stack, token_t *token) {
     TStack_ElementPtr temp_element = stack->top;
     TStack_ElementPtr prev_element = temp_element;
     while (temp_element != NULL) {
-        if (temp_element->token.type != EP_EXPR) {
+        if (temp_element->token.type != EP_EXPR && temp_element->token.type != EP_LT_MARKER) {
             TStack_Element *new_element = (TStack_ElementPtr)malloc(sizeof(TStack_Element));
             if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, ""); }
             if (temp_element == stack->top) {
@@ -58,20 +58,22 @@ void stack_pop(TStack *stack) {
 }
 
 token_t top(TStack *stack) {
-    if (empty(stack)) {  } //TODO
+    if (empty(stack)) { error_exit(INTERNAL_ERR, 0, ""); } //TODO
     return (stack->top->token);
 }
 
 token_t top_terminal(TStack *stack) {
-    if (empty(stack)) {  } //TODO
+    if (empty(stack)) { error_exit(INTERNAL_ERR, 0, ""); } //TODO
     TStack_ElementPtr temp_element = stack->top;
-    while (temp_element->token.type != EP_EXPR) {
-        if (temp_element->token.value.ast_node_ptr == NULL) {
+    while (temp_element != NULL) {
+        if (temp_element->token.type != EP_EXPR && temp_element->token.type != EP_LT_MARKER) {
             return temp_element->token;
         }
         temp_element = temp_element->next;
     }
-    return temp_element->token;
+    error_exit(INTERNAL_ERR, 0, ""); //TODO
+    token_t token = {0};
+    return token;
 }
 
 bool empty(TStack *stack) { return (stack->top == NULL); }
