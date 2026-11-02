@@ -8,11 +8,20 @@
  */
 
 #include "memory.h"
+#include "ast.h"
 #include "parser.h"
+#include "semantic_anal.h"
+#include "IFJcode_generator.h"
 
 int main()
 {
     ast_init_arena();
+
+
+    ast_node_t *ast = build_ast();  // parser + scanner
+    run_sem_anal(ast);              // semantic analysis
+    generate_IFJcode26(ast);        // code generator
+
 
     ast_free_arena();
 }

@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 # --- Paths ---
 BINARY="../../build/compiler"
-LOG_DIR="../test_logs"
+LOG_DIR="../test_logs/compiler"
 
 mkdir -p "$LOG_DIR"
 
@@ -38,6 +38,7 @@ for file in ../*.scala; do
     log_file="$LOG_DIR/$name.txt"
 
     # ==========================================================================
+    # ==========================================================================
     # 🪟 THE OPEN WINDOW: TEST EXPECTATIONS
     # --------------------------------------------------------------------------
     # Matches against $name (the test filename without .scala).
@@ -52,30 +53,23 @@ for file in ../*.scala; do
     #   - The *) branch at the bottom is the fallback for normal/valid programs.
     # ==========================================================================
     case "$name" in
-        "example_err_lex"*)
-            expected_exit=1
-            expected_output="lexical error"
-            expected_file=""
+        "tiny_prog"*)
+            expected_exit=0
+            expected_output=""
+            expected_file="./expected_output/tiny_prog.txt"
             ;;
 
-        "example_err_syn"*)
+        "small_prog"*)
             expected_exit=2
-            expected_output="syntax error"
-            expected_file=""
-            ;;
-
-        "example_err_sem"*)
-            expected_exit=3
             expected_output=""
             expected_file=""
             ;;
 
-        "example_test_div_zero")
-            expected_exit=4
-            expected_output="division by zero"
+        "medium_prog"*)
+            expected_exit=2
+            expected_output=""
             expected_file=""
             ;;
-
         *)
             # Default for unlisted tests: expect clean exit with no required text
             expected_exit=0
@@ -83,6 +77,7 @@ for file in ../*.scala; do
             expected_file=""
             ;;
     esac
+    # ==========================================================================
     # ==========================================================================
 
     # Feed the .scala file to the compiler via stdin

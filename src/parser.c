@@ -33,22 +33,22 @@ void parse_prologue()
     // ifj26
     current_token = get_next_token();
     if(current_token.type != T_IDENTIFIER) {
-        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format (Expected: \"ifj26\")");
     }
     else if(strcmp(current_token.value.string_value, "ifj26") != 0) {
-        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format (Expected: \"ifj26\")");
     }
 
     // .
     current_token = get_next_token();
     if(current_token.type != T_DOT) {
-        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format (Expected: \".\")");
     }
 
     // *
     current_token = get_next_token();
     if(current_token.type != T_MULT) {
-        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format");
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect prologue format (Expected: \"*\")");
     }
 
     // newline or eof
@@ -268,7 +268,6 @@ ast_node_t *parse_fn_definition()
     }
 
     // =
-    current_token = get_next_token();
     if(current_token.type != T_ASSIGN) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected colon or assign");
     }

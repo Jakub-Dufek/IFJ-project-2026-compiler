@@ -621,7 +621,7 @@ token_t get_next_token()
                     token = first_digit(character, token, &lexeme, CASE_DOUBLE_LITERAL);
                 }
                 else {
-                    next_token = new_token(T_DOT);
+                    token.type = T_DOT;
                     ungetc(next_character, stdin);
                 }
             }
