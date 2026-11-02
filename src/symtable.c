@@ -155,7 +155,7 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr){
     if (root_ptr->r_ptr != NULL){
         symtable_destructor(root_ptr->r_ptr);
     }
-    if (root_ptr->symbol_data.func_info.param_types != NULL) {
+    if (root_ptr->symbol_data.id_type == ID_FUNC && root_ptr->symbol_data.func_info.param_types != NULL) {
         param_list_destroy(root_ptr->symbol_data.func_info.param_types);  // <--let it be for now
     }
     free(root_ptr->key);
@@ -190,7 +190,7 @@ void symtable_stack_pop(symtable_stack_t *stack){
     }
 }
 
-symtable_bvs_node_t *symtable_stack_top(symtable_stack_t *stack){
+symtable_bvs_node_t *symtable_stack_top(symtable_stack_t *stack){ //Nutné??
     if (stack->top == NULL){
         return NULL;  //chybovy kod 40/99
     }
@@ -228,7 +228,7 @@ param_type_list_t *param_type_list_initialize(void) {
 }
 
 void param_type_list_insert(param_type_list_t *l, data_type type){
-    if (l->last != NULL){
+    if (l != NULL){
         param_type_t *new_param_type = (param_type_t *) malloc(sizeof(param_type_t));
         if (new_param_type == NULL){
             error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this

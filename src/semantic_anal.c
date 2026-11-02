@@ -22,7 +22,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
     while (ast_node != NULL) {
         switch (ast_node->stmt_type){
             case AST_DEFINITION: {
-                symbol_data_t new_symbol;
+                symbol_data_t new_symbol = {0};
                 new_symbol.data_type = ast_node->data->definition_node.data_type;
                 new_symbol.id_type = ID_FUNC; // <-- Come back to this>ID_VAL
                 param_type_list_t *param_type_list = param_type_list_initialize(); // <-- Later destroy this ! 
@@ -44,7 +44,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                 parameter = ast_node->data->definition_node.first_param;
                 while (parameter != NULL){
                     // Preparing parameter for getting inserted into symtable
-                    symbol_data_t new_symbol;
+                    symbol_data_t new_symbol = {0};
                     new_symbol.data_type = parameter->data->declaration_node.data_type;
                     if (parameter->data->declaration_node.is_mutable) {
                         new_symbol.id_type = ID_VAR; 
@@ -98,7 +98,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                     error_exit(SEM_TYPE_ERR, ast_node->line_num, "Incompatible types assignment");
                 }
                 // Preparation for inserting into symtable
-                symbol_data_t new_symbol;
+                symbol_data_t new_symbol = {0};
                 new_symbol.data_type = ast_node->data->declaration_node.data_type;
                 if (ast_node->data->declaration_node.is_mutable) {
                     new_symbol.id_type = ID_VAR; 
