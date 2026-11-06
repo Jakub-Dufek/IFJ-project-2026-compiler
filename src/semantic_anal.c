@@ -155,6 +155,8 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                     error_exit(SEM_UNDEF_ERR, ast_node->line_num, "Using non existing identifier");                     // <---- Come back to this
                 }
                 else{
+                    ast_node->data->id_leaf_node.symbol_data = symtable_node->symbol_data;
+                    
                     return symtable_node->symbol_data.data_type;
                 }
             }

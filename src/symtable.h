@@ -13,8 +13,9 @@
 
 //libraries:
 #include "structures.h"
+#include "memory.h"
 #include "../src/error.h"
-#include "stdbool.h"
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h> 
 
@@ -201,6 +202,6 @@ void param_type_list_insert(param_type_list_t *l, data_type type);
 /*
  frees entire parameter's types list
 */
-void param_list_destroy(param_type_list_t *l);
+//void param_list_destroy(param_type_list_t *l);
 
 #endif

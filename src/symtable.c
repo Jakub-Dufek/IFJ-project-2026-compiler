@@ -38,7 +38,7 @@ int bvs_height(symtable_bvs_node_t *ptr){
     return ptr->height;
 }
 
-symtable_bvs_node_t *left_rotate(symtable_bvs_node_t *y){
+symtable_bvs_node_t *symtable_left_rotate(symtable_bvs_node_t *y){
     symtable_bvs_node_t *x = y->r_ptr;
     y->r_ptr = x->l_ptr;
     x->l_ptr = y;
@@ -48,7 +48,7 @@ symtable_bvs_node_t *left_rotate(symtable_bvs_node_t *y){
 
     return x;
 }
-symtable_bvs_node_t *right_rotate(symtable_bvs_node_t *y){
+symtable_bvs_node_t *symtable_right_rotate(symtable_bvs_node_t *y){
     symtable_bvs_node_t *x = y->l_ptr;
     y->l_ptr = x->r_ptr;
     x->r_ptr = y;
@@ -84,14 +84,7 @@ symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
         error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
         //return NULL;
     }
-    new_node->key = (char *)malloc((strlen(key) + 1) * sizeof(char));
-    if (new_node->key == NULL) {
-        free(new_node);
-        error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
-        //return NULL;
-    }
-    strcpy(new_node->key, key);
-
+    new_node->key = key;
     new_node->symbol_data = symb;
     new_node->l_ptr = NULL;
     new_node->r_ptr = NULL;
@@ -155,10 +148,9 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr){
     if (root_ptr->r_ptr != NULL){
         symtable_destructor(root_ptr->r_ptr);
     }
-    if (root_ptr->symbol_data.id_type == ID_FUNC && root_ptr->symbol_data.func_info.param_types != NULL) {
+    /*if (root_ptr->symbol_data.id_type == ID_FUNC && root_ptr->symbol_data.func_info.param_types != NULL) {
         param_list_destroy(root_ptr->symbol_data.func_info.param_types);  // <--let it be for now
-    }
-    free(root_ptr->key);
+    }*/
     free(root_ptr);
 }
 
@@ -218,7 +210,8 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
 // LINKED LIST
 
 param_type_list_t *param_type_list_initialize(void) {
-    param_type_list_t *l = malloc(sizeof(param_type_list_t));
+    //param_type_list_t *l = (param_type_list_t*) malloc(sizeof(param_type_list_t));
+    param_type_list_t *l = ast_alloc(sizeof(param_type_list_t));
     if (l == NULL) {
         error_exit(INTERNAL_ERR, 0, "Internal allocation fault");
     }
@@ -229,7 +222,8 @@ param_type_list_t *param_type_list_initialize(void) {
 
 void param_type_list_insert(param_type_list_t *l, data_type type){
     if (l != NULL){
-        param_type_t *new_param_type = (param_type_t *) malloc(sizeof(param_type_t));
+        //param_type_t *new_param_type = (param_type_t *) malloc(sizeof(param_type_t));
+        param_type_t *new_param_type = ast_alloc(sizeof(param_type_t));
         if (new_param_type == NULL){
             error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
             //return;
@@ -248,7 +242,7 @@ void param_type_list_insert(param_type_list_t *l, data_type type){
     }
 }
 
-void param_list_destroy(param_type_list_t *l) {
+/*void param_list_destroy(param_type_list_t *l) {
     param_type_t *current;
 
     while (l->first != NULL) {
@@ -258,4 +252,4 @@ void param_list_destroy(param_type_list_t *l) {
     }
     l->last = NULL; 
     free(l);
-}
+}*/
