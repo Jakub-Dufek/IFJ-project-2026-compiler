@@ -9,3 +9,4 @@ def main(): Unit =
     val y = 20
     var result: Double = add(x, y)
     result = result + 5
+    return y
