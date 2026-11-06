@@ -211,7 +211,7 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
 
 param_type_list_t *param_type_list_initialize(void) {
     //param_type_list_t *l = (param_type_list_t*) malloc(sizeof(param_type_list_t));
-    param_type_list_t *l = ast_alloc(sizeof(param_type_list_t));
+    param_type_list_t *l = arena_alloc(sizeof(param_type_list_t));
     if (l == NULL) {
         error_exit(INTERNAL_ERR, 0, "Internal allocation fault");
     }
@@ -223,7 +223,7 @@ param_type_list_t *param_type_list_initialize(void) {
 void param_type_list_insert(param_type_list_t *l, data_type type){
     if (l != NULL){
         //param_type_t *new_param_type = (param_type_t *) malloc(sizeof(param_type_t));
-        param_type_t *new_param_type = ast_alloc(sizeof(param_type_t));
+        param_type_t *new_param_type = arena_alloc(sizeof(param_type_t));
         if (new_param_type == NULL){
             error_exit(INTERNAL_ERR, 0, "Internal allocation fault"); // <-- Come back to this
             //return;

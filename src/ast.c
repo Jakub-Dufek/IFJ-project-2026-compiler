@@ -30,8 +30,8 @@
  */
 static ast_node_t *ast_node_init(ast_stmt_type_t stmt_type, unsigned line_num)
 {
-    ast_node_t *node = ast_alloc(sizeof(ast_node_t));
-    node->data = ast_alloc(sizeof(ast_node_data_t));
+    ast_node_t *node = arena_alloc(sizeof(ast_node_t));
+    node->data = arena_alloc(sizeof(ast_node_data_t));
     node->next = NULL;
 
     node->stmt_type = stmt_type;

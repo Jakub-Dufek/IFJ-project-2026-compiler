@@ -15,7 +15,8 @@
 
 int main()
 {
-    ast_init_arena();
+    arena_init();
+    scratch_init();
 
 
     ast_node_t *ast = build_ast();  // parser + scanner
@@ -23,5 +24,6 @@ int main()
     generate_IFJcode26(ast);        // code generator
 
 
-    ast_free_arena();
+    scratch_free();
+    arena_free_all();
 }

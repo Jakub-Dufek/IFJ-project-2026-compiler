@@ -32,7 +32,8 @@ void error_exit(err_code_t err_code, unsigned line, const char *fmt, ...)
 
     va_end(args);
 
-    ast_free_arena(); // Frees dynamic memory alloc in AST
+    scratch_free();     // Frees string buffer
+    arena_free_all();   // Frees dynamic memory alloc in AST
 
     exit(err_code);
 }

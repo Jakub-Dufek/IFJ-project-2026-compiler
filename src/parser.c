@@ -92,6 +92,8 @@ static token_type parse_optional_type_def()
 static ast_node_t *parse_expr_or_call()
 {
     //TODO: parse_expr_or_call
+
+    return NULL;
 }
 
 
@@ -299,6 +301,8 @@ ast_node_t *parse_next_local(token_t current_token)
         default:
             error_exit(SYNT_ERR, current_token.line_num, "Unexpected token at local level");
     }
+
+    return NULL; // this will never be reached
 }
 
 
@@ -312,6 +316,8 @@ ast_node_t *parse_next_global(token_t current_token)
         default:
             error_exit(SYNT_ERR, current_token.line_num, "Unexpected token at global level");
     }
+
+    return NULL; // this will never be reached
 }
 
 

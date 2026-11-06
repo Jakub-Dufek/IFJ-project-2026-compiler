@@ -10,7 +10,8 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#define ARENA_SIZE 1024 * 1024 // 1 MB
+#define ARENA_SIZE (1024 * 1024) // 1 MB
+#define STARTING_STAGING_CAPACITY 256
 
 typedef struct arena arena_t;
 
@@ -26,30 +27,64 @@ struct arena {
 };
 
 
-//  AST ARENA FUNCTIONS
+
+//  GENERAL ARENA FUNCTIONS
 
 /**
- * @brief Initializes arena for AST
- */
-void ast_init_arena();
-
-/**
- * @brief Frees all allocated nodes in AST at once
- */
-void ast_free_arena(void);
-
-/**
- * @brief Allocates size number of bytes in ast_arena
+ * @brief Allocates size number of bytes in arena
  * 
  * @param size size in bytes
  * 
  * @return ptr to allocated mem
  */
-void *ast_alloc(unsigned size);
+void *arena_alloc(unsigned size);
+
+/**
+ * @brief Initializes arena
+ */
+void arena_init();
+
+/**
+ * @brief Frees all memory in arena
+ */
+void arena_free_all();
 
 
-//  STRING ARENA FUNCTIONS
 
-// TODO: string arena functions
+//  SCANNER STRING BUILDER (SCRATCHPAD)
+
+/**
+ * @brief Appends char to string buffer
+ */
+void scratch_append(char character);
+
+/**
+ * @brief Clears string buffer
+ */
+void scratch_clear();
+
+/**
+ * @brief Outputs UNALLOCATED string at buffer
+ * 
+ * @return UNALLOCATED string sitting in buffer
+ */
+const char *scratch_get_string();
+
+/**
+ * @brief Allocates string at buffer
+ * 
+ * @return ALLOCATED string sitting in buffer
+ */
+char *scratch_save_to_arena();
+
+/**
+ * @brief Initializes string buffer
+ */
+void scratch_init();
+
+/**
+ * @brief Frees string buffer
+ */
+void scratch_free();
 
 #endif
