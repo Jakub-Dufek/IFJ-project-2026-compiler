@@ -117,20 +117,20 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, s
         
         if (root_ptr->weight == -2){
             if (strcmp(root_ptr->l_ptr->key, key) > 0){
-                root_ptr = right_rotate(root_ptr);
+                root_ptr = symtable_right_rotate(root_ptr);
             }
             else{
-                root_ptr->l_ptr = left_rotate(root_ptr->l_ptr);
-                root_ptr = right_rotate(root_ptr);
+                root_ptr->l_ptr = symtable_left_rotate(root_ptr->l_ptr);
+                root_ptr = symtable_right_rotate(root_ptr);
             }
         }
         else if (root_ptr->weight == 2){
             if (strcmp(root_ptr->r_ptr->key, key) < 0){
-                root_ptr = left_rotate(root_ptr);
+                root_ptr = symtable_left_rotate(root_ptr);
             }
             else{
-                root_ptr->r_ptr = right_rotate(root_ptr->r_ptr);
-                root_ptr = left_rotate(root_ptr);
+                root_ptr->r_ptr = symtable_right_rotate(root_ptr->r_ptr);
+                root_ptr = symtable_left_rotate(root_ptr);
             }
         }
 
