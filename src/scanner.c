@@ -19,13 +19,24 @@
 #include <string.h>
 
 // global variables
+// Holds the information of there already was a token on this line or not
 static bool line_start = true;
+// Holds the information of a line has the /tab symbol on its start
 static bool tab_on_line_start = false;
+// The value of this variable states how many openning round brackets have not been closed yet
 static unsigned depth_of_brackets = NO_VALUE;
+// This value states how many spaces have been used for the indentation of the current line
 static unsigned indent_depth = NO_VALUE;
-static unsigned last_indent_idx = NO_VALUE;
+// Variable for storing one token, that will be sent in the next call of this module
 static token_t next_token = {0};
+// Variable for storing one token that was sent back from parser. It will be sent in the 
+// next call of scanner and has higher priority than next_token
+static token_t buffer_token = {0};
+// Variable holding the number of the active line this module is getting information from
 static unsigned current_line_num = 1;
+// Index of the value after the last indent value in indent_values
+static unsigned last_indent_idx = NO_VALUE;
+// Array of increasing indent values. Used for handling blocks
 static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
 
 // dictionary
@@ -36,6 +47,10 @@ keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
     {"false", T_KEY_FALSE},     {"for", T_KEY_FOR},       {"if", T_KEY_IF},     {"import", T_KEY_IMPORT},
     {"match", T_KEY_MATCH},     {"return", T_KEY_RETURN}, {"then", T_KEY_THEN}, {"true", T_KEY_TRUE},
     {"type", T_KEY_TYPE},       {"val", T_KEY_VAL},       {"var", T_KEY_VAR},   {"while", T_KEY_WHILE}};
+
+void buffer_token(token_t token) {
+    
+}
 
 token_t new_token(unsigned line_num)
 {
