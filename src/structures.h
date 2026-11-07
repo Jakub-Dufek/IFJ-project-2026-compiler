@@ -63,9 +63,9 @@ typedef enum token_type {
     T_EQ,     // '=='
     T_NEQ,    // '!='
     T_ASSIGN, // '='
-    T_NEG     // '!'
-    T_AND     // '&&'
-    T_OR      // '||'
+    T_NEG,    // '!'
+    T_AND,    // '&&'
+    T_OR,     // '||'
 
     T_DOT,              // '.'
     T_L_ROUND_BRACKET,  // '('

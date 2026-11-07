@@ -495,7 +495,8 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
                 if ((character = getchar()) == '=') {
                     token.type = T_NEQ;
                 } else {
-                    error_exit(LEX_ERR, token.line_num, "Invalid use of the '!' symbol.");
+                    token.type = T_NEG;
+                    ungetc(character, stdin);
                 }
                 break;
             case ',':
@@ -516,8 +517,24 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
             case '"':
                 current_case = CASE_QUOTATION_MARKS;
                 break;
+            case '&':
+                if ((character = getchar()) == '&') {
+                    token.type = T_AND;
+                }
+                else {
+                    error_exit(LEX_ERR, token.line_num, "Symbol '&' is not supported. If you want AND operand, use '&&'.\n");
+                }
+                break;
+            case '|':
+                if ((character = getchar()) == '|') {
+                    token.type = T_OR;
+                }
+                else {
+                    error_exit(LEX_ERR, token.line_num, "Symbol '|' is not supported. If you want OR operand, use '||'.\n");
+                }
+                break;
             default:
-                error_exit(LEX_ERR, token.line_num, "Unknown character.");
+                error_exit(LEX_ERR, token.line_num, "Unknown character.\n");
                 break;
             }
             break;
