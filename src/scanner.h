@@ -61,7 +61,7 @@ typedef struct Lexeme {
  *
  * The token that is being returned will be sent in the next call of scanner
  */
-void buffer_token(token_t token);
+void return_buffer_token(token_t token);
 
 /**
  * @brief Creates new token and initialises it
