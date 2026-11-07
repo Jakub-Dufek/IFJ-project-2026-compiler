@@ -49,7 +49,7 @@ keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
     {"type", T_KEY_TYPE},       {"val", T_KEY_VAL},       {"var", T_KEY_VAR},   {"while", T_KEY_WHILE}};
 
 void buffer_token(token_t token) {
-    
+    buffer_token = token;
 }
 
 token_t new_token(unsigned line_num)
@@ -619,6 +619,13 @@ token_t get_next_token()
     scanner_case current_case = CASE_START;
     int character;
     char next_character;
+
+    // If buffer_token is not empty, the now-sent token should be buffer_token
+    if (buffer_token.type != T_UNDEFINED) {
+        token = buffer_token;
+        buffer_token = new_token(current_line_num); // line_num not important
+        return token;
+    }
 
     // Main loop for finding and creating token
     while (token.type == T_UNDEFINED && next_token.type == T_UNDEFINED) {
