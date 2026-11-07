@@ -63,10 +63,13 @@ typedef enum token_type {
     T_EQ,     // '=='
     T_NEQ,    // '!='
     T_ASSIGN, // '='
+    T_NEG     // '!'
+    T_AND     // '&&'
+    T_OR      // '||'
 
-    T_DOT,             // '.'
-    T_L_ROUND_BRACKET, // '('
-    T_R_ROUND_BRACKET, // ')'
+    T_DOT,              // '.'
+    T_L_ROUND_BRACKET,  // '('
+    T_R_ROUND_BRACKET,  // ')'
 
     T_LF,        // '\n'
     T_COLON,     // ':'
@@ -82,6 +85,8 @@ typedef enum token_type {
     T_INT_LITERAL,
     T_DOUBLE_LITERAL,
     T_UNIT_LITERAL,
+    T_TRUE_LITERAL,
+    T_FALSE_LITERAL,
 
     EP_DOLLAR,
     EP_LT_MARKER,
