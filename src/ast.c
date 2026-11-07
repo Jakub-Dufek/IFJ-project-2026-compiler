@@ -94,6 +94,17 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
 }
 
 
+ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_t *body)
+{
+    ast_node_t *current_node = ast_node_init(AST_WHILE, line_num);
+
+    current_node->data->while_node.condition = condition;
+    current_node->data->while_node.body = body;
+
+    return current_node;
+}
+
+
 ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num)
 {
     ast_node_t *current_node = ast_node_init(AST_RETURN, line_num);

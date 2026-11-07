@@ -231,6 +231,32 @@ ast_node_t *parse_var_declaration(token_t current_token)
 }
 
 
+ast_node_t *parse_while()
+{
+    // condition
+    token_t current_token = get_next_token();
+    unsigned line_num = current_token.line_num;
+    ast_node_t *condition = parse_expression(current_token); // TODO: SYNCHRONIZE WITH EXPR PARSER TO UNGET TOKEN!
+
+    // do
+    current_token = get_next_token();
+    if(current_token.type != T_KEY_DO) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected do after while condition");
+    }
+
+    // newline
+    current_token = get_next_token();
+    if(current_token.type != T_LF) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after while do");
+    }
+
+    // body
+    ast_node_t *body = parse_block();
+
+    return ast_insert_while(condition, line_num, body);
+}
+
+
 ast_node_t *parse_return()
 {
     token_t current_token = get_next_token();
@@ -327,9 +353,9 @@ ast_node_t *parse_next_local(token_t current_token)
         case T_KEY_IF:
             return NULL; // TODO: specify
         case T_KEY_WHILE:
-            return NULL; // TODO: specify
+            return parse_while();
         case T_KEY_RETURN:
-            return NULL; // TODO: specify
+            return parse_return();
         case T_IDENTIFIER:
             return NULL; // TODO: specify
         default:

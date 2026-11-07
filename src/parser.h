@@ -35,11 +35,19 @@ void parse_prologue();
 ast_node_t *parse_var_declaration(token_t current_token);
 
 /**
+ * @brief Parses while do cycle, call after recieving while
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_while();
+
+/**
  * @brief Parses return, call after recieving return
  * 
  * @return pointer to top of return sub-tree
  */
 ast_node_t *parse_return();
+
 
 
 //  GLOBAL PARSING FUNCTIONS

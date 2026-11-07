@@ -89,6 +89,15 @@ typedef struct {
 } ast_declaration_node_t;
 
 /**
+ * @brief ast_while_node_t
+ * @brief Node for while do cycle
+ */
+typedef struct {
+    ast_node_t *condition;
+    ast_node_t *body;
+} ast_while_node_t;
+
+/**
  * @struct ast_return_node_t
  * @brief Node for return
  */
@@ -163,6 +172,7 @@ typedef union {
     ast_param_node_t param_node;
 
     ast_declaration_node_t declaration_node;
+    ast_while_node_t while_node;
     ast_return_node_t return_node;
 
     ast_definition_node_t definition_node;
@@ -243,6 +253,15 @@ ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_ty
  */
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression);
+
+/**
+ * @brief Creates AST for while do cycle
+ * 
+ * @param condition a sub-AST of condition
+ * @param line_num
+ * @param body a sub-AST of body
+ */
+ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_t *body);
 
 /**
  * @brief Creates AST for return
