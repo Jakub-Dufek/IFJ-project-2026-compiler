@@ -48,7 +48,7 @@ keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
     {"match", T_KEY_MATCH},     {"return", T_KEY_RETURN}, {"then", T_KEY_THEN}, {"true", T_KEY_TRUE},
     {"type", T_KEY_TYPE},       {"val", T_KEY_VAL},       {"var", T_KEY_VAR},   {"while", T_KEY_WHILE}};
 
-void buffer_token(token_t token) {
+void return_buffer_token(token_t token) {
     buffer_token = token;
 }
 
