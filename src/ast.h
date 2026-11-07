@@ -11,8 +11,9 @@
 #ifndef AST_H
 #define AST_H
 
+
 #include <stdbool.h>
-#include <string.h>
+
 #include "symtable.h"
 #include "structures.h"
 
@@ -27,18 +28,29 @@ typedef struct ast_block_node ast_block_node_t;
  * @brief Enum for statement types of nodes
  */
 typedef enum ast_stmt_type {
+  // discrete nodes 
     AST_BLOCK,
-    AST_PARAM,
+    AST_PARAM,          /// function parameter
 
-    AST_DECLARATION,
-    AST_DEFINITION,
-    AST_CALL,
+  // local nodes
+    AST_DECLARATION,    /// variable
+    AST_ASSIGN,
+    AST_EXPR,
+    AST_CALL,           /// function call
+    AST_IF,
+    AST_WHILE,
+    AST_RETURN,
 
+  // global nodes
+    AST_DEFINITION,     /// function
+
+  // expr nodes
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
     EXPR_LITERAL,
 
-    EXPR_INT2FLOAT
+  // semantic nodes
+    EXPR_INT2FLOAT      /// semantic conversion marker
 } ast_stmt_type_t;
 
 
@@ -50,7 +62,7 @@ typedef enum ast_stmt_type {
  * @brief Node representing block
  */
 struct ast_block_node {
-    ast_node_t *first;  /// Unit literal if empty block
+    ast_node_t *first;  /// NULL if empty block
     ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
 };
 
@@ -75,6 +87,16 @@ typedef struct {
     token_type data_type;
     ast_node_t *expression;     /// expression subtree
 } ast_declaration_node_t;
+
+/**
+ * @struct ast_return_node_t
+ * @brief Node for return
+ */
+typedef struct {
+    ast_node_t *expr_or_call;   /// NULL if standalone
+} ast_return_node_t;
+
+
 
 /**
  * @struct ast_definition_node_t
@@ -118,6 +140,8 @@ typedef struct {
     token_value_t lit_value;
 } expr_lit_leaf_node_t;
 
+
+
 /**
  * @struct expr_imp_leaf_node_t
  * @brief Node for implicit conversion
@@ -139,6 +163,8 @@ typedef union {
     ast_param_node_t param_node;
 
     ast_declaration_node_t declaration_node;
+    ast_return_node_t return_node;
+
     ast_definition_node_t definition_node;
 
     expr_op_node_t op_node;
@@ -175,10 +201,10 @@ ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
 
 
 
-//  AST INSERT FUNCTIONS
+//  DISCRETE INSERT FUNCTIONS
 
 /**
- * @brief Creates node for new block
+ * @brief Creates AST for new block
  * 
  * @param first ptr to first stmt
  * @param line_num
@@ -192,6 +218,7 @@ ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *l
  * @brief Creates AST for function parameter
  * 
  * @param value name of id
+ * @param line_num
  * @param data_type
  * @param next param right after
  * 
@@ -201,12 +228,15 @@ ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_ty
 
 
 
+//  LOCAL INSERT FUNCTIONS
+
 /**
- * @brief Creates AST for var/val declaration (usually one line of code)
+ * @brief Creates AST for var/val declaration
  * 
- * @param value Value of var/val (key)
- * @param is_mutable Mutability of var/val
- * @param data_type Data type given (or to be deduced)
+ * @param value name of id
+ * @param line_num
+ * @param is_mutable var => true, val => false
+ * @param data_type if T_NO_TYPE  => to be deduced
  * @param expression a sub-AST of expression
  * 
  * @return AST node representing var/val declaration
@@ -215,13 +245,28 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
                                             token_type data_type, ast_node_t *expression);
 
 /**
+ * @brief Creates AST for return
+ * 
+ * @param expr_or_call a sub-AST of either expr or call
+ * @param line_num
+ * 
+ * @return AST node representing return
+ */
+ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num);
+
+
+
+//  GLOBAL INSERT FUNCTIONS
+
+/**
  * @brief Creates AST for function definition
  * 
- * @param value
+ * @param value name of id
  * @param line_num
- * @param data_type
- * @param block
- * @param first_param
+ * @param data_type if T_NO_TYPE  => to be deduced
+ * @param first_param ->next is second param etc, NULL if no param
+ * @param body a sub-AST of body
+ * @param is_main
  * 
  * @return AST node representing function definition
  */

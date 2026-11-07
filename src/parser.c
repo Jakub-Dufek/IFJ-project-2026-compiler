@@ -231,6 +231,18 @@ ast_node_t *parse_var_declaration(token_t current_token)
 }
 
 
+ast_node_t *parse_return()
+{
+    token_t current_token = get_next_token();
+
+    if(current_token.type == T_LF || current_token.type == T_EOF) {
+        return ast_insert_return(NULL, current_token.line_num);
+    }
+    else {
+        return ast_insert_return(parse_expression(current_token), current_token.line_num);
+    }
+}
+
 
 //  GLOBAL PARSING FUNCTIONS
 
@@ -310,15 +322,19 @@ ast_node_t *parse_fn_definition()
 ast_node_t *parse_next_local(token_t current_token)
 {
     switch(current_token.type) {
-        case T_KEY_VAR: // fall through below
-        case T_KEY_VAL:
+        case T_KEY_VAR: case T_KEY_VAL:
             return parse_var_declaration(current_token);
-        // TODO: OTHER CASES
+        case T_KEY_IF:
+            return NULL; // TODO: specify
+        case T_KEY_WHILE:
+            return NULL; // TODO: specify
+        case T_KEY_RETURN:
+            return NULL; // TODO: specify
+        case T_IDENTIFIER:
+            return NULL; // TODO: specify
         default:
-            error_exit(SYNT_ERR, current_token.line_num, "Unexpected token at local level");
+            return parse_expression(current_token);
     }
-
-    return NULL; // this will never be reached
 }
 
 

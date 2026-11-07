@@ -10,6 +10,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+
 #include "ast.h"
 
 
@@ -33,6 +34,12 @@ void parse_prologue();
  */
 ast_node_t *parse_var_declaration(token_t current_token);
 
+/**
+ * @brief Parses return, call after recieving return
+ * 
+ * @return pointer to top of return sub-tree
+ */
+ast_node_t *parse_return();
 
 
 //  GLOBAL PARSING FUNCTIONS
@@ -81,7 +88,7 @@ ast_node_t *parse_next_global(token_t current_token);
 /**
  * @brief Parses entire programme and builds AST for further analysis and compiling
  * 
- * @return pointer to top of AST
+ * @return pointer to top of entire AST
  */
 ast_node_t *build_ast();
 

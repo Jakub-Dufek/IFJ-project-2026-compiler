@@ -10,6 +10,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+
 #define ARENA_SIZE (1024 * 1024) // 1 MB
 #define STARTING_STAGING_CAPACITY 256
 
@@ -86,5 +87,6 @@ void scratch_init();
  * @brief Frees string buffer
  */
 void scratch_free();
+
 
 #endif
