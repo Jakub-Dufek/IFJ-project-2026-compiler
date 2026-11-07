@@ -10,7 +10,7 @@
 */
 int main()
 {
-    ast_init_arena(); // DO NOT REMOVE, KEEP AT BEGINNING
+    arena_init(); // DO NOT REMOVE, KEEP AT BEGINNING
 
     // 10
     token_value_t ten_int; ten_int.int_value = 10;
@@ -59,5 +59,5 @@ int main()
     //generate_IFJcode26(definition);
 
 
-    ast_free_arena(); // DO NOT REMOVE, KEEP AT END
+    arena_free_all(); // DO NOT REMOVE, KEEP AT END
 }
