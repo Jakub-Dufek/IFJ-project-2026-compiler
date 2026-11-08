@@ -331,11 +331,20 @@ token_t first_alpha (int character, token_t token) {
         if ((character = getchar()) == '"') {
             if ((character = getchar()) == '"') {
                 multiline_interpolation = true;
+                //call function for interpolation
             }
             else {
-                
+                if (character != EOF) {
+                    ungetc(character, stdin);
+                }
+                ungetc('"', stdin);
             }
         }
+        else if (character != EOF) {
+            ungetc(character, stdin);
+        }
+        multiline_interpolation = false;
+        //call function for interpolation
     }
     else if (character != EOF) {
         ungetc(character, stdin);
