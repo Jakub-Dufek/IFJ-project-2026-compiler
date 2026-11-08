@@ -15,28 +15,13 @@
 #define ELEMENT_ARRAY_SIZE 4
 
 static const char precedence_table[PRECEDENCE_TABLE_SIZE][PRECEDENCE_TABLE_SIZE] = {
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*  +-  */{'>', '<', '>', '>', '>',      '>', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /* * /  */{'>', '>', '>', '>', '>',      '>', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*  &&  */{'<', '<', '>', '>', '<',      '<', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*  ||  */{'<', '<', '<', '>', '<',      '<', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*<><=>=*/{'<', '<', '>', '>', ' ',      '>', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /* ==!= */{'<', '<', '>', '>', '<',      ' ', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*   (  */{'<', '<', '<', '<', '<',      '<', '<', '=', '<', '<', ' ',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*   )  */{'>', '>', '>', '>', '>',      '>', ' ', '>', ' ', ' ', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /* -i!i */{'>', '>', '>', '>', '>',      '>', '<', '>', '<', '<', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*   i  */{'>', '>', '>', '>', '>',      '>', ' ', '>', ' ', ' ', '>',},
-    /*         +-   * /  &&   ||   <><=>=   ==!=   (    )  -i!i   i    $   */
-    /*   $  */{'<', '<', '<', '<', '<',      '<', '<', ' ', '<', '<', ' ',},
+    /*        +-    /*   (    )    i    $   */
+    /*  +- */{'>', '<', '<', '>', '<', '>'},
+    /*  /* */{'>', '>', '<', '>', '<', '>'},
+    /*  (  */{'>', '>', '<', '=', '<', '>'},
+    /*  )  */{'>', '>', ' ', '>', '<', '>'},
+    /*  i  */{'>', '>', ' ', '>', ' ', '>'},
+    /*  $  */{'<', '<', '<', ' ', '<', ' '}
 };
 
 precedence_table_index table_index(token_type type) {
@@ -48,38 +33,16 @@ precedence_table_index table_index(token_type type) {
         case T_MULT:
         case T_DIV:
             return P_MUL_DIV;
-
-        case T_AND:
-            return P_AND;
-
-        case T_OR:
-            return P_OR;
-
-        case T_LT:
-        case T_LTE:
-        case T_GT:
-        case T_GTE:
-            return P_LT_LTE_GT_GTE;
-
-        case T_EQ:
-        case T_NEQ:
-            return P_EQ_NEQ;
-
+        
         case T_L_ROUND_BRACKET:
             return P_L_ROUND_BRACKET;
 
         case T_R_ROUND_BRACKET:
             return P_R_ROUND_BRACKET;
 
-        case EP_UNARY_NEG:
-        case EP_UNARY_MINUS:
-            return P_UNARY_NEG_MINUS;
-
         case T_IDENTIFIER:
         case T_INT_LITERAL:
         case T_DOUBLE_LITERAL:
-        case T_KEY_TRUE:
-        case T_KEY_FALSE:
             return P_ID;
 
         default:
@@ -90,10 +53,10 @@ precedence_table_index table_index(token_type type) {
 bool is_operator(TStack_Element *array, int array_counter){
     return array[array_counter].token.type == T_PLUS   || array[array_counter].token.type == T_MINUS 
         || array[array_counter].token.type == T_MULT   || array[array_counter].token.type == T_DIV
-        || array[array_counter].token.type == T_AND    || array[array_counter].token.type == T_OR
-        || array[array_counter].token.type == T_LT     || array[array_counter].token.type == T_LTE
         || array[array_counter].token.type == T_GT     || array[array_counter].token.type == T_GTE
-        || array[array_counter].token.type == T_EQ     || array[array_counter].token.type == T_NEQ;
+        || array[array_counter].token.type == T_LT     || array[array_counter].token.type == T_LTE
+        || array[array_counter].token.type == T_EQ     || array[array_counter].token.type == T_NEQ
+        || array[array_counter].token.type == T_ASSIGN;
 }
 
 //EXPRESSION PARSING
@@ -119,16 +82,6 @@ ast_node_t *parse_expression(token_t token)
 
     bool value = true;
     while (value) {
-        token_type top_ter = top_terminal(&stack).type;
-
-        if (next_token.type == T_MINUS && (top_ter == EP_DOLLAR || top_ter == T_L_ROUND_BRACKET)) {
-            next_token.type = EP_UNARY_MINUS;
-        }
-
-        if (next_token.type == T_NEG && (top_ter == EP_DOLLAR || top_ter == T_L_ROUND_BRACKET)) {
-            next_token.type = EP_UNARY_NEG;
-        }
-
         int row = table_index(top_terminal(&stack).type);
         int colm = table_index(next_token.type);
 
@@ -157,11 +110,7 @@ ast_node_t *parse_expression(token_t token)
                 break;
 
             default:
-                if(top_terminal(&stack).type == EP_DOLLAR && (next_token.type == T_EOF || next_token.type == T_LF || 
-                                                              next_token.type == T_KEY_THEN || next_token.type ==  T_KEY_DO)) {
-                    if (next_token.type == T_KEY_THEN || next_token.type ==  T_KEY_DO) {
-                        return_buffer_token(next_token);
-                    }
+                if(top_terminal(&stack).type == EP_DOLLAR && (next_token.type == T_EOF || next_token.type == T_LF)) {
                     tree = top(&stack).value.ast_node_ptr;
                     value = false;
                     break;
@@ -185,8 +134,7 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = expr_insert_id_leaf(array[0].token.value.string_value, array[0].token.line_num);
                 stack_push(stack, &new_token);
             }
-            else if (array[0].token.type == T_INT_LITERAL || array[0].token.type == T_DOUBLE_LITERAL || 
-                     array[0].token.type == T_KEY_TRUE || array[0].token.type == T_KEY_FALSE) {
+            else if (array[0].token.type == T_INT_LITERAL || array[0].token.type == T_DOUBLE_LITERAL) {
                 new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, array[0].token.type);
                 stack_push(stack, &new_token);
             }
@@ -196,10 +144,6 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
         case 2:
             if (array[0].token.type == T_R_ROUND_BRACKET && array[1].token.type == T_L_ROUND_BRACKET) {
                 new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, T_UNIT_LITERAL);
-                stack_push(stack, &new_token);
-            }
-            else if (array[0].token.type == EP_EXPR && (array[1].token.type == EP_UNARY_MINUS || array[1].token.type == EP_UNARY_NEG)) {
-                new_token.value.ast_node_ptr = expr_insert_op(array[1].token.type, array[1].token.line_num, NULL, array[0].token.value.ast_node_ptr);
                 stack_push(stack, &new_token);
             }
             else { error_exit (SYNT_ERR, new_token.line_num, ""); } //TODO ERROR

@@ -58,12 +58,12 @@ void stack_pop(TStack *stack) {
 }
 
 token_t top(TStack *stack) {
-    if (empty(stack)) { error_exit(SYNT_ERR, 0, ""); } //TODO
+    if (empty(stack)) { error_exit(INTERNAL_ERR, 0, ""); } //TODO
     return (stack->top->token);
 }
 
 token_t top_terminal(TStack *stack) {
-    if (empty(stack)) { error_exit(SYNT_ERR, 0, ""); } //TODO
+    if (empty(stack)) { error_exit(INTERNAL_ERR, 0, ""); } //TODO
     TStack_ElementPtr temp_element = stack->top;
     while (temp_element != NULL) {
         if (temp_element->token.type != EP_EXPR && temp_element->token.type != EP_LT_MARKER) {
@@ -71,7 +71,7 @@ token_t top_terminal(TStack *stack) {
         }
         temp_element = temp_element->next;
     }
-    error_exit(SYNT_ERR, 0, ""); //TODO
+    error_exit(INTERNAL_ERR, 0, ""); //TODO
     token_t token = {0};
     return token;
 }
