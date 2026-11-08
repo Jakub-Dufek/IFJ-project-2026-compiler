@@ -57,6 +57,11 @@ void return_buffer_token(token_t token) {
     buffer_token = token;
 }
 
+token_t process_interpolation (token_t token) {
+
+    return token;
+}
+
 token_t new_token(unsigned line_num)
 {
     token_t new_token = {NO_VALUE};
@@ -328,23 +333,26 @@ int compare(const void *string, const void *keyword_string)
 token_t first_alpha (int character, token_t token) {
     // Check for interpolated s
     if (character == 's' && (character = getchar()) == '"') {
+        interpolated_s = true;
         if ((character = getchar()) == '"') {
             if ((character = getchar()) == '"') {
                 multiline_interpolation = true;
-                //call function for interpolation
             }
             else {
+                multiline_interpolation = false;
                 if (character != EOF) {
                     ungetc(character, stdin);
                 }
                 ungetc('"', stdin);
             }
         }
-        else if (character != EOF) {
-            ungetc(character, stdin);
+        else {
+            multiline_interpolation = false;
+            if (character != EOF) {
+                ungetc(character, stdin);
+            }
         }
-        multiline_interpolation = false;
-        //call function for interpolation
+        return token = process_interpolation(token);
     }
     else if (character != EOF) {
         ungetc(character, stdin);
@@ -663,6 +671,10 @@ token_t get_next_token()
         token = buffer_token;
         buffer_token = new_token(current_line_num); // line_num not important
         return token;
+    }
+
+    if (interpolated_s == true && token.type == T_UNDEFINED) {
+        token = process_interpolation(token);
     }
 
     // Main loop for finding and creating token
