@@ -87,11 +87,28 @@ static token_type parse_data_type_def()
 /**
  * @brief Determines whether upcoming tokens are expr or fn-call
  * 
+ * @param current_token
+ * 
  * @return subtree of expr or call
  */
-static ast_node_t *parse_expr_or_call()
+static ast_node_t *parse_expr_or_call(token_t current_token)
 {
     //TODO: parse_expr_or_call
+
+    return NULL;
+}
+
+
+/**
+ * @brief Determines whether upcoming tokens are expr, fn-call or assign
+ * 
+ * @param current_token
+ * 
+ * @return subtree of expr, call or assign
+ */
+static ast_node_t *parse_expr_call_or_assign(token_t current_token)
+{
+    //TODO: parse_expr_call_or_assign
 
     return NULL;
 }
@@ -231,6 +248,41 @@ ast_node_t *parse_var_declaration(token_t current_token)
 }
 
 
+ast_node_t *parse_if()
+{
+    // condition
+    token_t current_token = get_next_token();
+    unsigned line_num = current_token.line_num;
+    ast_node_t *condition = parse_expression(current_token); // TODO: SYNCHRONIZE WITH EXPR PARSER TO UNGET TOKEN!
+
+    // then
+    current_token = get_next_token();
+    if(current_token.type != T_KEY_THEN) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected 'then' after 'if' condition");
+    }
+
+    // newline
+    current_token = get_next_token();
+    if(current_token.type != T_LF) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after 'if then'");
+    }
+
+    // body
+    ast_node_t *then_body = parse_block();
+
+    // else
+    current_token = get_next_token();
+    if(current_token.type != T_KEY_ELSE) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected 'else' after 'if then' block");
+    }
+
+    // newline
+    ast_node_t *else_body = parse_block();
+
+    return ast_insert_if(condition, line_num, then_body, else_body);
+}
+
+
 ast_node_t *parse_while()
 {
     // condition
@@ -241,13 +293,13 @@ ast_node_t *parse_while()
     // do
     current_token = get_next_token();
     if(current_token.type != T_KEY_DO) {
-        error_exit(SYNT_ERR, current_token.line_num, "Expected do after while condition");
+        error_exit(SYNT_ERR, current_token.line_num, "Expected 'do' after 'while' condition");
     }
 
     // newline
     current_token = get_next_token();
     if(current_token.type != T_LF) {
-        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after while do");
+        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after 'while do'");
     }
 
     // body
@@ -335,7 +387,7 @@ ast_node_t *parse_fn_definition()
         body = parse_block();
     }
     else {
-        body = parse_expr_or_call();
+        body = parse_expr_or_call(current_token);
     }
 
     return ast_insert_fn_definition(value, line_num, data_type, param, body, false);
@@ -351,13 +403,13 @@ ast_node_t *parse_next_local(token_t current_token)
         case T_KEY_VAR: case T_KEY_VAL:
             return parse_var_declaration(current_token);
         case T_KEY_IF:
-            return NULL; // TODO: specify
+            return parse_if();
         case T_KEY_WHILE:
             return parse_while();
         case T_KEY_RETURN:
             return parse_return();
         case T_IDENTIFIER:
-            return NULL; // TODO: specify
+            return parse_expr_call_or_assign(current_token);
         default:
             return parse_expression(current_token);
     }

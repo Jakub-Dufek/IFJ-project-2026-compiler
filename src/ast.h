@@ -89,7 +89,17 @@ typedef struct {
 } ast_declaration_node_t;
 
 /**
- * @brief ast_while_node_t
+ * @struct ast_if_node_t
+ * @brief Node for if then stmt
+ */
+typedef struct {
+    ast_node_t *condition;
+    ast_node_t *then_body;
+    ast_node_t *else_body;
+} ast_if_node_t;
+
+/**
+ * @struct ast_while_node_t
  * @brief Node for while do cycle
  */
 typedef struct {
@@ -172,6 +182,7 @@ typedef union {
     ast_param_node_t param_node;
 
     ast_declaration_node_t declaration_node;
+    ast_if_node_t if_node;
     ast_while_node_t while_node;
     ast_return_node_t return_node;
 
@@ -255,13 +266,27 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
                                             token_type data_type, ast_node_t *expression);
 
 /**
- * @brief Creates AST for while do cycle
+ * @brief Creates AST for 'while do' cycle
  * 
  * @param condition a sub-AST of condition
  * @param line_num
  * @param body a sub-AST of body
+ * 
+ * @return AST node representing 'while do' cycle
  */
 ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_t *body);
+
+/**
+ * @brief Creates AST for 'if then else' stmt
+ * 
+ * @param condition a sub-AST of condition
+ * @param line_num
+ * @param then_body a sub-AST of body that executes if condition true
+ * @param else_body a sub-AST of body that executes if condition false
+ * 
+ * @return AST node representing 'if then else' stmt
+ */
+ast_node_t *ast_insert_if(ast_node_t *condition, unsigned line_num, ast_node_t *then_body, ast_node_t *else_body);
 
 /**
  * @brief Creates AST for return

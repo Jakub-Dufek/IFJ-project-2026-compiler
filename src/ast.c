@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "ast.h"
-#include "error.h"
 #include "memory.h"
 
 
@@ -90,6 +89,18 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
     current_node->data->declaration_node.data_type = data_type;
     current_node->data->declaration_node.expression = expression;
     
+    return current_node;
+}
+
+
+ast_node_t *ast_insert_if(ast_node_t *condition, unsigned line_num, ast_node_t *then_body, ast_node_t *else_body)
+{
+    ast_node_t *current_node = ast_node_init(AST_IF, line_num);
+
+    current_node->data->if_node.condition = condition;
+    current_node->data->if_node.then_body = then_body;
+    current_node->data->if_node.else_body = else_body;
+
     return current_node;
 }
 
