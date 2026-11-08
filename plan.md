@@ -100,7 +100,7 @@ Deadline 274855:
 - 15\. 11. 2026: parser + expr parser tests, sync small_prog.scala
 
 Deadline xkyclon00:
-- 11\. 11. 2026: semantic analysis of if, while, return
+- 11\. 11. 2026: semantic analysis of if, while, return, code enhancing??
 - 13\. 11. 2026: semantic analysis of assign, expr, call
 
 Deadline xgreges00:
@@ -108,6 +108,6 @@ Deadline xgreges00:
 - 15\. 11. 2026: medium_prog.scala compiling
 
 Deadline xlehots00:
-- 11\. 11. 2026: print()
+- 11\. 11. 2026: print(), boolean, defence, code enhancing??
 - 13\. 11. 2026: scanner diagramme
 - 15\. 11. 2026: other fns
