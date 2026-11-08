@@ -53,6 +53,15 @@ typedef struct keyword {
 void return_buffer_token(token_t token);
 
 /**
+ * @brief Function for sending a token back to scanner
+ *
+ * @param token Token that is being returned to scanner
+ *
+ * The token that is being returned will be sent in the next call of scanner
+ */
+void return_buffer_token(token_t token);
+
+/**
  * @brief Creates new token and initialises it
  *
  * @param line_num Number holding on which like the token is located

@@ -9,7 +9,7 @@
 */
 int main()
 {
-    ast_init_arena(); // DO NOT REMOVE, KEEP AT BEGINNING
+    arena_init(); // DO NOT REMOVE, KEEP AT BEGINNING
 
     // z
     char z_str[MAX_LENGTH] = "z";
@@ -48,5 +48,5 @@ int main()
 
 
 
-    ast_free_arena(); // DO NOT REMOVE, KEEP AT END
+    arena_free_all(); // DO NOT REMOVE, KEEP AT END
 }

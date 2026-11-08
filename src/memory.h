@@ -10,6 +10,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+
 #define ARENA_SIZE (1024 * 1024) // 1 MB
 #define STARTING_STAGING_CAPACITY 256
 
@@ -71,6 +72,13 @@ void scratch_clear();
 const char *scratch_get_string();
 
 /**
+ * @brief Outputs length of string at buffer
+ * 
+ * @return length of string at buffer
+ */
+unsigned scratch_get_len();
+
+/**
  * @brief Allocates string at buffer
  * 
  * @return ALLOCATED string sitting in buffer
@@ -86,5 +94,6 @@ void scratch_init();
  * @brief Frees string buffer
  */
 void scratch_free();
+
 
 #endif

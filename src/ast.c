@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdalign.h>
+#include <string.h>
 
 #include "ast.h"
 #include "error.h"
@@ -51,7 +52,7 @@ ast_node_t *ast_convert_int2float(ast_node_t *inner_node) {
 
 
 
-//  AST INSERT FUNCTIONS
+//  DISCRETE INSERT FUNCTIONS
 
 ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *last)
 {
@@ -77,6 +78,8 @@ ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_ty
 
 
 
+//  LOCAL INSERT FUNCTIONS
+
 ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
                                             token_type data_type, ast_node_t *expression)
 {
@@ -90,6 +93,30 @@ ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num
     return current_node;
 }
 
+
+ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_t *body)
+{
+    ast_node_t *current_node = ast_node_init(AST_WHILE, line_num);
+
+    current_node->data->while_node.condition = condition;
+    current_node->data->while_node.body = body;
+
+    return current_node;
+}
+
+
+ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num)
+{
+    ast_node_t *current_node = ast_node_init(AST_RETURN, line_num);
+
+    current_node->data->return_node.expr_or_call = expr_or_call;
+
+    return current_node;
+}
+
+
+
+//  GLOBAL INSERT FUNCTIONS
 
 ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
                                         ast_node_t *first_param, ast_node_t *body, bool is_main)
