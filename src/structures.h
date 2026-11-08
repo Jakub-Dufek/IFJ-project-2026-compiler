@@ -84,6 +84,8 @@ typedef enum token_type {
     T_UNIT_LITERAL,
 
     EP_DOLLAR,
+    EP_UNARY_NEG,
+    EP_UNARY_MINUS,
     EP_LT_MARKER,
     EP_EXPR
 } token_type;
