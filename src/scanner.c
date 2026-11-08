@@ -343,7 +343,7 @@ token_t first_alpha (int character, token_t token) {
      //Return last read character, that was not used
     if (character != EOF) { ungetc(character, stdin); }
 
-    token.size = strlen(scratch_get_string());  //TODO lexeme size
+    token.size = scratch_get_len();
     token.value.string_value = scratch_save_to_arena();
 
     return token;
@@ -413,7 +413,7 @@ token_t first_digit (int character, token_t token, scanner_case current_case) {
         ungetc(character, stdin);
     }
 
-    token.size = lexeme->size;  //TODO lexeme size
+    token.size = scratch_get_len();
 
     return token;
 }
@@ -534,13 +534,13 @@ token_t first_special(int character, token_t token, scanner_case current_case)
         case CASE_SLASH:
             switch (character) {
             case '/':
-                lexeme->size = 0;   //TODO lexeme size
+                scratch_clear();
                 current_case = CASE_LINE_COMMENT;
                 token = handle_comment(character, token, current_case);
                 return token;
                 break;
             case '*':
-                lexeme->size = 0;   //TODO lexeme size
+                scratch_clear();
                 current_case = CASE_BLOCK_COMMENT;
                 token = handle_comment(character, token, current_case);
                 return token;
@@ -624,6 +624,7 @@ token_t get_next_token()
     scanner_case current_case = CASE_START;
     int character;
     char next_character;
+    scratch_clear();
 
     // If buffer_token is not empty, the now-sent token should be buffer_token
     if (buffer_token.type != T_UNDEFINED) {
@@ -668,6 +669,7 @@ token_t get_next_token()
     }
 
     handle_indent(&token);
+    scratch_clear();
 
     return token;
 }
