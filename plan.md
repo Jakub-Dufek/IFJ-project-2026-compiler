@@ -84,9 +84,30 @@ Deadline 274855:
 Deadline 274855:
 - 2\. 11. 2026: Testing framework + merge main + synchronization
 - 8\. 11. 2026: Assign, fn call, return + if?
+
 Deadline xkyclon00:
 - 8\. 11. 2026: Print ast fn, assign, fn call, return
+
 Deadline xgreges00:
 - 8\. 11. 2026: boolean for scanner + 2 other extensions, return
+
 Deadline xlehots00:
 - 8\. 11. 2026: Docs skeleton + info, project defence streams?? (tactics), boolean
+
+# 8. 11. 2026 - micromanaging
+Deadline 274855:
+- 11\. 11. 2026: complete parser, complate ast shell tests, memory management, medium_prog.scala
+- 15\. 11. 2026: parser + expr parser tests, sync small_prog.scala
+
+Deadline xkyclon00:
+- 11\. 11. 2026: semantic analysis of if, while, return
+- 13\. 11. 2026: semantic analysis of assign, expr, call
+
+Deadline xgreges00:
+- 13\. 11. 2026: small_prog.scala compiling
+- 15\. 11. 2026: medium_prog.scala compiling
+
+Deadline xlehots00:
+- 11\. 11. 2026: print()
+- 13\. 11. 2026: scanner diagramme
+- 15\. 11. 2026: other fns
