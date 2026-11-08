@@ -13,6 +13,7 @@
 // libraries
 #include "scanner.h"
 #include "error.h"
+#include "memory.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,19 +58,6 @@ token_t new_token(unsigned line_num)
     token_t new_token = {NO_VALUE};
     new_token.line_num = line_num;
     return new_token;
-}
-
-void write_lexeme(int character, lexeme_t *lexeme)
-{
-    // Check size of the lexeme
-    if (lexeme->size + 1 >= MAX_LENGTH) {
-        error_exit(INTERNAL_ERR, current_line_num, "Too long lexeme value, lexeme buffer overflow.");
-    }
-    // Write character value into the lexeme string
-    lexeme->value[lexeme->size] = (char)character;
-    lexeme->size++;
-    lexeme->value[lexeme->size] = '\0';
-    return;
 }
 
 // functions
@@ -157,7 +145,7 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
     return token;
 } // end of handle_comment()
 
-void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
+void handle_quotation(int character, bool multiline)
 {
     // no condition inside of while because there are if statements inside of this cycle that exit the cycle
     while (true) {
@@ -166,7 +154,7 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
             if (multiline == false) { // In case of one-line quotation, there can't be a symbol for end of the line
                 error_exit(LEX_ERR, current_line_num, "One-line string does not end on the same line.");
             } else {
-                write_lexeme(character, lexeme);
+                scratch_append((char)character);
             }
             break;
         case '\\':
@@ -174,26 +162,26 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
             if (multiline == false) {
                 switch (character = getchar()) {
                 case 'n':
-                    write_lexeme('\n', lexeme);
+                    scratch_append('\n');
                     break;
                 case 't':
-                    write_lexeme('\t', lexeme);
+                    scratch_append('\t');
                     break;
                 case 'r':
-                    write_lexeme('\r', lexeme);
+                    scratch_append('\r');
                     break;
                 case '\\':
-                    write_lexeme('\\', lexeme);
+                    scratch_append('\\');
                     break;
                 case '"':
-                    write_lexeme('"', lexeme);
+                    scratch_append('"');
                     break;
                 default:
                     error_exit(LEX_ERR, current_line_num, "Unsupported escape sequence used inside of a string literal.");
                     break;
                 }
             } else {
-                write_lexeme(character, lexeme);
+                scratch_append((char)character);
             }
             break;
         case '"':
@@ -202,13 +190,17 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
                 if ((character = getchar()) == '"') {
                     return; // end multiline quotation
                 } else {
-                    write_lexeme('"', lexeme);
-                    write_lexeme('"', lexeme);
-                    write_lexeme(character, lexeme);
+                    scratch_append('"');
+                    scratch_append('"');
+                    if (character != EOF) {
+                        ungetc(character, stdin);
+                    }
                 }
-            } else if (multiline == true) { // write everything read into lexeme if quotations is not ending
-                write_lexeme('"', lexeme);
-                write_lexeme(character, lexeme);
+            } else if (multiline == true) { // write everything read into scratchpad if quotations is not ending
+                scratch_append('"');
+                if (character != EOF) {
+                    ungetc(character, stdin);
+                }
             } else if (multiline == false) { // end one-line quotation
                 return;
             }
@@ -217,7 +209,7 @@ void handle_quotation(int character, lexeme_t *lexeme, bool multiline)
             error_exit(LEX_ERR, current_line_num, "File ended inside of a string literal");
             break;
         default:
-            write_lexeme(character, lexeme);
+            scratch_append((char)character);
             break;
         }
         character = getchar(); // get next character
@@ -329,19 +321,19 @@ int compare(const void *string, const void *keyword_string)
     return (strcmp((const char *)string, new_keyword->string));
 }
 
-token_t first_alpha (int character, token_t token, lexeme_t *lexeme) {
+token_t first_alpha (int character, token_t token) {
     bool valid = false;
     do {
         if (character != '_') { valid = true; }
 
         //note the lexeme's value
-        write_lexeme(character, lexeme);
+        scratch_append((char)character);
 
     } while ((isalnum(character = getchar()) || character == '_') && character != EOF);
 
     if (valid == false) { error_exit(LEX_ERR, current_line_num, "Invalid identifier."); }
 
-    keyword *the_keyword = bsearch(lexeme->value, keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
+    keyword *the_keyword = bsearch(scratch_get_string(), keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
     if (the_keyword == NULL) {
         token.type = T_IDENTIFIER;
     } else {
@@ -351,13 +343,13 @@ token_t first_alpha (int character, token_t token, lexeme_t *lexeme) {
      //Return last read character, that was not used
     if (character != EOF) { ungetc(character, stdin); }
 
-    token.size = lexeme->size;
-    strcpy(token.value.string_value, lexeme->value);
+    token.size = strlen(scratch_get_string());  //TODO lexeme size
+    token.value.string_value = scratch_save_to_arena();
 
     return token;
 }
 
-token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_case current_case) {
+token_t first_digit (int character, token_t token, scanner_case current_case) {
     int num_cnt_e, num_cnt_d = 0;
     bool valid = true;
     char last_character = character;
@@ -393,7 +385,7 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
 
         if (valid) {
             //note the lexeme's value
-            write_lexeme(character, lexeme);
+            scratch_append((char)character);
         }
         else { break; }
 
@@ -408,12 +400,12 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
 
     if (current_case == CASE_INT_LITERAL) { 
         token.type = T_INT_LITERAL;
-        token.value.int_value = atoi(lexeme->value);
+        token.value.int_value = atoi(scratch_get_string());
     }
     else if (current_case == CASE_DOUBLE_LITERAL || current_case == CASE_EXPONENT 
                                                  || character == 'd' || character == 'D') {
         token.type = T_DOUBLE_LITERAL;
-        token.value.double_value = atof(lexeme->value);
+        token.value.double_value = atof(scratch_get_string());
     }
 
     // Return last read character, that was not used
@@ -421,16 +413,16 @@ token_t first_digit (int character, token_t token, lexeme_t *lexeme, scanner_cas
         ungetc(character, stdin);
     }
 
-    token.size = lexeme->size;
+    token.size = lexeme->size;  //TODO lexeme size
 
     return token;
 }
 
-token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_case current_case)
+token_t first_special(int character, token_t token, scanner_case current_case)
 {
     do {
         // note the lexeme's value
-        write_lexeme(character, lexeme);
+        scratch_append((char)character);
 
         switch (current_case) {
         case CASE_START:
@@ -542,13 +534,13 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
         case CASE_SLASH:
             switch (character) {
             case '/':
-                lexeme->size = 0;
+                lexeme->size = 0;   //TODO lexeme size
                 current_case = CASE_LINE_COMMENT;
                 token = handle_comment(character, token, current_case);
                 return token;
                 break;
             case '*':
-                lexeme->size = 0;
+                lexeme->size = 0;   //TODO lexeme size
                 current_case = CASE_BLOCK_COMMENT;
                 token = handle_comment(character, token, current_case);
                 return token;
@@ -587,27 +579,24 @@ token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_ca
 
         case CASE_QUOTATION_MARKS:
             // Remove quotation marks from the literal's value
-            lexeme->size = NO_VALUE;
-            lexeme->value[lexeme->size] = '\0';
+            scratch_clear();
 
             if (character == '"') {
                 if ((character = getchar()) == '"') {
                     // Handles multiline quotation
-                    handle_quotation(character = getchar(), lexeme, true);
+                    handle_quotation(character = getchar(), true);
                 } else { // Token contains empty string literal
-                    lexeme->size = NO_VALUE;
-                    lexeme->value[lexeme->size] = '\0';
+                    scratch_clear();
                     if (character != EOF) {
                         ungetc(character, stdin);
                     }
                 }
             } else {
                 // Handles one-line quotation
-                handle_quotation(character, lexeme, false);
+                handle_quotation(character, false);
             }
             token.type = T_STRING_LITERAL;
-            token.size = lexeme->size;
-            strcpy(token.value.string_value, lexeme->value);
+            token.value.string_value = scratch_save_to_arena();
             break;
 
         default:
@@ -632,7 +621,6 @@ token_t get_next_token()
 {
     // Initialize token and variable for storing read characters
     token_t token = new_token(current_line_num);
-    lexeme_t lexeme = {0};
     scanner_case current_case = CASE_START;
     int character;
     char next_character;
@@ -653,11 +641,11 @@ token_t get_next_token()
         }
 
         if (isalpha(character) || character == '_') {
-            token = first_alpha(character, token, &lexeme);
+            token = first_alpha(character, token);
         } else if (isdigit(character) || character == '.') {
             if (character == '.') {
                 if (isdigit(next_character = getchar())) {
-                    token = first_digit(character, token, &lexeme, CASE_DOUBLE_LITERAL);
+                    token = first_digit(character, token, CASE_DOUBLE_LITERAL);
                 }
                 else {
                     token.type = T_DOT;
@@ -665,12 +653,12 @@ token_t get_next_token()
                 }
             }
             else if (character != '0') {
-                token = first_digit(character, token, &lexeme, CASE_INT_LITERAL);
+                token = first_digit(character, token, CASE_INT_LITERAL);
             }
             else { error_exit(LEX_ERR, current_line_num, "Non-Zero number starting with zero."); }
         }
         else if (!isspace(character)) {
-            token = first_special(character, token, &lexeme, current_case);
+            token = first_special(character, token, current_case);
         }
     }
 
