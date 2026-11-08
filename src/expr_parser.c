@@ -133,14 +133,14 @@ ast_node_t *parse_expression(token_t token)
         int colm = table_index(next_token.type);
 
         switch (precedence_table[row][colm]) {
-            case '<':
+            case '<': {
                 token_t token = {0};
                 token.type = EP_LT_MARKER;
                 stack_push_after_top_terminal(&stack, &token);
                 stack_push(&stack, &next_token);
                 next_token = get_next_token();
                 break;
-
+            }
             case '>':
                 array_counter = 0;
                 while(top(&stack).type != EP_LT_MARKER && array_counter < ELEMENT_ARRAY_SIZE) { // '<'
