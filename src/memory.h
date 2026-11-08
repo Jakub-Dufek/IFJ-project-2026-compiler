@@ -72,6 +72,13 @@ void scratch_clear();
 const char *scratch_get_string();
 
 /**
+ * @brief Outputs length of string at buffer
+ * 
+ * @return length of string at buffer
+ */
+unsigned scratch_get_len();
+
+/**
  * @brief Allocates string at buffer
  * 
  * @return ALLOCATED string sitting in buffer
