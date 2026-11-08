@@ -39,6 +39,10 @@ static unsigned current_line_num = 1;
 static unsigned last_indent_idx = NO_VALUE;
 // Array of increasing indent values. Used for handling blocks
 static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
+// Bool value indicating if there is an interpolated expression active
+bool interpolated_s = false;
+// Bool value indicating if the interpolated expression is multiline or not
+bool multiline_interpolation = false;
 
 // dictionary
 keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
@@ -322,6 +326,24 @@ int compare(const void *string, const void *keyword_string)
 }
 
 token_t first_alpha (int character, token_t token) {
+    // Check for interpolated s
+    if (character == 's' && (character = getchar()) == '"') {
+        if ((character = getchar()) == '"') {
+            if ((character = getchar()) == '"') {
+                multiline_interpolation = true;
+            }
+            else {
+                
+            }
+        }
+    }
+    else if (character != EOF) {
+        ungetc(character, stdin);
+    }
+    else {
+        character = 's';
+    }
+
     bool valid = false;
     do {
         if (character != '_') { valid = true; }
@@ -350,7 +372,8 @@ token_t first_alpha (int character, token_t token) {
 }
 
 token_t first_digit (int character, token_t token, scanner_case current_case) {
-    int num_cnt_e, num_cnt_d = 0;
+    int num_cnt_e = 0; 
+    int num_cnt_d = 0;
     bool valid = true;
     char last_character = character;
     do {
