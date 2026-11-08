@@ -87,11 +87,28 @@ static token_type parse_data_type_def()
 /**
  * @brief Determines whether upcoming tokens are expr or fn-call
  * 
+ * @param current_token
+ * 
  * @return subtree of expr or call
  */
-static ast_node_t *parse_expr_or_call()
+static ast_node_t *parse_expr_or_call(token_t current_token)
 {
     //TODO: parse_expr_or_call
+
+    return NULL;
+}
+
+
+/**
+ * @brief Determines whether upcoming tokens are expr, fn-call or assign
+ * 
+ * @param current_token
+ * 
+ * @return subtree of expr, call or assign
+ */
+static ast_node_t *parse_expr_call_or_assign(token_t current_token)
+{
+    //TODO: parse_expr_call_or_assign
 
     return NULL;
 }
@@ -370,7 +387,7 @@ ast_node_t *parse_fn_definition()
         body = parse_block();
     }
     else {
-        body = parse_expr_or_call();
+        body = parse_expr_or_call(current_token);
     }
 
     return ast_insert_fn_definition(value, line_num, data_type, param, body, false);
@@ -392,7 +409,7 @@ ast_node_t *parse_next_local(token_t current_token)
         case T_KEY_RETURN:
             return parse_return();
         case T_IDENTIFIER:
-            return NULL; // TODO: specify
+            return parse_expr_call_or_assign(current_token);
         default:
             return parse_expression(current_token);
     }
