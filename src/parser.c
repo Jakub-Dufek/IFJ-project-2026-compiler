@@ -231,6 +231,41 @@ ast_node_t *parse_var_declaration(token_t current_token)
 }
 
 
+ast_node_t *parse_if()
+{
+    // condition
+    token_t current_token = get_next_token();
+    unsigned line_num = current_token.line_num;
+    ast_node_t *condition = parse_expression(current_token); // TODO: SYNCHRONIZE WITH EXPR PARSER TO UNGET TOKEN!
+
+    // then
+    current_token = get_next_token();
+    if(current_token.type != T_KEY_THEN) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected 'then' after 'if' condition");
+    }
+
+    // newline
+    current_token = get_next_token();
+    if(current_token.type != T_LF) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after 'if then'");
+    }
+
+    // body
+    ast_node_t *then_body = parse_block();
+
+    // else
+    current_token = get_next_token();
+    if(current_token.type != T_KEY_ELSE) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected 'else' after 'if then' block");
+    }
+
+    // newline
+    ast_node_t *else_body = parse_block();
+
+    return ast_insert_if(condition, line_num, then_body, else_body);
+}
+
+
 ast_node_t *parse_while()
 {
     // condition
@@ -241,13 +276,13 @@ ast_node_t *parse_while()
     // do
     current_token = get_next_token();
     if(current_token.type != T_KEY_DO) {
-        error_exit(SYNT_ERR, current_token.line_num, "Expected do after while condition");
+        error_exit(SYNT_ERR, current_token.line_num, "Expected 'do' after 'while' condition");
     }
 
     // newline
     current_token = get_next_token();
     if(current_token.type != T_LF) {
-        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after while do");
+        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after 'while do'");
     }
 
     // body
@@ -351,7 +386,7 @@ ast_node_t *parse_next_local(token_t current_token)
         case T_KEY_VAR: case T_KEY_VAL:
             return parse_var_declaration(current_token);
         case T_KEY_IF:
-            return NULL; // TODO: specify
+            return parse_if();
         case T_KEY_WHILE:
             return parse_while();
         case T_KEY_RETURN:

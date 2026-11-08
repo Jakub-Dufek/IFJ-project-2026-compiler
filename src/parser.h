@@ -35,7 +35,14 @@ void parse_prologue();
 ast_node_t *parse_var_declaration(token_t current_token);
 
 /**
- * @brief Parses while do cycle, call after recieving while
+ * @brief Parses 'if then else' stmt, call after recieving if
+ * 
+ * @return pointer to top od syntax sub-tree
+ */
+ast_node_t *parse_if();
+
+/**
+ * @brief Parses 'while do' cycle, call after recieving while
  * 
  * @return pointer to top of syntax sub-tree
  */
