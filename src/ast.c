@@ -64,13 +64,13 @@ ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *l
 }
 
 
-ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_type data_type, ast_node_t *next)
+ast_node_t *ast_insert_param(char *value, unsigned line_num, token_type data_type, ast_node_t *next)
 {
     ast_node_t *current_node = ast_node_init(AST_PARAM, line_num);
 
     current_node->next = next;
     current_node->data->param_node.data_type = data_type;
-    strcpy(current_node->data->param_node.id_val, value);
+    current_node->data->param_node.id_val = value;
 
     return current_node;
 }
@@ -79,17 +79,35 @@ ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_ty
 
 //  LOCAL INSERT FUNCTIONS
 
-ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
-                                            token_type data_type, ast_node_t *expression)
+ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_mutable,
+                                            token_type data_type, ast_node_t *expr_or_call)
 {
     ast_node_t *current_node = ast_node_init(AST_DECLARATION, line_num);
 
-    strcpy(current_node->data->declaration_node.id_val, value);
+    current_node->data->declaration_node.id_val = value;
     current_node->data->declaration_node.is_mutable = is_mutable;
     current_node->data->declaration_node.data_type = data_type;
-    current_node->data->declaration_node.expression = expression;
+    current_node->data->declaration_node.expr_or_call = expr_or_call;
     
     return current_node;
+}
+
+
+ast_node_t *ast_insert_assign(char *value, unsigned line_num, ast_node_t *expr_or_call)
+{
+    // TODO: ast_insert_assign
+}
+
+
+ast_node_t *ast_insert_expr(ast_node_t *expression, unsigned line_num)
+{
+    // TODO: ast_insert_expr
+}
+
+
+ast_node_t *ast_insert_call(char *value, unsigned line_num, ast_node_t *first_arg)
+{
+    // TODO: ast_insert_call 
 }
 
 
@@ -129,12 +147,12 @@ ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num)
 
 //  GLOBAL INSERT FUNCTIONS
 
-ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
+ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type data_type,
                                         ast_node_t *first_param, ast_node_t *body, bool is_main)
 {
     ast_node_t *current_node = ast_node_init(AST_DEFINITION, line_num);
 
-    strcpy(current_node->data->definition_node.id_val, value);
+    current_node->data->definition_node.id_val = value;
     current_node->data->definition_node.data_type = data_type;
     current_node->data->definition_node.first_param = first_param;
     current_node->data->definition_node.body = body;
@@ -159,10 +177,10 @@ ast_node_t *expr_insert_op(token_type opr, unsigned line_num, ast_node_t *left, 
 }
 
 
-ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num)
+ast_node_t *expr_insert_id_leaf(char *value, unsigned line_num)
 {
     ast_node_t *leaf_node = ast_node_init(EXPR_IDENTIFIER, line_num);
-    strcpy(leaf_node->data->id_leaf_node.id_val, value);
+    leaf_node->data->id_leaf_node.id_val = value;
 
     return leaf_node;
 }
