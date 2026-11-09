@@ -98,14 +98,6 @@ typedef struct {
 } ast_assign_node_t;
 
 /**
- * @struct ast_expr_node_t
- * @brief Node for standalone expression stmts
- */
-typedef struct {
-    ast_node_t *expression; // op or leaf(id/lit)
-} ast_expr_node_t;
-
-/**
  * @struct ast_call_node_t
  * @brief Node for function calling, first_arg->next is next arg, if NULL no arg
  */
@@ -209,7 +201,6 @@ typedef union {
 
     ast_declaration_node_t declaration_node;
     ast_assign_node_t assign_node;
-    ast_expr_node_t expr_node;
     ast_call_node_t call_node;
 
     ast_if_node_t if_node;
@@ -304,16 +295,6 @@ ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_m
  * @return AST node represenging assigning of variable
  */
 ast_node_t *ast_insert_assign(char *value, unsigned line_num, ast_node_t *expr_or_call);
-
-/**
- * @brief Creates AST of expression AS A STANDALONE STATEMENT (line of code)
- * 
- * @param expression a sub-AST of expression (leaf or op node)
- * @param line_num
- * 
- * @return AST node representing expression AS A STANDALONE STATEMENT (line of code)
- */
-ast_node_t *ast_insert_expr(ast_node_t *expression, unsigned line_num);
 
 /**
  * @brief Creates AST for function call AS A STANDALONE STATEMENT (line of code)

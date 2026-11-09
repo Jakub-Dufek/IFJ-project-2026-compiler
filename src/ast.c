@@ -104,15 +104,6 @@ ast_node_t *ast_insert_assign(char *value, unsigned line_num, ast_node_t *expr_o
 }
 
 
-ast_node_t *ast_insert_expr(ast_node_t *expression, unsigned line_num)
-{
-    ast_node_t *current_node = ast_node_init(AST_EXPR, line_num);
-    current_node->data->expr_node.expression = expression;
-
-    return current_node;
-}
-
-
 ast_node_t *ast_insert_call(char *value, unsigned line_num, ast_node_t *first_arg)
 {
     ast_node_t *current_node = ast_node_init(AST_CALL, line_num);

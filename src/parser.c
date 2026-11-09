@@ -95,9 +95,9 @@ static ast_node_t *parse_expr_or_call(token_t id_token)
 {
     token_t current_token = get_next_token();
 
-    if(current_token.type = T_L_ROUND_BRACKET) {
+    if(current_token.type == T_L_ROUND_BRACKET) {
         return_buffer_token(current_token);
-        return parse_assign(id_token);
+        return parse_call(id_token);
     }
     else {
         return_buffer_token(current_token);
@@ -122,10 +122,10 @@ static ast_node_t *parse_expr_call_or_assign(token_t id_token)
             return parse_assign(id_token);
         case T_L_ROUND_BRACKET:
             return_buffer_token(current_token);
-            return parse_standalone_call(id_token);
+            return parse_call(id_token);
         default:
             return_buffer_token(current_token);
-            return parse_standalone_expr(id_token);
+            return parse_expression(id_token);
     }
 }
 
@@ -169,7 +169,7 @@ static ast_node_t *parse_block()
 
 
 /**
- * @brief Parses parameters through recursion
+ * @brief Parses fn def parameters through recursion
  * 
  * @param current_token
  * @param is_first
@@ -206,21 +206,77 @@ static ast_node_t *parse_param(token_t current_token, bool is_first)
     if(current_token.type != T_IDENTIFIER) {
         error_exit(SYNT_ERR, current_token.line_num, "Incorrect function parameter format");
     }
-    char value[MAX_LENGTH];
-    strcpy(value, current_token.value.string_value);
+    char *value = current_token.value.string_value;
     unsigned line_num = current_token.line_num;
 
-    // [: type]
+    // :
     current_token = get_next_token();
-    token_type data_type = T_NO_TYPE;
-
     if(current_token.type != T_COLON) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected data type for parameter");
     }
-    data_type = parse_data_type_def();
+
+    // type
+    token_type data_type = parse_data_type_def();
     current_token = get_next_token();
 
+    // AST inserting
     return ast_insert_param(value, line_num, data_type, parse_param(current_token, false)); // recursive calling
+}
+
+
+/**
+ * @brief Parses fn call arguments through recursion
+ * 
+ * @param current_token
+ * @param is_first
+ * 
+ * @return pointer to first arg, ptr->next is next arg, NULL if no arg
+ */
+static ast_node_t *parse_arg(token_t current_token, bool is_first)
+{
+    // end of recursion
+    if(current_token.type == T_R_ROUND_BRACKET) {
+        return NULL;
+    }
+
+    // ,
+    if(!is_first) {
+        if(current_token.type != T_COMMA) {
+            error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call argument format");
+        }
+        unsigned comma_line_num = current_token.line_num;
+        current_token = get_next_token();
+
+        // edge case T_LF after comma handling
+        if(current_token.type == T_R_ROUND_BRACKET) {
+            if(comma_line_num < current_token.line_num) {
+                return NULL;
+            }
+            else {
+                error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call argument format");
+            }
+        }
+    }
+
+    // TODO: T_MINUS
+
+    // id or lit
+    ast_node_t *arg;
+    unsigned line_num = current_token.line_num;
+
+    switch(current_token.type) {
+        case T_IDENTIFIER:
+            arg = expr_insert_id_leaf(current_token.value.string_value, line_num);
+            break;
+        case T_INT_LITERAL: case T_DOUBLE_LITERAL: case T_STRING_LITERAL: case T_UNIT_LITERAL:
+            arg = expr_insert_lit_leaf(current_token.value, line_num, current_token.type);
+            break;
+        default:
+            error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call argument format");
+    }
+
+    arg->next = parse_arg(get_next_token(), false); // recursive calling
+    return arg;
 }
 
 
@@ -301,17 +357,29 @@ ast_node_t *parse_assign(token_t current_token)
 }
 
 
-ast_node_t *parse_standalone_expr(token_t current_token)
+ast_node_t *parse_call(token_t current_token)
 {
+    // id
+    char *value = current_token.value.string_value;
     unsigned line_num = current_token.line_num;
 
-    return ast_insert_expr(parse_expression(current_token), line_num);
-}
+    // (
+    current_token = get_next_token();
+    if(current_token.type != T_L_ROUND_BRACKET) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected '(' after function call");
+    }
 
+    // arguments )
+    current_token = get_next_token();
+    ast_node_t *first_arg = parse_arg(current_token, true); // recursive series arg parsing
 
-ast_node_t *parse_standalone_call(token_t current_token)
-{
-    // TODO: parse_call
+    // newline or eof
+    current_token = get_next_token();
+    if(current_token.type != T_LF && current_token.type != T_EOF) {
+        error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call format");
+    }
+
+    return ast_insert_call(value, line_num, first_arg);
 }
 
 
@@ -344,6 +412,12 @@ ast_node_t *parse_if()
     }
 
     // newline
+    current_token = get_next_token();
+    if(current_token.type != T_LF) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after 'else'");
+    }
+
+    // block
     ast_node_t *else_body = parse_block();
 
     return ast_insert_if(condition, line_num, then_body, else_body);
@@ -382,6 +456,9 @@ ast_node_t *parse_return()
     if(current_token.type == T_LF || current_token.type == T_EOF) {
         return ast_insert_return(NULL, current_token.line_num);
     }
+    else if(current_token.type == T_IDENTIFIER) {
+        return ast_insert_return(parse_expr_or_call(current_token), current_token.line_num);
+    }
     else {
         return ast_insert_return(parse_expression(current_token), current_token.line_num);
     }
@@ -418,8 +495,7 @@ ast_node_t *parse_fn_definition()
     if(current_token.type != T_IDENTIFIER) {
         error_exit(SYNT_ERR, current_token.line_num, "Incorrect function definition format");
     }
-    char value[MAX_LENGTH];
-    strcpy(value, current_token.value.string_value);
+    char *value = current_token.value.string_value;
     unsigned line_num = current_token.line_num;
 
     // (
@@ -452,8 +528,11 @@ ast_node_t *parse_fn_definition()
     if(current_token.type == T_LF) {
         body = parse_block();
     }
-    else {
+    else if(current_token.type == T_IDENTIFIER) {
         body = parse_expr_or_call(current_token);
+    }
+    else {
+        body = parse_expression(current_token);
     }
 
     return ast_insert_fn_definition(value, line_num, data_type, param, body, false);
