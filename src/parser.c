@@ -85,32 +85,48 @@ static token_type parse_data_type_def()
 
 
 /**
- * @brief Determines whether upcoming tokens are expr or fn-call
+ * @brief Determines whether upcoming tokens are expr or fn-call as part of another type of stmt
  * 
- * @param current_token
+ * @param id_token identifier as first token after T_ASSIGN
  * 
- * @return subtree of expr or call
+ * @return subtree of expr or call as part of another type of stmt
  */
-static ast_node_t *parse_expr_or_call(token_t current_token)
+static ast_node_t *parse_expr_or_call(token_t id_token)
 {
-    //TODO: parse_expr_or_call
+    token_t current_token = get_next_token();
 
-    return NULL;
+    if(current_token.type = T_L_ROUND_BRACKET) {
+        return_buffer_token(current_token);
+        return parse_assign(id_token);
+    }
+    else {
+        return_buffer_token(current_token);
+        return parse_expression(id_token);
+    }
 }
 
 
 /**
- * @brief Determines whether upcoming tokens are expr, fn-call or assign
+ * @brief Determines whether upcoming tokens are standalone expr, standalone fn-call or assign
  * 
- * @param current_token
+ * @param id_token identifier as first token in whole stmt
  * 
- * @return subtree of expr, call or assign
+ * @return subtree of standalone expr, standalone call or assign
  */
-static ast_node_t *parse_expr_call_or_assign(token_t current_token)
+static ast_node_t *parse_expr_call_or_assign(token_t id_token)
 {
-    //TODO: parse_expr_call_or_assign
-
-    return NULL;
+    token_t current_token = get_next_token();
+    switch(current_token.type) {
+        case T_ASSIGN:
+            return_buffer_token(current_token);
+            return parse_assign(id_token);
+        case T_L_ROUND_BRACKET:
+            return_buffer_token(current_token);
+            return parse_standalone_call(id_token);
+        default:
+            return_buffer_token(current_token);
+            return parse_standalone_expr(id_token);
+    }
 }
 
 
@@ -224,8 +240,7 @@ ast_node_t *parse_var_declaration(token_t current_token)
     if(current_token.type != T_IDENTIFIER) {
         error_exit(SYNT_ERR, current_token.line_num, "Expected identifier");
     }
-    char value[MAX_LENGTH];
-    strcpy(value, current_token.value.string_value);
+    char *value = current_token.value.string_value;
     unsigned line_num = current_token.line_num;
 
     // [: type]
@@ -242,9 +257,61 @@ ast_node_t *parse_var_declaration(token_t current_token)
         error_exit(SYNT_ERR, current_token.line_num, "Expected assign or colon");
     }
 
-    // expression
-    ast_node_t *expression = parse_expression(get_next_token());
-    return ast_insert_var_declaration(value, line_num, is_mutable, data_type, expression);
+    // expression or call
+    current_token = get_next_token();
+    ast_node_t *expr_or_call;
+
+    if(current_token.type == T_IDENTIFIER) {
+        expr_or_call = parse_expr_or_call(current_token);
+    }
+    else {
+        expr_or_call = parse_expression(current_token);
+    }
+    
+    // AST insertion
+    return ast_insert_var_declaration(value, line_num, is_mutable, data_type, expr_or_call);
+}
+
+
+ast_node_t *parse_assign(token_t current_token)
+{
+    // id
+    char *value = current_token.value.string_value;
+    unsigned line_num = current_token.line_num;
+
+    // =
+    current_token = get_next_token();
+    if(current_token.type != T_ASSIGN) {
+        error_exit(SYNT_ERR, current_token.line_num, "Expected assign or colon");
+    }
+
+    // expression or call
+    current_token = get_next_token();
+    ast_node_t *expr_or_call;
+
+    if(current_token.type == T_IDENTIFIER) {
+        expr_or_call = parse_expr_or_call(current_token);
+    }
+    else {
+        expr_or_call = parse_expression(current_token);
+    }
+    
+    // AST insertion
+    return ast_insert_assign(value, line_num, expr_or_call);
+}
+
+
+ast_node_t *parse_standalone_expr(token_t current_token)
+{
+    unsigned line_num = current_token.line_num;
+
+    return ast_insert_expr(parse_expression(current_token), line_num);
+}
+
+
+ast_node_t *parse_standalone_call(token_t current_token)
+{
+    // TODO: parse_call
 }
 
 
@@ -253,7 +320,7 @@ ast_node_t *parse_if()
     // condition
     token_t current_token = get_next_token();
     unsigned line_num = current_token.line_num;
-    ast_node_t *condition = parse_expression(current_token); // TODO: SYNCHRONIZE WITH EXPR PARSER TO UNGET TOKEN!
+    ast_node_t *condition = parse_expression(current_token);
 
     // then
     current_token = get_next_token();
@@ -288,8 +355,7 @@ ast_node_t *parse_while()
     // condition
     token_t current_token = get_next_token();
     unsigned line_num = current_token.line_num;
-    ast_node_t *condition = parse_expression(current_token); // TODO: SYNCHRONIZE WITH EXPR PARSER TO UNGET TOKEN!
-
+    ast_node_t *condition = parse_expression(current_token);
     // do
     current_token = get_next_token();
     if(current_token.type != T_KEY_DO) {

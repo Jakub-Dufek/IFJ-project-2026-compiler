@@ -16,8 +16,13 @@
 typedef enum {
     P_ADD_SUB,
     P_MUL_DIV,
+    P_AND,
+    P_OR,
+    P_LT_LTE_GT_GTE,
+    P_EQ_NEQ,
     P_L_ROUND_BRACKET,
     P_R_ROUND_BRACKET,
+    P_UNARY_NEG_MINUS,
     P_ID,
     P_DOLLAR,
 

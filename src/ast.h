@@ -33,7 +33,7 @@ typedef enum ast_stmt_type {
     AST_PARAM,          /// function parameter
 
   // local nodes
-    AST_DECLARATION,    /// variable
+    AST_DECLARATION,    /// for variables
     AST_ASSIGN,
     AST_EXPR,
     AST_CALL,           /// function call
@@ -42,7 +42,7 @@ typedef enum ast_stmt_type {
     AST_RETURN,
 
   // global nodes
-    AST_DEFINITION,     /// function
+    AST_DEFINITION,     /// for function
 
   // expr nodes
     EXPR_OPERATION,
@@ -59,7 +59,7 @@ typedef enum ast_stmt_type {
 
 /**
  * @struct ast_block_node_t
- * @brief Node representing block
+ * @brief Node representing block, lines inside block are chained with first->next->next->...->next(last)
  */
 struct ast_block_node {
     ast_node_t *first;  /// NULL if empty block
@@ -71,7 +71,7 @@ struct ast_block_node {
  * @brief Parameter node
  */
 typedef struct {
-    char id_val[MAX_LENGTH];
+    char *id_val;   /// var name
     token_type data_type;
 } ast_param_node_t;
 
@@ -82,20 +82,46 @@ typedef struct {
  * @brief Node for variable declaration
  */
 typedef struct {
-    char id_val[MAX_LENGTH];
+    char *id_val;   /// var name
     bool is_mutable;
     token_type data_type;
-    ast_node_t *expression;     /// expression subtree
+    ast_node_t *expr_or_call;   // expr (op or leaf(id/lit)) or fn call
 } ast_declaration_node_t;
+
+/**
+ * @struct ast_assign_node_t
+ * @brief Node for variable assigning
+ */
+typedef struct {
+    char *id_val;   /// var name
+    ast_node_t *expr_or_call; // expr (op or leaf(id/lit)) or fn call
+} ast_assign_node_t;
+
+/**
+ * @struct ast_expr_node_t
+ * @brief Node for standalone expression stmts
+ */
+typedef struct {
+    ast_node_t *expression; // op or leaf(id/lit)
+} ast_expr_node_t;
+
+/**
+ * @struct ast_call_node_t
+ * @brief Node for function calling, first_arg->next is next arg, if NULL no arg
+ */
+typedef struct {
+    char *id_val;           /// fn name
+    ast_node_t *first_arg;  // leaf(id/lit)
+} ast_call_node_t;
 
 /**
  * @struct ast_if_node_t
  * @brief Node for if then stmt
  */
 typedef struct {
-    ast_node_t *condition;
-    ast_node_t *then_body;
-    ast_node_t *else_body;
+    ast_node_t *condition;  // expr (op or leaf(id/lit))
+    ast_node_t *then_body;  // block
+    ast_node_t *else_body;  // block
 } ast_if_node_t;
 
 /**
@@ -103,8 +129,8 @@ typedef struct {
  * @brief Node for while do cycle
  */
 typedef struct {
-    ast_node_t *condition;
-    ast_node_t *body;
+    ast_node_t *condition;  // expr (op or leaf(id/lit))
+    ast_node_t *body;       // block
 } ast_while_node_t;
 
 /**
@@ -119,13 +145,13 @@ typedef struct {
 
 /**
  * @struct ast_definition_node_t
- * @brief Node for function definition
+ * @brief Node for function definition, param->next is next param, if NULL no param
  */
 typedef struct {
-    char id_val[MAX_LENGTH];
+    char *id_val;
     token_type data_type;
-    ast_node_t *first_param;    /// param->next is next param, if NULL no param
-    ast_node_t *body;           /// expression, call or block
+    ast_node_t *first_param;    // param node
+    ast_node_t *body;           /// expr (op or leaf(id/lit)), call or block
     bool is_main;
 } ast_definition_node_t;
 
@@ -146,7 +172,7 @@ typedef struct {
  * @brief Node for AST leaf - identifier
  */
 typedef struct {
-    char id_val[MAX_LENGTH];
+    char *id_val;
     symbol_data_t symbol_data;
 } expr_id_leaf_node_t;
 
@@ -182,6 +208,10 @@ typedef union {
     ast_param_node_t param_node;
 
     ast_declaration_node_t declaration_node;
+    ast_assign_node_t assign_node;
+    ast_expr_node_t expr_node;
+    ast_call_node_t call_node;
+
     ast_if_node_t if_node;
     ast_while_node_t while_node;
     ast_return_node_t return_node;
@@ -193,7 +223,6 @@ typedef union {
     expr_lit_leaf_node_t lit_leaf_node;
     
     expr_imp_conversion_t imp_conversion;
-    // TODO: other structures
 } ast_node_data_t;
 
 /**
@@ -245,7 +274,7 @@ ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *l
  * 
  * @return AST node representing param list
  */
-ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_type data_type, ast_node_t *next);
+ast_node_t *ast_insert_param(char *value, unsigned line_num, token_type data_type, ast_node_t *next);
 
 
 
@@ -258,12 +287,44 @@ ast_node_t *ast_insert_param(char value[MAX_LENGTH], unsigned line_num, token_ty
  * @param line_num
  * @param is_mutable var => true, val => false
  * @param data_type if T_NO_TYPE  => to be deduced
- * @param expression a sub-AST of expression
+ * @param expr_or_call a sub-AST of expression or function call
  * 
  * @return AST node representing var/val declaration
  */
-ast_node_t *ast_insert_var_declaration(char value[MAX_LENGTH], unsigned line_num, bool is_mutable,
-                                            token_type data_type, ast_node_t *expression);
+ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_mutable,
+                                            token_type data_type, ast_node_t *expr_or_call);
+
+/**
+ * @brief Creates AST for variable assigning
+ * 
+ * @param value name of id
+ * @param line_num
+ * @param expr_or_call a sub-AST of expression or function call
+ * 
+ * @return AST node represenging assigning of variable
+ */
+ast_node_t *ast_insert_assign(char *value, unsigned line_num, ast_node_t *expr_or_call);
+
+/**
+ * @brief Creates AST of expression AS A STANDALONE STATEMENT (line of code)
+ * 
+ * @param expression a sub-AST of expression (leaf or op node)
+ * @param line_num
+ * 
+ * @return AST node representing expression AS A STANDALONE STATEMENT (line of code)
+ */
+ast_node_t *ast_insert_expr(ast_node_t *expression, unsigned line_num);
+
+/**
+ * @brief Creates AST for function call AS A STANDALONE STATEMENT (line of code)
+ * 
+ * @param value name of if
+ * @param line_num
+ * @param first_arg ->next is second arg etc, NULL if no arg
+ * 
+ * @return AST node representing function call AS A STANDALONE STATEMENT (line of code)
+ */
+ast_node_t *ast_insert_call(char *value, unsigned line_num, ast_node_t *first_arg);
 
 /**
  * @brief Creates AST for 'while do' cycle
@@ -314,7 +375,7 @@ ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num);
  * 
  * @return AST node representing function definition
  */
-ast_node_t *ast_insert_fn_definition(char value[MAX_LENGTH], unsigned line_num, token_type data_type,
+ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type data_type,
                                         ast_node_t *first_param, ast_node_t *body, bool is_main);
 
 
@@ -342,7 +403,7 @@ ast_node_t *expr_insert_op(token_type opr, unsigned line_num, ast_node_t *left, 
  * 
  * @return Allocated node for given identifier
  */
-ast_node_t *expr_insert_id_leaf(char value[MAX_LENGTH], unsigned line_num);
+ast_node_t *expr_insert_id_leaf(char *value, unsigned line_num);
 
 
 /**
