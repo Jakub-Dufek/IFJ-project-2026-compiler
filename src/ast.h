@@ -94,7 +94,7 @@ typedef struct {
  */
 typedef struct {
     char *id_val;   /// var name
-    ast_node_t *expression; // expr (op or leaf(id/lit)) or fn call
+    ast_node_t *expr_or_call; // expr (op or leaf(id/lit)) or fn call
 } ast_assign_node_t;
 
 /**

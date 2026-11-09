@@ -5,9 +5,9 @@
 
 #define LINE_NUM 999
 
-/*
-    var x : Int = z + 5
-*/
+/*  @main
+    def main(): Unit =
+        var x : Int = 10 + 55   */
 int main()
 {
     arena_init(); // DO NOT REMOVE, KEEP AT BEGINNING

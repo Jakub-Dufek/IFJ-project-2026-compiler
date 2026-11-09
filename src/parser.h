@@ -35,6 +35,33 @@ void parse_prologue();
 ast_node_t *parse_var_declaration(token_t current_token);
 
 /**
+ * @brief Parses variable assign
+ * 
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_assign(token_t current_token);
+
+/**
+ * @brief Parses standalone expressions
+ * 
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_standalone_expr(token_t current_token);
+
+/**
+ * @brief Parses standalone function call
+ * 
+ * @param current_token
+ * 
+ * @return pointer to top of syntax sub-tree
+ */
+ast_node_t *parse_standalone_call(token_t current_token);
+
+/**
  * @brief Parses 'if then else' stmt, call after recieving if
  * 
  * @return pointer to top od syntax sub-tree

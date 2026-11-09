@@ -95,19 +95,33 @@ ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_m
 
 ast_node_t *ast_insert_assign(char *value, unsigned line_num, ast_node_t *expr_or_call)
 {
-    // TODO: ast_insert_assign
+    ast_node_t *current_node = ast_node_init(AST_ASSIGN, line_num);
+
+    current_node->data->assign_node.id_val = value;
+    current_node->data->assign_node.expr_or_call = expr_or_call;
+
+    return current_node;
 }
 
 
 ast_node_t *ast_insert_expr(ast_node_t *expression, unsigned line_num)
 {
-    // TODO: ast_insert_expr
+    ast_node_t *current_node = ast_node_init(AST_EXPR, line_num);
+    current_node->data->expr_node.expression = expression;
+
+    return current_node;
 }
 
 
 ast_node_t *ast_insert_call(char *value, unsigned line_num, ast_node_t *first_arg)
 {
-    // TODO: ast_insert_call 
+    ast_node_t *current_node = ast_node_init(AST_CALL, line_num);
+
+    current_node->data->call_node.id_val = value;
+    current_node->data->call_node.first_arg = first_arg;
+
+    return current_node;
+
 }
 
 
