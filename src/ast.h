@@ -59,7 +59,7 @@ typedef enum ast_stmt_type {
 
 /**
  * @struct ast_block_node_t
- * @brief Node representing block
+ * @brief Node representing block, lines inside block are chained with first->next->next->...->next(last)
  */
 struct ast_block_node {
     ast_node_t *first;  /// NULL if empty block
@@ -85,7 +85,7 @@ typedef struct {
     char id_val[MAX_LENGTH];
     bool is_mutable;
     token_type data_type;
-    ast_node_t *expression;     /// expression subtree
+    ast_node_t *expression;     // op
 } ast_declaration_node_t;
 
 /**
@@ -93,9 +93,9 @@ typedef struct {
  * @brief Node for if then stmt
  */
 typedef struct {
-    ast_node_t *condition;
-    ast_node_t *then_body;
-    ast_node_t *else_body;
+    ast_node_t *condition;  // expr (op)
+    ast_node_t *then_body;  // block
+    ast_node_t *else_body;  // block
 } ast_if_node_t;
 
 /**
@@ -103,8 +103,8 @@ typedef struct {
  * @brief Node for while do cycle
  */
 typedef struct {
-    ast_node_t *condition;
-    ast_node_t *body;
+    ast_node_t *condition;  // expr (op)
+    ast_node_t *body;       // block
 } ast_while_node_t;
 
 /**
@@ -125,7 +125,7 @@ typedef struct {
     char id_val[MAX_LENGTH];
     token_type data_type;
     ast_node_t *first_param;    /// param->next is next param, if NULL no param
-    ast_node_t *body;           /// expression, call or block
+    ast_node_t *body;           /// expr, call or block
     bool is_main;
 } ast_definition_node_t;
 
