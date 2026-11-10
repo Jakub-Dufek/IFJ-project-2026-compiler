@@ -154,11 +154,12 @@ static ast_node_t *parse_block()
 
     current_token = get_next_token();
     while(current_token.type != T_LESS_INDENT && current_token.type != T_EOF) {
-        // newline
-        if(current_token.type == T_LF) {
+        // newline or semicolon
+        if(current_token.type == T_LF || current_token.type == T_SEMICOLON) {
             current_token = get_next_token();
             continue;
         }
+
         last->next = parse_next_local(current_token);
         last = last->next;
         current_token = get_next_token();
@@ -258,7 +259,19 @@ static ast_node_t *parse_arg(token_t current_token, bool is_first)
         }
     }
 
-    // TODO: T_MINUS
+    // unary minus before literal
+    if(current_token.type == T_MINUS) {
+        current_token = get_next_token();
+        if(current_token.type == T_INT_LITERAL) {
+            current_token.value.int_value = -current_token.value.int_value;
+        }
+        else if(current_token.type == T_DOUBLE_LITERAL) {
+            current_token.value.double_value = -current_token.value.double_value;
+        }
+        else {
+            error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call argument format");
+        }
+    }
 
     // id or lit
     ast_node_t *arg;
@@ -373,9 +386,11 @@ ast_node_t *parse_call(token_t current_token)
     current_token = get_next_token();
     ast_node_t *first_arg = parse_arg(current_token, true); // recursive series arg parsing
 
-    // newline or eof
+    // newline, eof, semicolon
     current_token = get_next_token();
-    if(current_token.type != T_LF && current_token.type != T_EOF) {
+    if(current_token.type != T_LF &&
+       current_token.type != T_EOF &&
+       current_token.type != T_SEMICOLON) {
         error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call format");
     }
 
@@ -453,7 +468,9 @@ ast_node_t *parse_return()
 {
     token_t current_token = get_next_token();
 
-    if(current_token.type == T_LF || current_token.type == T_EOF) {
+    if(current_token.type == T_LF ||
+       current_token.type == T_EOF ||
+       current_token.type == T_SEMICOLON) {
         return ast_insert_return(NULL, current_token.line_num);
     }
     else if(current_token.type == T_IDENTIFIER) {
