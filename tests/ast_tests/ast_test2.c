@@ -2,6 +2,7 @@
 #include "../../src/memory.h"
 #include "../../src/semantic_anal.h"
 #include "../../src/IFJcode_generator.h"
+#include "ast_print_module.h"
 
 #define LINE_NUM 999
 
@@ -24,7 +25,8 @@ int main()
     ast_node_t *plus = expr_insert_op(T_PLUS, LINE_NUM, ten_lit, fifty_five_lit);
 
     // var x : Int = 10 + 55
-    char x_str[MAX_LENGTH] = "x";
+    scratch_append('x');
+    char *x_str = scratch_save_to_arena();
     ast_node_t *declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_KEY_INT, plus);
 
     // (INDENT) var x : Int = 10 + 55
@@ -33,30 +35,25 @@ int main()
 /*  @main
     def main(): Unit =
         var x : Int = 10 + 55   */
-    char main_str[MAX_LENGTH] = "main";
+    scratch_append('m'); scratch_append('a'); scratch_append('i'); scratch_append('n');
+    char *main_str = scratch_save_to_arena();
     ast_node_t *definition = ast_insert_fn_definition(main_str, LINE_NUM, T_KEY_UNIT, NULL, body, true);
 
 
 
 
 
-                    // INSERT CODE HERE
-                // INSERT CODE HERE
-            // INSERT CODE HERE
-        // INSERT CODE HERE
+    ast_print(definition, 0);
+    printf("======================================\n\
+            ======================================\n\
+            ======================================\n");
+
     run_sem_anal(definition);
-    // INSERT CODE HERE
-        // INSERT CODE HERE
-            // INSERT CODE HERE
-                // INSERT CODE HERE
-                    // INSERT CODE HERE
+
+    ast_print(definition, 0);
 
 
 
-
-
-    //(void)definition; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
-    //generate_IFJcode26(definition);
 
 
     arena_free_all(); // DO NOT REMOVE, KEEP AT END
