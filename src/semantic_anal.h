@@ -19,7 +19,13 @@
 
 //missing information 
 
+typedef token_type data_type; // 
+
 //functions 
+/*
+ 
+*/
+void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack);
 /*
  
 */
