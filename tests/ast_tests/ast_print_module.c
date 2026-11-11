@@ -2,6 +2,7 @@
 #include <string.h>
 #include "ast.h"
 #include "structures.h"
+#include "ast_print_module.h"
 
 // -----------------------------------------------------------------------------
 // HELPER: TOKEN TO STRING CONVERTER
@@ -68,9 +69,6 @@ static void print_indent(int level) {
     }
 }
 
-/**
- * @brief Main recursive function for printing the AST structure
- */
 void ast_print(ast_node_t *node, int level) {
     if (node == NULL) {
         return;
@@ -92,7 +90,7 @@ void ast_print(ast_node_t *node, int level) {
                    token_type_to_string(node->data->declaration_node.data_type),
                    node->line_num);
             // Print the right-side expression of the declaration
-            ast_print(node->data->declaration_node.expression, level + 1);
+            ast_print(node->data->declaration_node.expr_or_call, level + 1);
             break;
 
         case AST_DEFINITION:

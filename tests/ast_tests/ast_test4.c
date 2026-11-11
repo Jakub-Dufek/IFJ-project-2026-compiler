@@ -2,6 +2,7 @@
 #include "../../src/memory.h"
 #include "../../src/semantic_anal.h"
 #include "../../src/IFJcode_generator.h"
+#include "ast_print_module.h"
 
 #define LINE_NUM 999
 
@@ -40,29 +41,25 @@ int main()
         def main(): Unit =
             while 1 == 1.0 do
                 return          */
-    char main_str[MAX_LENGTH] = "main";
+    scratch_append('m'); scratch_append('a'); scratch_append('i'); scratch_append('n');
+    char *main_str = scratch_save_to_arena();
     ast_node_t *definition = ast_insert_fn_definition(main_str, LINE_NUM, T_KEY_UNIT, NULL, cycle, true);
 
 
 
 
 
-                    // INSERT CODE HERE
-                // INSERT CODE HERE
-            // INSERT CODE HERE
-        // INSERT CODE HERE
-    // INSERT CODE HERE
-    // INSERT CODE HERE
-        // INSERT CODE HERE
-            // INSERT CODE HERE
-                // INSERT CODE HERE
-                    // INSERT CODE HERE
+    ast_print(definition, 0);
+    printf("======================================\n\
+            ======================================\n\
+            ======================================\n");
+
+    run_sem_anal(definition);
+
+    ast_print(definition, 0);
 
 
 
-
-
-    (void)definition; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
 
 
     arena_free_all(); // DO NOT REMOVE, KEEP AT END
