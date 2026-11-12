@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 
-void print_string_literal(char *string) {
+void print_string_literal(char *string, bool flag) {
     printf("string@");
     for (unsigned idx = 0; string[idx] != '\0'; idx++) {
         if (string[idx] <= 32 || string[idx] == '#' || string[idx] == '\\') {
@@ -24,7 +24,7 @@ void print_string_literal(char *string) {
             putchar(string[idx]);
         }
     }
-    putchar('\n');
+    if (!flag) {putchar('\n');}
 }
 
 token_type find_operand_type (ast_node_t *node) {
@@ -202,7 +202,7 @@ void generate_literal(ast_node_t *node, char *print_before) {
     switch (node->data->lit_leaf_node.lit_type)
     {
     case T_STRING_LITERAL:
-        print_string_literal(node->data->lit_leaf_node.lit_value.string_value);
+        print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
         //printf("string@%s\n", node->data->lit_leaf_node.lit_value.string_value);
         break;
     
@@ -264,6 +264,43 @@ void process_node(ast_node_t *node, char *message_before) {
     }
 
     return;
+}
+
+void generate_print(ast_node_t *node) {
+    switch(node->stmt_type) {
+        case EXPR_LITERAL:
+            switch(node->data->lit_leaf_node.lit_type) {
+                case T_STRING_LITERAL:
+                    printf("WRITE ");
+                    print_string_literal(node->data->lit_leaf_node.lit_value.string_value, true);
+                    break;
+
+                case T_INT_LITERAL:
+                    printf("WRITE int@%d\n", node->data->lit_leaf_node.lit_value.int_value);
+                    break;
+
+                case T_DOUBLE_LITERAL:
+                    printf("WRITE float@%a\n", node->data->lit_leaf_node.lit_value.double_value);
+                    break;
+
+                case T_UNIT_LITERAL:
+                    printf("WRITE string@\\032()\\032\n");
+                    break;
+
+                default:
+                    //TODO
+                    break;
+            }
+            break;
+
+        case EXPR_IDENTIFIER:
+            //TODO
+            break;
+
+        default:
+            //TODO
+            break;
+    }
 }
 
 void generate_IFJcode26(ast_node_t *root) {
