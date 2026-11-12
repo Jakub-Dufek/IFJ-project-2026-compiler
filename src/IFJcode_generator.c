@@ -191,7 +191,7 @@ void generate_identifier(ast_node_t *node, char *print_before) {
         printf("%s", print_before);
     }
 
-    printf("LF@%s\n", node.id_leaf_node.id_val);
+    printf("LF@%s\n", node->data->id_leaf_node.id_val);
     //TODO... dokončit funkci
 }
 
