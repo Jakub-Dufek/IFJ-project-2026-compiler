@@ -184,14 +184,15 @@ void generate_operation(ast_node_t *node) {
         // #TODO chyba, neznama operace
         break;
     }
-
-    return;
 }
 
 void generate_identifier(ast_node_t *node, char *print_before) {
-    // #TODO implementace
+    if (print_before != NULL) {
+        printf("%s", print_before);
+    }
 
-    return;
+    printf("LF@%s\n", node->data->id_leaf_node.id_val);
+    //TODO... dokončit funkci
 }
 
 void generate_literal(ast_node_t *node, char *print_before) {
@@ -222,8 +223,6 @@ void generate_literal(ast_node_t *node, char *print_before) {
         // #TODO error, nerozpoznaný typ literálu
         break;
     }
-
-    return;
 }
 
 void process_node(ast_node_t *node, char *message_before) {
@@ -262,8 +261,6 @@ void process_node(ast_node_t *node, char *message_before) {
         // #TODO error, nerozpoznaný typ uzlu
         break;
     }
-
-    return;
 }
 
 void generate_IFJcode26(ast_node_t *root) {
