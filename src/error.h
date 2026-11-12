@@ -45,6 +45,9 @@ typedef enum error_code {
     /// Other semantic error - (disallowed return, non-exhaustive match, zero range step)
     SEM_OTHER_ERR = 10,
 
+    /// Runtime semantic error
+    SEM_RNTIME_ERR = 40,
+
     /// Internal compiler error - (memory allocation failure)
     INTERNAL_ERR = 99
 } err_code_t;

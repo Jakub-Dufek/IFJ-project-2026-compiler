@@ -1,63 +1,72 @@
-//import ifj26.*
 
+// THIS IS A COMMENT
+    /* and this is a block
+        comment
+            for y'all 
+                */
+
+import ifj26.*
+
+//  Prints number
 def printNumber(value: Int): Unit =
     print("value = ")
     print(value)
     print("\n")
 
-def processNumber(value: Int): Int =
-    var result: Int = value
-
-    if result > 0 then
-        if result >= 10 then
-            result = result * 2
-
-            while result > 20 do
-                result = result - 3
-
-                if result == 25 then
-                    print("twenty five\n")
-                else
-                    print("not twenty five\n")
-        else
-            result = result + 5
+//  Brief: Gives critique on your life
+//  param age: Enter your age
+//  param happy_i: Happiness index - on a scale of 1 to 10 how happy do you feel?
+//  param is_soup: Is cereal a soup?
+//  Output: Predicts how many days you have left to live
+def lifeAdviser200(age: Int,
+                  happy_i : Double,
+                  is_soup : Boolean,
+                  ): Int =
+    if !is_soup then
+        print("Your life is a tragedy.\n"); return 0;;
     else
-        if result < 0 then
-            result = 0 - result
-        else
-            result = 1
+        ()
 
-    result
+    if age <= 0 then
+        print("You're most likely lying")
+        return -42069
+    else
+        "Yeah boiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
 
+    val happy_i_int = toInt(happy_i)
+    25000 * happy_i_int / 2 / age / (age+4) // the cereal soup secret prediction recipe
+
+//  Counts down from starting number to 0 recursively
 def countdown(start: Int): Unit =
-    var i = start
+    if start <= 0 then
+        print(0)
+    else
+        print(start)
+        print(" ")
+        var start_dec = start - 1
+        countdown(start_dec)
 
-    while i > 0 do
-        printNumber(i)
-
-        if i > 5 then
-            print("large\n")
-        else
-            if i == 5 then
-                print("middle\n")
-            else
-                print("small\n")
-
-        i = i - 1
-
-    ()
-
+//  MAN
 @main
 def main(): Unit =
-    val input = 12
-    val processed = processNumber(input)
 
-    print("processed result:\n")
-    printNumber(processed)
+    printNumber(-2)
 
-    if processed > 10 then
-        countdown(processed)
-    else
-        print("nothing to count\n")
+    print("Enter your age: ")
+    val age = readInt()
+    print("\n")
 
-    ()
+    print("How happy are you on a scale of 1 to 10? ")
+    val happy_i = readDouble()
+    print("\n")
+
+    print("Is cereal a soup? ")
+    val is_soup = readBoolean()
+    print("\n\n")
+
+    val days = lifeAdviser200(age, happy_i, is_soup)
+    print("You have ")
+    print(days)
+    print(" days to live, or as someone would say it:\n")
+
+    countdown(days)

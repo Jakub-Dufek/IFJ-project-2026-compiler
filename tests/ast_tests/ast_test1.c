@@ -1,6 +1,7 @@
 #include "../../src/ast.h"
 #include "../../src/memory.h"
 #include "../../src/semantic_anal.h"
+#include "ast_print_module.h"
 
 #define LINE_NUM 999
 
@@ -9,10 +10,12 @@
 */
 int main()
 {
-    ast_init_arena(); // DO NOT REMOVE, KEEP AT BEGINNING
+    scratch_init();
+    arena_init(); // DO NOT REMOVE, KEEP AT BEGINNING
 
     // z
-    char z_str[MAX_LENGTH] = "z";
+    scratch_append('z');
+    char *z_str = scratch_save_to_arena();
     ast_node_t *z_id = expr_insert_id_leaf(z_str, LINE_NUM);
 
     // 5
@@ -24,29 +27,24 @@ int main()
 
 
     // var x : Int = z + 5
-    char x_str[MAX_LENGTH] = "x";
+    scratch_append('x');
+    char *x_str = scratch_save_to_arena();
     ast_node_t *declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_KEY_INT, plus);
     
-    // 1. Lokální inicializace zásobníku
-    symtable_stack_t stack;
-    symtable_stack_initialize(&stack); 
-    symtable_stack_push(&stack); // Globální scope
 
-    // 2. Ruční vložení 'z', aby test nevyhodil Error 3
-    symbol_data_t z_sym;
-    z_sym.data_type = T_KEY_INT;
-    z_sym.id_type = ID_VAR; 
-    stack.top->symtable = symtable_insert(stack.top->symtable, "z", z_sym);
 
-    // 3. Spuštění analýzy s předaným zásobníkem
-    sem_anal(declaration, &stack);
+    
+    ast_print(declaration, 0);
+    printf("======================================\n\
+            ======================================\n\
+            ======================================\n");
 
-    // 4. Úklid
-    symtable_stack_pop(&stack);
+    run_sem_anal(declaration);
 
-    (void)declaration; // FEEL FREE TO REMOVE, IS HERE FOR CFLAGS+ PURPOSES
+    ast_print(declaration, 0);
 
 
 
-    ast_free_arena(); // DO NOT REMOVE, KEEP AT END
+    scratch_free();
+    arena_free_all(); // DO NOT REMOVE, KEEP AT END
 }

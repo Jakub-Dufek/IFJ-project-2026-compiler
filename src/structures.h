@@ -63,10 +63,13 @@ typedef enum token_type {
     T_EQ,     // '=='
     T_NEQ,    // '!='
     T_ASSIGN, // '='
+    T_NEG,    // '!'
+    T_AND,    // '&&'
+    T_OR,     // '||'
 
-    T_DOT,             // '.'
-    T_L_ROUND_BRACKET, // '('
-    T_R_ROUND_BRACKET, // ')'
+    T_DOT,              // '.'
+    T_L_ROUND_BRACKET,  // '('
+    T_R_ROUND_BRACKET,  // ')'
 
     T_LF,        // '\n'
     T_COLON,     // ':'
@@ -84,6 +87,8 @@ typedef enum token_type {
     T_UNIT_LITERAL,
 
     EP_DOLLAR,
+    EP_UNARY_NEG,
+    EP_UNARY_MINUS,
     EP_LT_MARKER,
     EP_EXPR
 } token_type;
@@ -95,10 +100,10 @@ typedef enum token_type {
  * This union holds the value of the token, depending on the type of the value
  */
 typedef union Token_value {
-    int int_value;                      /**<Storage for integer type of the token */
-    double double_value;                /**<Storage for double type of the token */
-    char string_value[MAX_LENGTH];      /**<Storage for string representation of the token */
-    struct ast_node *ast_node_ptr;      /**<Storage for pointer to AST node  */
+    int int_value;                  /**<Storage for integer type of the token */
+    double double_value;            /**<Storage for double type of the token */
+    char *string_value;             /**<Storage for string representation of the token */
+    struct ast_node *ast_node_ptr;  /**<Storage for pointer to AST node  */
 } token_value_t;
 
 /**

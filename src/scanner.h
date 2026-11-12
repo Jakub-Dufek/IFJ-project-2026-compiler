@@ -44,17 +44,6 @@ typedef struct keyword {
 } keyword;
 
 /**
- * @struct lexeme_t
- * @brief Structure representing one lexeme
- *
- * This structure holds value of the lexeme and its length
- */
-typedef struct Lexeme {
-    char value[MAX_LENGTH]; /**<String representation of the lexeme */
-    unsigned size;          /**<Size of the lexeme */
-} lexeme_t;
-
-/**
  * @brief Function for sending a token back to scanner
  *
  * @param token Token that is being returned to scanner
@@ -62,6 +51,14 @@ typedef struct Lexeme {
  * The token that is being returned will be sent in the next call of scanner
  */
 void return_buffer_token(token_t token);
+
+
+/**
+ * @brief Processes interpolation expression
+ *
+ * @param token Structure that will hold the result of the function
+ */
+token_t process_interpolation (token_t token);
 
 /**
  * @brief Creates new token and initialises it
@@ -71,14 +68,6 @@ void return_buffer_token(token_t token);
  * @return New initialised token.
  */
 token_t new_token(unsigned line_num);
-
-/**
- * @brief Writes one character on the end of lexeme string
- *
- * @param character Variable holding one character from stdin.
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
- */
-void write_lexeme(int character, lexeme_t *lexeme);
 
 /**
  * @brief Removes comments from code
@@ -95,10 +84,9 @@ token_t handle_comment(int character, token_t token, scanner_case current_case);
  * @brief Removes comments from code
  *
  * @param character Variable holding one character from stdin.
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it.
  * @param multiline Variable indicating if the quotation is supposed to be multiline or not
  */
-void handle_quotation(int character, lexeme_t *lexeme, bool multiline);
+void handle_quotation(int character, bool multiline);
 
 /**
  * @brief Handles white spaces
@@ -122,35 +110,32 @@ void handle_indent(token_t *token);
  *
  * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
  *
  * @return token_t structure, ready to send
  */
-token_t first_alpha(int character, token_t token, lexeme_t *lexeme);
+token_t first_alpha(int character, token_t token);
 
 /**
  * @brief Handles all cases of tokens starting with a digit character
  *
  * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
  * @param current_case Variable representing the current case for switch
  *
  * @return token_t structure, ready to send
  */
-token_t first_digit(int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
+token_t first_digit(int character, token_t token, scanner_case current_case);
 
 /**
  * @brief Handles all cases of tokens starting with all other possible characters
  *
  * @param character Variable holding one character from stdin.
  * @param token Structure that will hold the result of the function
- * @param lexeme Pointer to a structure used to store the value of the lexeme while reading it
  * @param current_case Variable representing the current case for switch
  *
  * @return token_t structure, ready to send
  */
-token_t first_special(int character, token_t token, lexeme_t *lexeme, scanner_case current_case);
+token_t first_special(int character, token_t token, scanner_case current_case);
 
 /**
  * @brief Scanner entry function. Declares all needed variables and starts the process of the fsm
