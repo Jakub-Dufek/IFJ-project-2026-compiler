@@ -19,10 +19,26 @@
 #include "semantic_anal.h"
 
 void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
+
+    bool main_found = false;
     while (ast_node != NULL && ast_node->stmt_type == AST_DEFINITION){
         if (symtable_find_symbol(stack->top->symtable, ast_node->data->definition_node.id_val) != NULL){
             error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Redefinition of a function is not allowed!");
         }
+        if (ast_node->data->definition_node.is_main == true){
+            if (main_found == true){
+                error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Multiple @main functions are not allowed!");
+            }
+            main_found = true;
+
+            if (ast_node->data->definition_node.first_param != NULL){
+                error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: There cannot be any arguments in @main function!");
+            }
+            if (ast_node->data->definition_node.is_main == false){
+                error_exit(SEM_UNDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Missing @main function!");
+            }
+        }
+
         symbol_data_t new_symbol = {0};
         new_symbol.data_type = ast_node->data->definition_node.data_type;
         new_symbol.id_type = ID_FUNC;
@@ -41,6 +57,9 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
         stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->definition_node.id_val, new_symbol);
 
         ast_node = ast_node->next;
+    }
+    if (main_found == false){
+        error_exit(SEM_UNDEF_ERR, 0, "SEMANTIC ANALYSIS: Missing @main function!");
     }
 }
 
@@ -66,7 +85,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                 }
 
                 curr_func_ret_type = ast_node->data->definition_node.data_type; 
-                data_type body_type = sem_anal(ast_node->data->definition_node.body, stack);
+                data_type body_type = sem_anal(ast_node->data->definition_node.body, stack); //<-- Body entry
                 if (ast_node->data->definition_node.body->stmt_type != AST_BLOCK){
                     if (curr_func_ret_type == body_type || curr_func_ret_type == T_KEY_UNIT) {
 
@@ -297,9 +316,4 @@ void run_sem_anal(ast_node_t *ast_node) {
     sem_anal(ast_node, &symtable_stack);
     
     symtable_stack_pop(&symtable_stack);
-
-    /*if (sem_anal(ast_node, &symtable) == !!!!!!!!!!-->T_NO_TYPE<--------){
-        error_exit(SEM_UNDEF_ERR, 0, "Main function not defined"); //<-- COme back to this
-    }*/
-    
 }
