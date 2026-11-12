@@ -288,17 +288,16 @@ void generate_print(ast_node_t *node) {
                     break;
 
                 default:
-                    //TODO
+                    //TODO ERROR
                     break;
             }
             break;
 
         case EXPR_IDENTIFIER:
-            //TODO
             break;
 
         default:
-            //TODO
+            //TODO ERRO
             break;
     }
 }
