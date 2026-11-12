@@ -12,19 +12,27 @@
 # The Makefile is in the ../../ dir and runs the script as follows:
 # @bash tests/compiler_tests/run_tests.sh
 
-
 # Ensure we are in the directory where this script and test files live
 cd "$(dirname "$0")"
 
-
 # ==============================================================================
-# 🔧 ONLY EDIT THIS LINE FOR EACH TEST SUITE:
+# 🔧 ONLY EDIT THIS SECTION FOR CONFIGURATION:
+# ------------------------------------------------------------------------------
+# Object files needed by standalone unit tests (ast_test*.c):
 NEEDED_OBJS="../../build/ast.o ../../build/semantic_anal.o ../../build/symtable.o ../../build/error.o ../../build/memory.o"
-# ==============================================================================
 
+# Additional objects required by fake_main (build_ast requires parser + scanner):
+PARSER_OBJS="../../build/parser.o ../../build/scanner.o"
+
+# Local helper source file required by AST tests:
+HELPER_SRC="ast_print_module.c"
+
+# Compiler flags
+CFLAGS="-Wall -Wextra -I../../src -I."
+# ==============================================================================
 
 # --- Directories ---
-LOG_DIR="../test_logs"
+LOG_DIR="../test_logs/ast"
 BUILD_DIR="../../build"
 
 mkdir -p "$LOG_DIR"
@@ -37,63 +45,61 @@ FAIL="\e[31m✘ FAIL\e[0m"
 passed_count=0
 failed_count=0
 
+# ==============================================================================
+# PHASE 1: STANDALONE C UNIT TESTS (ast_test*.c)
+# ==============================================================================
 echo "============================================================"
-echo "              COMPILER TEST SUITE RUNNER"
+echo "          RUNNING STANDALONE AST UNIT TESTS"
 echo -e "============================================================\n"
 
-# --- Main Test Loop ---
-for file in *.c; do
-    # Skip if no .c files exist
+for file in ast_test*.c; do
+    # Skip if no ast_test*.c files exist
     [ -e "$file" ] || continue
 
-    # Strip '.c' to get test name (e.g. err_syntax.c -> err_syntax)
     name=$(basename "$file" .c)
-
     binary="$BUILD_DIR/$name"
     log_file="$LOG_DIR/$name.txt"
 
     # ==========================================================================
-    # 🪟 THE OPEN WINDOW (C-style switch/case)
+    # 🪟 THE OPEN WINDOW: EXPECTATIONS FOR C UNIT TESTS
     # --------------------------------------------------------------------------
-    # For any test you can configure:
-    #   expected_exit    -> Exit code it must return (default: 0)
-    #   expected_output  -> Substring that must appear in the output (optional)
-    #   expect_empty     -> Set to 1 if test must produce NO output at all (optional)
+    # Settings:
+    #   expected_exit   -> Exit code (0 for success, non-zero for expected crashes/errors)
+    #   expected_output -> Substring that must appear in output ("" to ignore)
+    #   expect_empty    -> Set to 1 if test must produce NO output at all
+    #   expected_file   -> Diffs against reference file ("" to ignore)
     # ==========================================================================
     case "$name" in
         "ast_test1")
-            expected_exit=0
+            expected_exit=3
             expected_output=""
-            expect_empty=1
+            expect_empty=0
+            expected_file=""
             ;;
         "ast_test2")
             expected_exit=0
             expected_output=""
-            expect_empty=1
-            ;;
-        "example_err_silent_fail")
-            expected_exit=1
-            expected_output=""
-            expect_empty=1               # Must exit with 1 and stay completely silent
-            ;;
-        "example_test_ok")
-            expected_exit=0
-            expected_output="Result: 42"
             expect_empty=0
+            expected_file=""
+            ;;
+        "ast_test3"*)
+            expected_exit=0
+            expected_output=""
+            expect_empty=0
+            expected_file=""
             ;;
         *)
-            # Default for all tests not listed above:
+            # Default for unlisted unit tests:
             expected_exit=0
             expected_output=""
             expect_empty=0
+            expected_file=""
             ;;
     esac
     # ==========================================================================
 
-    # ----------------------------------------------------------
-    # 1. Compile
-    # ----------------------------------------------------------
-    gcc -Wall -Wextra -I../../src "$file" $NEEDED_OBJS -o "$binary" > "$log_file" 2>&1
+    # 1. Compile test binary
+    gcc $CFLAGS "$file" "$HELPER_SRC" $NEEDED_OBJS -o "$binary" > "$log_file" 2>&1
 
     if [ $? -ne 0 ]; then
         echo -e "  $FAIL   $name"
@@ -103,49 +109,130 @@ for file in *.c; do
         continue
     fi
 
-    # ----------------------------------------------------------
-    # 2. Run
-    # ----------------------------------------------------------
+    # 2. Run test binary
     "$binary" >> "$log_file" 2>&1
     actual_exit=$?
 
-    # ----------------------------------------------------------
-    # 3. Check Results
-    # ----------------------------------------------------------
-    # Check A: Did it exit with the right return code?
+    # 3. Check results
     if [ $actual_exit -ne $expected_exit ]; then
         echo -e "  $FAIL   $name"
         echo "           -> Expected exit code $expected_exit, but got $actual_exit"
         echo -e "           -> Log: $log_file\n"
         failed_count=$((failed_count + 1))
 
-    # Check B: Should it be completely silent?
     elif [ $expect_empty -eq 1 ] && [ -s "$log_file" ]; then
         echo -e "  $FAIL   $name"
         echo "           -> Expected no output, but program printed to stdout/stderr"
         echo -e "           -> Log: $log_file\n"
         failed_count=$((failed_count + 1))
 
-    # Check C: Does the output contain the required text?
+    elif [ -n "$expected_file" ] && ! diff -u "$expected_file" "$log_file" > /dev/null 2>&1; then
+        echo -e "  $FAIL   $name"
+        echo "           -> Output does not match $expected_file"
+        echo -e "           -> Diff command: diff -u $expected_file $log_file\n"
+        failed_count=$((failed_count + 1))
+
     elif [ -n "$expected_output" ] && ! grep -q "$expected_output" "$log_file"; then
         echo -e "  $FAIL   $name"
         echo "           -> Output missing required text: '$expected_output'"
         echo -e "           -> Log: $log_file\n"
         failed_count=$((failed_count + 1))
 
-    # Otherwise: All checks passed!
     else
         echo -e "  $PASS   $name"
         passed_count=$((passed_count + 1))
     fi
-
 done
 
-# --- Summary ---
+# ==============================================================================
+# PHASE 2: FAKE MAIN OVER .SCALA TEST FILES
+# ==============================================================================
+echo -e "\n============================================================"
+echo "          RUNNING FAKE MAIN OVER SCALA TEST FILES"
+echo -e "============================================================\n"
+
+FAKE_MAIN_BIN="$BUILD_DIR/ast_fake_runner"
+FAKE_MAIN_LOG="$LOG_DIR/fake_main_compile.txt"
+
+# 1. Compile fake_main binary once
+gcc $CFLAGS fake_main.c "$HELPER_SRC" $NEEDED_OBJS $PARSER_OBJS -o "$FAKE_MAIN_BIN" > "$FAKE_MAIN_LOG" 2>&1
+
+if [ $? -ne 0 ]; then
+    echo -e "  $FAIL   fake_main.c"
+    echo "           -> Compilation failed for fake_main runner"
+    echo -e "           -> Log: $FAKE_MAIN_LOG\n"
+    exit 1
+fi
+
+# 2. Iterate through all .scala test files in ../
+for file in ../*.scala; do
+    [ -e "$file" ] || continue
+
+    name=$(basename "$file" .scala)
+    log_file="$LOG_DIR/scala_$name.txt"
+
+    # ==========================================================================
+    # 🪟 THE OPEN WINDOW: EXPECTATIONS FOR SCALA AST TESTS
+    # --------------------------------------------------------------------------
+    # Settings:
+    #   expected_exit   -> Exit code (0 for success, non-zero for lexer/parser/semantics)
+    #   expected_output -> Substring that must appear in output ("" to ignore)
+    #   expected_file   -> Diffs AST output against reference file ("" to ignore)
+    # ==========================================================================
+    case "$name" in
+        "tiny_prog"*)
+            expected_exit=0
+            expected_output=""
+            expected_file=""
+            ;;
+        "err_sem"*)
+            expected_exit=3
+            expected_output=""
+            expected_file=""
+            ;;
+        *)
+            # Default for unlisted scala programs:
+            expected_exit=0
+            expected_output=""
+            expected_file=""
+            ;;
+    esac
+    # ==========================================================================
+
+    # Run fake_main with .scala file as stdin
+    "$FAKE_MAIN_BIN" < "$file" > "$log_file" 2>&1
+    actual_exit=$?
+
+    # Check results
+    if [ $actual_exit -ne $expected_exit ]; then
+        echo -e "  $FAIL   [scala] $name"
+        echo "           -> Expected exit code $expected_exit, but got $actual_exit"
+        echo -e "           -> Log: $log_file\n"
+        failed_count=$((failed_count + 1))
+
+    elif [ -n "$expected_file" ] && ! diff -u "$expected_file" "$log_file" > /dev/null 2>&1; then
+        echo -e "  $FAIL   [scala] $name"
+        echo "           -> Output does not match $expected_file"
+        echo -e "           -> Diff command: diff -u $expected_file $log_file\n"
+        failed_count=$((failed_count + 1))
+
+    elif [ -n "$expected_output" ] && ! grep -q "$expected_output" "$log_file"; then
+        echo -e "  $FAIL   [scala] $name"
+        echo "           -> Output missing required text: '$expected_output'"
+        echo -e "           -> Log: $log_file\n"
+        failed_count=$((failed_count + 1))
+
+    else
+        echo -e "  $PASS   [scala] $name"
+        passed_count=$((passed_count + 1))
+    fi
+done
+
+# --- Final Summary ---
 total_count=$((passed_count + failed_count))
 
-echo "------------------------------------------------------------"
-echo "Summary: $passed_count passed, $failed_count failed ($total_count total)"
+echo -e "\n------------------------------------------------------------"
+echo "AST Summary: $passed_count passed, $failed_count failed ($total_count total)"
 echo "============================================================"
 
 # Return non-zero if any test failed so Makefile stops
