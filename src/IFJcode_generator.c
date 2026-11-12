@@ -92,7 +92,7 @@ void generate_block(ast_node_t *node) {
 
 void generate_declaration(ast_node_t *node, char *frame) {
     printf("DEFVAR %s@%s\n", frame, node->data->declaration_node.id_val);
-    process_node(node->data->declaration_node.expression, "PUSHS ");
+    process_node(node->data->declaration_node.expr_or_call, "PUSHS ");
     printf("POPS %s@%s\n", frame, node->data->declaration_node.id_val);
 }
 
