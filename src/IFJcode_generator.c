@@ -62,9 +62,11 @@ token_type find_operand_type (ast_node_t *node) {
     
     case EXPR_OPERATION: {
         // Handle unary operations seperatelly
-        if (node->data->op_node.op_type == EP_UNARY_MINUS || 
-            node->data->op_node.op_type == EP_UNARY_NEG) {
+        if (node->data->op_node.op_type == EP_UNARY_MINUS) {
             return find_operand_type(node->data->op_node.right);
+        }
+        else if (node->data->op_node.op_type == EP_UNARY_NEG) {
+            return T_KEY_BOOLEAN;
         }
 
         token_type type_left = find_operand_type(node->data->op_node.left);
@@ -121,7 +123,7 @@ void generate_function(ast_node_t *node) {
 
 void generate_operation(ast_node_t *node) {
     // Special handling for unary minus, because all other operations are binary
-    if (node->data->op_node.op_type = EP_UNARY_MINUS) {
+    if (node->data->op_node.op_type == EP_UNARY_MINUS) {
         // Push a zero on the stack
         if (find_operand_type(node) == T_KEY_INT) {
             printf("PUSHS int@0\n");
@@ -137,6 +139,7 @@ void generate_operation(ast_node_t *node) {
     else if (node->data->op_node.op_type == EP_UNARY_NEG) {
         process_node(node->data->op_node.right, "PUSHS ");
         printf("NOTS\n");
+        return;
     }
 
     process_node(node->data->op_node.left, "PUSHS ");
