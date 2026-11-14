@@ -39,7 +39,6 @@ typedef enum {
     ID_VAL,
     ID_VAR,
     ID_FUNC,
-    //ID_LABEL // <-- Come back to this
 } id_type;
 
 
@@ -63,6 +62,7 @@ typedef struct param_type_list {
 
 
 //SYMBOL INFORMATION STRUCTURES
+
 /*
  information about a function
 */
@@ -70,7 +70,7 @@ typedef struct {
     unsigned param_num;
     param_type_list_t *param_types;
     bool is_defined;
-    bool is_main;// <-- Come back to this
+    bool is_main;
 } func_info_t;
 /* 
  symbol_data_t is a structure for storage of data related to a symbol
@@ -80,9 +80,6 @@ typedef struct {
     id_type id_type;
 
     func_info_t func_info;
-    // index - ukazatel do paměti var, val <-- Come back to this
-
-    //// label ??? <-- Come back to this
 } symbol_data_t;
 
 /* 
@@ -174,14 +171,6 @@ void symtable_stack_push(symtable_stack_t *stack);
  deletes the symbol table instance from top of the stack
 */
 void symtable_stack_pop(symtable_stack_t *stack);
-/*
- obtains a pointer to an instance on top of the stack
-*/
-symtable_bvs_node_t *symtable_stack_top(symtable_stack_t *stack);
-/*
- checks if there are any instances on the stack
-*/
-bool symtable_stack_empty(symtable_stack_t *stack); 
 
 /*
  function searches for a symbol in all instances on the stack, returns location

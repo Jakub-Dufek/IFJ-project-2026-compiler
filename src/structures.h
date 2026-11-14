@@ -28,7 +28,7 @@ typedef enum token_type {
     T_KEY_STRING,
     T_KEY_BOOLEAN,
     T_KEY_UNIT,
-    T_KEY_ANY,
+    T_ANY_TYPE,
     T_NO_TYPE,
 
     // keywords

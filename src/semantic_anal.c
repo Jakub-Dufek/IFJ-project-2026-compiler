@@ -18,6 +18,181 @@
 
 #include "semantic_anal.h"
 
+static data_type curr_func_ret_type; // current function return type helper variable
+
+// BUILT-IN FUNCTIONS INSERTION
+
+void builtin_functions_insertion(symtable_stack_t *stack){
+    print_insertion(stack);
+    readline_insertion(stack);
+    readint_insertion(stack);
+    readdouble_insertion(stack);
+    tostr_insertion(stack);
+    toint_insertion(stack);
+    strlength_insertion(stack);
+    substr_insertion(stack);
+    ord_insertion(stack);
+    chr_insertion(stack);
+    readboolean_insertion(stack);
+}
+
+void print_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_UNIT;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 1;
+    param_type_list_insert(params, T_ANY_TYPE);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "print", symbol);
+}
+void readline_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_STRING;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 0;
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "readLine", symbol);
+}
+void readint_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_INT;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 0;
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "readInt", symbol);
+}
+void readdouble_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_DOUBLE;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 0;
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "readDouble", symbol);
+}
+void tostr_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_STRING;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 1;
+    param_type_list_insert(params, T_ANY_TYPE);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "toStr", symbol);
+}
+void toint_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_INT;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 1;
+    param_type_list_insert(params, T_KEY_DOUBLE);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "toInt", symbol);
+}
+void strlength_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_INT;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 1;
+    param_type_list_insert(params, T_KEY_STRING);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "strLength", symbol);
+}
+void substr_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_STRING;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 3;
+    param_type_list_insert(params, T_KEY_STRING);
+    param_type_list_insert(params, T_KEY_INT);
+    param_type_list_insert(params, T_KEY_INT);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "subStr", symbol);
+}
+void ord_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_INT;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 2;
+    param_type_list_insert(params, T_KEY_STRING);
+    param_type_list_insert(params, T_KEY_INT);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "ord", symbol);
+}
+void chr_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_STRING;
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 1;
+    param_type_list_insert(params, T_KEY_INT);
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "chr", symbol);
+}
+void readboolean_insertion(symtable_stack_t *stack){
+    symbol_data_t symbol = {0};
+    param_type_list_t *params = param_type_list_initialize();
+
+    symbol.id_type = ID_FUNC;
+    symbol.data_type = T_KEY_BOOLEAN; // Návratový typ je Boolean
+    symbol.func_info.is_defined = true; 
+    symbol.func_info.is_main = false;
+    symbol.func_info.param_num = 0;
+    symbol.func_info.param_types = params;
+
+    symtable_insert(stack->top->symtable, "readBoolean", symbol);
+}
+
+
+// FIRST GO THROUGH AST
+
 void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
 
     bool main_found = false;
@@ -63,8 +238,10 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
     }
 }
 
+
+// SECOND GO THROUGH AST
+
 data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
-    data_type curr_func_ret_type; // current function return type helper variable
 
     while (ast_node != NULL) {
         switch (ast_node->stmt_type){
@@ -113,7 +290,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
 
                 while(curr_arg != NULL && expected_param != NULL){
                     data_type curr_arg_type = sem_anal(curr_arg, stack);
-                    if (/*expected_param->type != T_ANY &&*/ curr_arg_type != expected_param->type){
+                    if (expected_param->type != T_ANY_TYPE && curr_arg_type != expected_param->type){
                         error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Argument types do not match!");
                     }
                     curr_arg = curr_arg->next;
@@ -234,16 +411,16 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
                     if (left_type == right_type && (left_type == T_KEY_INT || left_type == T_KEY_DOUBLE)){
                         return left_type;
                     }
-                    error_exit(SEM_TYPE_ERR, ast_node->line_num, "Invalid operands for arithmetics");
+                    error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid operands for arithmetics");
                 }
                 
                 if (op == T_LT || op == T_LTE || op == T_GT || op == T_GTE || op == T_EQ || op == T_NEQ){
                     if (left_type != right_type){
-                        error_exit(SEM_TYPE_ERR, ast_node->line_num, "Invalid data types comparison in 'if' condition");
+                        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid data types comparison in 'if' condition");
                     }
                     return T_KEY_BOOLEAN;
                 }
-                error_exit(SEM_OTHER_ERR, ast_node->line_num, "Unknown operator in 'if' condition check");
+                error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown operator in 'if' condition check");
                 break; 
             }
             case EXPR_LITERAL: {
@@ -268,7 +445,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             case EXPR_IDENTIFIER: {
                 symtable_bvs_node_t *symtable_node = symtable_stack_search(stack, ast_node->data->id_leaf_node.id_val);
                 if(symtable_node == NULL){
-                    error_exit(SEM_UNDEF_ERR, ast_node->line_num, "Using non existing identifier");                     // <---- Come back to this
+                    error_exit(SEM_UNDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Using non existing identifier");
                 }
                 else{
                     ast_node->data->id_leaf_node.symbol_data = symtable_node->symbol_data;
@@ -299,12 +476,13 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             default:
                 break;
         }   
-        ast_node = ast_node->next; //Move to next line in block
+        ast_node = ast_node->next; //Move to the next function definition
     }
     return T_NO_TYPE;
  }
 
 
+//EXECUTE SEMANTIC ANALYSIS
 
 void run_sem_anal(ast_node_t *ast_node) {
     symtable_stack_t symtable_stack;
@@ -312,6 +490,7 @@ void run_sem_anal(ast_node_t *ast_node) {
 
     symtable_stack_push(&symtable_stack);
 
+    builtin_functions_insertion(&symtable_stack);
     sem_pre_anal(ast_node, &symtable_stack);
     sem_anal(ast_node, &symtable_stack);
     
