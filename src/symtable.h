@@ -14,7 +14,7 @@
 //libraries:
 #include "structures.h"
 #include "memory.h"
-#include "../src/error.h"
+#include "error.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h> 
@@ -30,7 +30,7 @@
  T_KEY_STRING = 3, T_KEY_BOOLEAN = 4, T_KEY_UNIT = 5, T_NO_TYPE = 6), 
  token_type is renamed to data_type to match situation better 
 */
-typedef token_type data_type; // 
+typedef token_type data_type; // More convenient rename for symbol table
 
 /* 
  id_type description of an id type of a symbol with enum
