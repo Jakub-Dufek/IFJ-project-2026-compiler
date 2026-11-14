@@ -61,6 +61,12 @@ token_type find_operand_type (ast_node_t *node) {
         break;
     
     case EXPR_OPERATION: {
+        // Handle unary operations seperatelly
+        if (node->data->op_node.op_type == EP_UNARY_MINUS || 
+            node->data->op_node.op_type == EP_UNARY_NEG) {
+            return find_operand_type(node->data->op_node.right);
+        }
+
         token_type type_left = find_operand_type(node->data->op_node.left);
         token_type type_right = find_operand_type(node->data->op_node.right);
         if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
@@ -96,28 +102,43 @@ void generate_declaration(ast_node_t *node, char *frame) {
     printf("POPS %s@%s\n", frame, node->data->declaration_node.id_val);
 }
 
+void generate_assignment(ast_node_t *node) {
+    process_node(node->data->assign_node.expr_or_call, "PUSHS ");
+    printf("POPS LF@%s\n", node->data->assign_node.id_val);
+}
+
 void generate_function(ast_node_t *node) {
     ast_definition_node_t def_node = node->data->definition_node;
-    printf("LABEL $%s\n", def_node.id_val);
-    
-    if (def_node.is_main) {
-        printf("CREATEFRAME\n");
-    }
 
+    printf("LABEL $%s\n", def_node.id_val);
     printf("PUSHFRAME\n");
 
     generate_block(def_node.body);
 
     printf("POPFRAME\n");
-    if (def_node.is_main) {
-        printf("EXIT int@0\n");
-    }
-    else {
-        printf("RETURN\n");
-    }
+    printf("RETURN\n");
 }
 
 void generate_operation(ast_node_t *node) {
+    // Special handling for unary minus, because all other operations are binary
+    if (node->data->op_node.op_type = EP_UNARY_MINUS) {
+        // Push a zero on the stack
+        if (find_operand_type(node) == T_KEY_INT) {
+            printf("PUSHS int@0\n");
+        }
+        else {
+            printf("PUSHS float@0x0p+0\n");
+        }
+
+        process_node(node->data->op_node.right, "PUSHS ");
+        printf("SUBS\n");
+        return;
+    } 
+    else if (node->data->op_node.op_type == EP_UNARY_NEG) {
+        process_node(node->data->op_node.right, "PUSHS ");
+        printf("NOTS\n");
+    }
+
     process_node(node->data->op_node.left, "PUSHS ");
     process_node(node->data->op_node.right, "PUSHS ");
 
@@ -216,7 +237,7 @@ void generate_literal(ast_node_t *node, char *print_before) {
         break;
 
     case T_UNIT_LITERAL:
-        printf("nil@nil");
+        printf("nil@nil\n");
         break;
 
     default:
@@ -256,6 +277,10 @@ void process_node(ast_node_t *node, char *message_before) {
         process_node(node->data->imp_conversion.operand, "PUSHS ");
         printf("INT2FLOATS\n");
         break;
+
+    case AST_ASSIGN:
+        generate_assignment(node);
+        break;
     
     default:
         // #TODO error, nerozpoznaný typ uzlu
@@ -281,7 +306,7 @@ void generate_print(ast_node_t *node) {
                     break;
 
                 case T_UNIT_LITERAL:
-                    printf("WRITE string@\\032()\\032\n");
+                    printf("WRITE string@\\032()\\032\n");  // Mezery navíc kolem závorek?
                     break;
 
                 default:
@@ -299,8 +324,22 @@ void generate_print(ast_node_t *node) {
     }
 }
 
+char *find_main_function(ast_node_t *root) {
+    for (ast_node_t *node = root; node != NULL; node = node->next) {
+        if (node->stmt_type == AST_DEFINITION && node->data->definition_node.is_main == true) {
+            return node->data->definition_node.id_val;
+        }
+    }
+
+    // TODO chyba, nebyl nalezen main??
+    return NULL;
+}
+
 void generate_IFJcode26(ast_node_t *root) {
-    printf(".IFJcode26\n"); //Every code has to start with this notation
+    printf(".IFJcode26\n"); // Every code has to start with this notation
+    printf("CREATEFRAME\n");
+    printf("CALL $%s\n", find_main_function(root)); // Make sure interpret starts processing code at main
+    printf("EXIT int@0\n");
 
     ast_node_t *node = root;
     while(node != NULL) {

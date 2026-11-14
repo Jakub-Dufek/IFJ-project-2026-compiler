@@ -46,6 +46,11 @@ void generate_block(ast_node_t *node);
 void generate_declaration(ast_node_t *node, char *frame);
 
 /**
+ * TODO
+ */
+void generate_assignment(ast_node_t *node);
+
+/**
  * @brief Generates IFJcode26 for a definition of a function
  *
  * @param node Pointer to a node that is holding the definition of a function
@@ -80,6 +85,11 @@ void generate_literal(ast_node_t *node, char *print_before);
  * @param message_before String with the information that should be printed before anything else. If empty, is NULL
  */
 void process_node(ast_node_t *node, char *message_before);
+
+/**
+ * TODO
+ */
+char *find_main_function(ast_node_t *root);
 
 /**
  * @brief Entry function for this module
