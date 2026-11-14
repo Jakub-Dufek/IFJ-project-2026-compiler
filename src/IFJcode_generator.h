@@ -19,7 +19,7 @@
  *
  * @param string String representing the literal for print
  */
-void print_string_literal(char *string);
+void print_string_literal(char *string, bool flag);
 
 /**
  * @brief Discoveres the type of inputed node
