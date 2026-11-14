@@ -58,6 +58,11 @@ void generate_assignment(ast_node_t *node);
 void generate_function(ast_node_t *node);
 
 /**
+ * TODO
+ */
+void generate_call(ast_node_t *node);
+
+/**
  * @brief Generates IFJcode26 for an aritmetical operation
  *
  * @param node Pointer to a node that stores the operation

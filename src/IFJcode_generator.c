@@ -121,6 +121,25 @@ void generate_function(ast_node_t *node) {
     printf("RETURN\n");
 }
 
+void generate_call(ast_node_t *node) {
+    ast_call_node_t call_node = node->data->call_node;
+    int arg_count = 0;
+
+    for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
+        process_node(arg, "PUSHS ");
+        arg_count++;
+    }
+
+    printf("CREATEFRAME\n");
+    
+    for (int counter = 0; counter < arg_count; counter++) {
+        printf("DEFVAR TF@arg%i\n", counter);
+        printf("POPS TF@arg%i\n", counter);
+    }
+
+    printf("CALL $%s\n", call_node.id_val);
+}
+
 void generate_operation(ast_node_t *node) {
     // Special handling for unary minus, because all other operations are binary
     if (node->data->op_node.op_type == EP_UNARY_MINUS) {
@@ -257,7 +276,7 @@ void process_node(ast_node_t *node, char *message_before) {
         break;
 
     case AST_DECLARATION:
-        generate_declaration(node, "LF");   //mozna neni vzdy LF
+        generate_declaration(node, "LF");   // TODO mozna neni vzdy LF
         break;
 
     case AST_DEFINITION:
@@ -283,6 +302,10 @@ void process_node(ast_node_t *node, char *message_before) {
 
     case AST_ASSIGN:
         generate_assignment(node);
+        break;
+
+    case AST_CALL:
+        generate_call(node);
         break;
     
     default:
