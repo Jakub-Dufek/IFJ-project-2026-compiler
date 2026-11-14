@@ -2,46 +2,67 @@
  * @file semantic_anal.h
  * @internal Part of IFJ-project-2026-compiler, Team 274855
  *
- * @brief semantic analysis phase of the compiler
+ * @brief Header file for the semantic analysis phase of the compiler
  * @author Ondřej Kycl (xkyclon00)
  * @date 17. 10. 2026
  * 
- * @details This file contains declarations and descriptions of functions used in semantic_anal.c
+ * @details This file contains declarations of public functions used for 
+ * semantic analysis, including built-in function initialization, 
+ * pre-analysis, and the main semantic check routing.
  */
 
-#ifndef SEM_ANAL_H
-#define SEM_ANAL_H
+#ifndef SEMANTIC_ANAL_H
+#define SEMANTIC_ANAL_H
 
-//libraries
-#include "structures.h"
 #include "ast.h"
 #include "symtable.h"
+#include "error.h"
 
+typedef token_type data_type; // More convenient rename for semantic_analysis
 
-typedef token_type data_type; // More convenient rename for semantic analysis
+/**
+ * @brief Main entry point for semantic analysis.
+ * 
+ * Initializes the global symbol table stack, inserts built-in functions,
+ * runs the pre-analysis (to load global function definitions), and then
+ * executes the main semantic analysis.
+ * 
+ * @param ast_node Pointer to the root of the AST.
+ */
+void run_sem_anal(ast_node_t *ast_node);
 
-
-//functions 
-
-/*
- Executes first go-through AST for gathering global function header information, 
- like return type, parameter types and also checking for entry function (@main)
-*/
+/**
+ * @brief First pass through the AST.
+ * 
+ * Finds all function definitions on the global level and inserts them 
+ * into the symbol table to allow forward declarations and recursive calls.
+ * Also strictly checks the presence and signature of the @main function.
+ * 
+ * @param ast_node Pointer to the root of the AST.
+ * @param stack Pointer to the initialized symbol table stack.
+ */
 void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack);
 
-/*
- Executes second go-through AST
-*/
+/**
+ * @brief Second pass through the AST.
+ * 
+ * Recursively analyzes the tree, performs type deductions, type checking,
+ * variable scope management, and returns the resulting data type of the 
+ * evaluated block or statement.
+ * 
+ * @param ast_node Pointer to the currently evaluated AST node.
+ * @param stack Pointer to the symbol table stack.
+ * @return data_type The resulting data type of the evaluated node or block.
+ */
 data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack);
 
-/*
- Calls all functions below inserting built-in functions into top level of the symtable
-*/
+/**
+ * @brief Inserts all IFJ26 built-in functions into the global symbol table.
+ * 
+ * @param stack Pointer to the symbol table stack (global frame).
+ */
 void builtin_functions_insertion(symtable_stack_t *stack);
 
-/*
- Built-in functions filled and inserted into symtable 
-*/
 void print_insertion(symtable_stack_t *stack);
 void readline_insertion(symtable_stack_t *stack);
 void readint_insertion(symtable_stack_t *stack);
@@ -54,9 +75,4 @@ void ord_insertion(symtable_stack_t *stack);
 void chr_insertion(symtable_stack_t *stack);
 void readboolean_insertion(symtable_stack_t *stack);
 
-/*
- Performs entire semantic analysis by creating and destroying symtable stack, 
- and calling functions above (builtin_functions_insertion, pre_sem_anal, sem_anal)
-*/
-void run_sem_anal(ast_node_t *ast_node);
 #endif

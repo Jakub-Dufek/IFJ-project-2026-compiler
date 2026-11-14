@@ -1,40 +1,44 @@
 /**
-* @file symtable.h
-* @internal Part of IFJ-project-2026-compiler
-*
-* @brief symbol table structure
-* @author Ondřej Kycl (xkyclon00) 
-* @date 04.10.2026
-* 
-* @details This file contains declarations and descriptions of functions used in symtable.c
-*/
+ * @file symtable.h
+ * @internal Part of IFJ-project-2026-compiler, Team 274855
+ *
+ * @brief Symbol table structure and operations
+ * @author Ondřej Kycl (xkyclon00) 
+ * @date 04. 10. 2026
+ * 
+ * @details This file contains declarations and descriptions of structures 
+ * and functions used in symtable.c for managing variables, values, and functions.
+ */
+
 #ifndef SYMTABLE_H
 #define SYMTABLE_H
 
-//libraries:
-#include "structures.h"
-#include "memory.h"
-#include "error.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h> 
 
-//definitions:
+#include "structures.h"
+#include "memory.h"
+#include "../src/error.h"
 
 
-//SYMTABLE STRUCTURES
 
-/* 
- description of data types with enum from "structures.h":
- 0-6 - (T_UNDEFINED = NO_VALUE = 0, T_KEY_INT = 1, T_KEY_DOUBLE = 2,
- T_KEY_STRING = 3, T_KEY_BOOLEAN = 4, T_KEY_UNIT = 5, T_NO_TYPE = 6), 
- token_type is renamed to data_type to match situation better 
-*/
-typedef token_type data_type; // More convenient rename for symbol table
+// SYMTABLE STRUCTURES & ENUMS
 
-/* 
- id_type description of an id type of a symbol with enum
-*/
+
+/**
+ * @brief More convenient rename for symbol table data types.
+ * 
+ * @details Description of data types with enum from "structures.h":
+ * 0-6 - (T_UNDEFINED = NO_VALUE = 0, T_KEY_INT = 1, T_KEY_DOUBLE = 2,
+ * T_KEY_STRING = 3, T_KEY_BOOLEAN = 4, T_KEY_UNIT = 5, T_NO_TYPE = 6).
+ * token_type is renamed to data_type to match situation better.
+ */
+typedef token_type data_type;
+
+/**
+ * @brief Description of an ID type of a symbol with enum.
+ */
 typedef enum {
     ID_VAL,
     ID_VAR,
@@ -42,51 +46,55 @@ typedef enum {
 } id_type;
 
 
-//LINKED LIST STRUCTURES
 
-/*
- element of linked list - data_type
-*/
+// LINKED LIST STRUCTURES (Function Parameters)
+
+
+/**
+ * @brief Element of linked list - data_type.
+ */
 typedef struct param_type {
     data_type type;
     struct param_type *next_ptr;
 } param_type_t;
 
-/*
- linked list constisting of function parameter's data types
-*/
+/**
+ * @brief Linked list consisting of function parameter's data types.
+ */
 typedef struct param_type_list {
     param_type_t *first;
     param_type_t *last;
 } param_type_list_t;
 
 
-//SYMBOL INFORMATION STRUCTURES
 
-/*
- information about a function
-*/
+// SYMBOL INFORMATION STRUCTURES
+
+
+/**
+ * @brief Information about a function.
+ */
 typedef struct {
     unsigned param_num;
     param_type_list_t *param_types;
     bool is_defined;
     bool is_main;
 } func_info_t;
-/* 
- symbol_data_t is a structure for storage of data related to a symbol
-*/
+
+/**
+ * @brief symbol_data_t is a structure for storage of data related to a symbol.
+ */
 typedef struct {
     data_type data_type; 
     id_type id_type;
-
     func_info_t func_info;
 } symbol_data_t;
 
-/* 
- A node of a binary tree
-*/
+/**
+ * @brief A node of a binary tree.
+ */
 typedef struct symtable_bvs_node_t {
-    char *key; // identifier value used for binary search
+    char *key;                               // identifier value used for binary search
     symbol_data_t symbol_data;
     struct symtable_bvs_node_t *l_ptr;
     struct symtable_bvs_node_t *r_ptr;
@@ -95,102 +103,153 @@ typedef struct symtable_bvs_node_t {
 } symtable_bvs_node_t;   
 
 
-//STACK STRUCTURES
 
-/*
- a symtable instance on the stack
-*/
+// STACK STRUCTURES
+
+
+/**
+ * @brief A symtable instance on the stack.
+ */
 typedef struct symtable_instance_t {
     symtable_bvs_node_t *symtable;
     struct symtable_instance_t *next;
 } symtable_instance_t;
-/*
- stack of symtables
-*/
+
+/**
+ * @brief Stack of symtables.
+ */
 typedef struct {
     symtable_instance_t *top;
 } symtable_stack_t;
 
 
+// ============================================================================
+// SYMTABLE FUNCTIONS
+// ============================================================================
 
-//SYMTABLE FUNCTIONS
-
-/*
- initialization of the symbol table
-*/
+/**
+ * @brief Initialization of the symbol table.
+ * 
+ * @return symtable_bvs_node_t* Pointer to the initialized root.
+ */
 symtable_bvs_node_t *symtable_initialize();
 
-/* 
- symtable_insert helper function - returns greater number of the two
-*/
+/**
+ * @brief symtable_insert helper function - returns greater number of the two.
+ */
 int bvs_max(int n1, int n2);
-/* 
- symtable_insert helper function - returns height from the current pointer
-*/
+
+/**
+ * @brief symtable_insert helper function - returns height from the current pointer.
+ */
 int bvs_height(symtable_bvs_node_t *ptr);
-/* 
- symtable_insert helper function - performs AVL tree rotation to the left, uses bvs_max and bvs_height
-*/
+
+/**
+ * @brief symtable_insert helper function - performs AVL tree rotation to the left.
+ * 
+ * @details Uses bvs_max and bvs_height.
+ */
 symtable_bvs_node_t *symtable_left_rotate(symtable_bvs_node_t *y);
-/* 
- symtable_insert helper function - performs AVL tree rotation to the right, uses bvs_max and bvs_height
-*/
+
+/**
+ * @brief symtable_insert helper function - performs AVL tree rotation to the right.
+ * 
+ * @details Uses bvs_max and bvs_height.
+ */
 symtable_bvs_node_t *symtable_right_rotate(symtable_bvs_node_t *y);
 
-/*
- returns the position of the found symbol node, or NULL if not found
- implementation is recursive
-*/
+/**
+ * @brief Returns the position of the found symbol node.
+ * 
+ * @details Returns the position of the found symbol node, or NULL if not found.
+ * Implementation is recursive.
+ * 
+ * @param rootPtr Root of the binary tree to search in.
+ * @param k Key (identifier) to search for.
+ * @return symtable_bvs_node_t* Pointer to the found node or NULL.
+ */
 symtable_bvs_node_t *symtable_find_symbol(symtable_bvs_node_t *rootPtr, char *k);
 
-/*
- symtable_insert helper function - allocates a new node, allocates key string and inserts received symbol information into the node 
-*/
+/**
+ * @brief symtable_insert helper function - allocates a new node.
+ * 
+ * @details Allocates a new node, allocates key string and inserts received 
+ * symbol information into the node.
+ */
 symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb);
-/*
- inserts new node as a leaf node of a binary tree, performs height balancing through rotations if necessary, 
- uses error() if insertion is not possible
- implementation is recursive
-*/
+
+/**
+ * @brief Inserts new node as a leaf node of a binary tree.
+ * 
+ * @details Performs height balancing through rotations if necessary, 
+ * uses error() if insertion is not possible. Implementation is recursive.
+ * 
+ * @param rootPtr Current root of the tree/subtree.
+ * @param key Key (identifier) of the new symbol.
+ * @param symb Symbol data to insert.
+ * @return symtable_bvs_node_t* Pointer to the new root of the balanced subtree.
+ */
 symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *rootPtr, char *key, symbol_data_t symb);
 
+/**
+ * @brief Frees the symbol table and all its nodes.
+ * 
+ * @param root_ptr Root of the binary tree to destroy.
+ */
 void symtable_destructor(symtable_bvs_node_t *root_ptr);
 
 
-//STACK FUNTIONS
+// ============================================================================
+// STACK FUNCTIONS
+// ============================================================================
 
-/*
- initialization of the symbol table stack
-*/
+/**
+ * @brief Initialization of the symbol table stack.
+ */
 void symtable_stack_initialize(symtable_stack_t *stack);
-/*
- puts new symbol table instance on top of the stack 
-*/
+
+/**
+ * @brief Puts new symbol table instance on top of the stack.
+ */
 void symtable_stack_push(symtable_stack_t *stack);
-/*
- deletes the symbol table instance from top of the stack
-*/
+
+/**
+ * @brief Deletes the symbol table instance from top of the stack.
+ */
 void symtable_stack_pop(symtable_stack_t *stack);
 
-/*
- function searches for a symbol in all instances on the stack, returns location
-*/
+/**
+ * @brief Function searches for a symbol in all instances on the stack.
+ * 
+ * @details Traverses the stack from top to bottom and returns the location 
+ * of the first matching symbol found.
+ * 
+ * @param stack Pointer to the stack to search in.
+ * @param key Key (identifier) to search for.
+ * @return symtable_bvs_node_t* Pointer to the found node or NULL.
+ */
 symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key);
 
 
-//LINKED LIST FUNCTIONS
+// ============================================================================
+// LINKED LIST FUNCTIONS (Parameter Handling)
+// ============================================================================
 
-/*
- initialization of the parameter list
-*/
+/**
+ * @brief Initialization of the parameter list.
+ */
 param_type_list_t *param_type_list_initialize(void);
-/*
- inserts and allocates new parameter's data type as the last element
-*/
+
+/**
+ * @brief Inserts and allocates new parameter's data type as the last element.
+ */
 void param_type_list_insert(param_type_list_t *l, data_type type);
-/*
- frees entire parameter's types list
-*/
-//void param_list_destroy(param_type_list_t *l);
+
+/**
+ * @brief Frees entire parameter's types list.
+ * 
+ * @note Uncomment and implement in symtable.c when necessary.
+ */
+// void param_list_destroy(param_type_list_t *l);
 
 #endif

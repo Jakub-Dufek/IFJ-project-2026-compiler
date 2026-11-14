@@ -9,8 +9,7 @@
 * @details This file contains a symbol table implemented with height self-balancing binary tree data structure
 */
 
-//TODO : Upravit popisky,
-//       Popsat Stack search jako AI funkci?
+//TODO : Popsat Stack search jako AI funkci?
 //       .clang-format,
 //       Zbývající param komentáře, celý destruktor odstranit
 
