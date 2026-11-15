@@ -75,4 +75,11 @@ void ord_insertion(symtable_stack_t *stack);
 void chr_insertion(symtable_stack_t *stack);
 void readboolean_insertion(symtable_stack_t *stack);
 
+/**
+ * @brief Safely frees all local symbol tables currently on the semantic stack.
+ * 
+ * This function is meant to be called by error_exit() to prevent memory leaks
+ */
+void sem_anal_error_exit();
+
 #endif

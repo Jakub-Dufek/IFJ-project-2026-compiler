@@ -14,6 +14,7 @@
 #include "error.h"
 #include "memory.h"
 #include "ast.h"
+#include "semantic_anal.h"
 
 
 void error_exit(err_code_t err_code, unsigned line, const char *fmt, ...)
@@ -32,6 +33,7 @@ void error_exit(err_code_t err_code, unsigned line, const char *fmt, ...)
 
     va_end(args);
 
+    sem_anal_error_exit(); // Frees symtable stack
     scratch_free();     // Frees string buffer
     arena_free_all();   // Frees dynamic memory alloc in AST
 

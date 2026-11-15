@@ -11,13 +11,14 @@
 
 //TODO: 
 //      Popsat implicitní konverzi jako AI generated?
-//      error_exit() leaks!!
+//      valgrind?
 //      T_KEY_BOOLEAN >> T_LITERAL_BOOLEAN
 //      Underscore "_"
 
 #include "semantic_anal.h"
 
 static data_type curr_func_ret_type; // current function return type helper variable
+static symtable_stack_t *active_sem_stack = NULL;
 
 // BUILT-IN FUNCTIONS INSERTION
 
@@ -561,6 +562,8 @@ void run_sem_anal(ast_node_t *ast_node) {
     symtable_stack_t symtable_stack;
     symtable_stack_initialize(&symtable_stack);
 
+    active_sem_stack = &symtable_stack;
+
     symtable_stack_push(&symtable_stack);
 
     builtin_functions_insertion(&symtable_stack);
@@ -568,4 +571,18 @@ void run_sem_anal(ast_node_t *ast_node) {
     sem_anal(ast_node, &symtable_stack);
     
     symtable_stack_pop(&symtable_stack);
+    
+    active_sem_stack = NULL;
+}
+
+ 
+// CLEANUP FUNCTION FOR error_exit()
+
+void sem_anal_error_exit(){
+    if (active_sem_stack != NULL){
+        while(!symtable_stack_is_empty(active_sem_stack)){
+            symtable_stack_pop(active_sem_stack);
+        }
+        active_sem_stack = NULL;
+    }
 }

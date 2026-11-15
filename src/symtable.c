@@ -9,9 +9,9 @@
 * @details This file contains a symbol table implemented with height self-balancing binary tree data structure
 */
 
-//TODO : Popsat Stack search jako AI funkci?
+//TODO : 
+//       Popsat Stack search jako AI funkci?
 //       .clang-format,
-//       Zbývající param komentáře, celý destruktor odstranit
 
 #include "symtable.h"
 
@@ -102,7 +102,7 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, s
                 root_ptr->r_ptr = symtable_insert(root_ptr->r_ptr, key, symb);
             }
             else{
-                error_exit(SEM_REDEF_ERR, 0, "SYMTABLE: Redefinition of a symbol"); // <-- shouldn't happen
+                error_exit(SEM_REDEF_ERR, 0, "SYMTABLE: Redefinition of a symbol"); // <-- shouldn't even happen
             }
         }
 
@@ -142,9 +142,6 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr){
     if (root_ptr->r_ptr != NULL){
         symtable_destructor(root_ptr->r_ptr);
     }
-    /*if (root_ptr->symbol_data.id_type == ID_FUNC && root_ptr->symbol_data.func_info.param_types != NULL) {
-        param_list_destroy(root_ptr->symbol_data.func_info.param_types);  // <--let it be for now
-    }*/
     free(root_ptr);
 }
 
@@ -175,6 +172,13 @@ void symtable_stack_pop(symtable_stack_t *stack){
     }
 }
 
+bool symtable_stack_is_empty(symtable_stack_t *stack) {
+    if (stack == NULL) {
+        return true;
+    }
+    return (stack->top == NULL);
+}
+
 symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
     symtable_instance_t *current = stack->top;
     while (current != NULL){
@@ -191,7 +195,6 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
 // LINKED LIST
 
 param_type_list_t *param_type_list_initialize(void) {
-    //param_type_list_t *l = (param_type_list_t*) malloc(sizeof(param_type_list_t));
     param_type_list_t *l = arena_alloc(sizeof(param_type_list_t));
     if (l == NULL) {
         error_exit(INTERNAL_ERR, 0, "Internal allocation fault");
@@ -203,7 +206,6 @@ param_type_list_t *param_type_list_initialize(void) {
 
 void param_type_list_insert(param_type_list_t *l, data_type type){
     if (l != NULL){
-        //param_type_t *new_param_type = (param_type_t *) malloc(sizeof(param_type_t));
         param_type_t *new_param_type = arena_alloc(sizeof(param_type_t));
         if (new_param_type == NULL){
             error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a parameter type");
@@ -221,15 +223,3 @@ void param_type_list_insert(param_type_list_t *l, data_type type){
         }
     }
 }
-
-/*void param_list_destroy(param_type_list_t *l) {
-    param_type_t *current;
-
-    while (l->first != NULL) {
-        current = l->first;
-        l->first = l->first->next_ptr; 
-        free(current);
-    }
-    l->last = NULL; 
-    free(l);
-}*/
