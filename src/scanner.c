@@ -401,7 +401,7 @@ token_t first_digit (int character, token_t token, scanner_case current_case) {
             case CASE_INT_LITERAL:
                 if (character == '.') { current_case = CASE_DOUBLE_LITERAL; }
                 else if (character == 'e' || character == 'E') { current_case = CASE_EXPONENT; }
-                else if (isdigit(character)) { if (zero && last_character != 0) { error_exit(LEX_ERR, current_line_num, "Number can not start with a zero."); } }
+                else if (isdigit(character)) { if (zero && last_character != 0) { error_exit(LEX_ERR, current_line_num, "Non-zero number can not start with a zero."); } }
                 else { valid = false; }
                 break;
         
