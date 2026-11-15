@@ -142,7 +142,56 @@ void ast_print(ast_node_t *node, int level) {
             printf("[EXPR_INT2FLOAT] Implicit conversion (line: %u)\n", node->line_num);
             ast_print(node->data->imp_conversion.operand, level + 1);
             break;
+        case AST_RETURN:
+            printf("[AST_RETURN] (line: %u)\n", node->line_num);
+            if (node->data->return_node.expr_or_call != NULL) {
+                ast_print(node->data->return_node.expr_or_call, level + 1);
+            }
+            break;
 
+        case AST_WHILE:
+            printf("[AST_WHILE] (line: %u)\n", node->line_num);
+            print_indent(level + 1);
+            printf("--- Condition ---\n");
+            ast_print(node->data->while_node.condition, level + 2);
+            print_indent(level + 1);
+            printf("--- Body ---\n");
+            ast_print(node->data->while_node.body, level + 2);
+            break;
+
+        case AST_IF:
+            printf("[AST_IF] (line: %u)\n", node->line_num);
+            print_indent(level + 1);
+            printf("--- Condition ---\n");
+            ast_print(node->data->if_node.condition, level + 2);
+            print_indent(level + 1);
+            printf("--- Then ---\n");
+            ast_print(node->data->if_node.then_body, level + 2);
+            if (node->data->if_node.else_body != NULL) {
+                print_indent(level + 1);
+                printf("--- Else ---\n");
+                ast_print(node->data->if_node.else_body, level + 2);
+            }
+            break;
+        case AST_ASSIGN:
+            printf("[AST_ASSIGN] id: '%s' (line: %u)\n", 
+                   node->data->assign_node.id_val, 
+                   node->line_num);
+            // Vypíše výraz nebo volání funkce na pravé straně přiřazení
+            ast_print(node->data->assign_node.expr_or_call, level + 1);
+            break;
+
+        case AST_CALL:
+            printf("[AST_CALL] func: '%s' (line: %u)\n", 
+                   node->data->call_node.id_val, 
+                   node->line_num);
+            // Pokud má funkce argumenty, vypíše je
+            if (node->data->call_node.first_arg != NULL) {
+                print_indent(level + 1);
+                printf("--- Arguments ---\n");
+                ast_print(node->data->call_node.first_arg, level + 2);
+            }
+            break;
         default:
             printf("[UNKNOWN_NODE]\n");
             break;

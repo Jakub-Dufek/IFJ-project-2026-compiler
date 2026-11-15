@@ -18,7 +18,7 @@
 #include "symtable.h"
 #include "error.h"
 
-typedef token_type data_type; // More convenient rename for semantic_analysis
+typedef token_type data_type; // More convenient rename for semantic analysis
 
 /**
  * @brief Main entry point for semantic analysis.

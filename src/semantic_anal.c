@@ -13,6 +13,7 @@
 //      Popsat implicitní konverzi jako AI generated?
 //      error_exit() leaks!!
 //      T_KEY_BOOLEAN >> T_LITERAL_BOOLEAN
+//      Underscore "_"
 
 #include "semantic_anal.h"
 
@@ -274,6 +275,28 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
     return T_KEY_UNIT;
 }
 
+static data_type sem_check_return(ast_node_t *ast_node, symtable_stack_t *stack) {
+    data_type ret_expr_type;
+    if (ast_node->data->return_node.expr_or_call == NULL){
+        ret_expr_type = T_KEY_UNIT;
+    }
+    else {
+        ret_expr_type = sem_anal(ast_node->data->return_node.expr_or_call, stack);
+    }
+    // Compare against expected function return type
+    if (curr_func_ret_type == ret_expr_type || curr_func_ret_type == T_KEY_UNIT){
+        // all good
+    }
+    else if (curr_func_ret_type == T_KEY_DOUBLE && ret_expr_type == T_KEY_INT){
+        ast_node->data->return_node.expr_or_call = ast_convert_int2float(ast_node->data->return_node.expr_or_call);
+    }
+    else{
+        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Expected different data type to be returned");
+    }
+
+    return ret_expr_type;
+}
+
 static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
     symtable_bvs_node_t *func_symbol = symtable_stack_search(stack, ast_node->data->call_node.id_val);
     if (func_symbol == NULL || func_symbol->symbol_data.id_type != ID_FUNC){
@@ -482,28 +505,6 @@ static data_type sem_check_identifier(ast_node_t *ast_node, symtable_stack_t *st
         ast_node->data->id_leaf_node.symbol_data = symtable_node->symbol_data;
         return symtable_node->symbol_data.data_type;
     }
-}
-
-static data_type sem_check_return(ast_node_t *ast_node, symtable_stack_t *stack) {
-    data_type ret_expr_type;
-    if (ast_node->data->return_node.expr_or_call == NULL){
-        ret_expr_type = T_KEY_UNIT;
-    }
-    else {
-        ret_expr_type = sem_anal(ast_node->data->return_node.expr_or_call, stack);
-    }
-    // Compare against expected function return type
-    if (curr_func_ret_type == ret_expr_type){
-        // all good
-    }
-    else if (curr_func_ret_type == T_KEY_DOUBLE && ret_expr_type == T_KEY_INT){
-        ast_node->data->return_node.expr_or_call = ast_convert_int2float(ast_node->data->return_node.expr_or_call);
-    }
-    else{
-        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Expected different data type to be returned");
-    }
-
-    return ret_expr_type;
 }
 
 

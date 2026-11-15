@@ -123,9 +123,9 @@ typedef struct {
 } symtable_stack_t;
 
 
-// ============================================================================
+
 // SYMTABLE FUNCTIONS
-// ============================================================================
+
 
 /**
  * @brief Initialization of the symbol table.
@@ -199,9 +199,9 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *rootPtr, char *key, sy
 void symtable_destructor(symtable_bvs_node_t *root_ptr);
 
 
-// ============================================================================
+
 // STACK FUNCTIONS
-// ============================================================================
+
 
 /**
  * @brief Initialization of the symbol table stack.
@@ -231,9 +231,9 @@ void symtable_stack_pop(symtable_stack_t *stack);
 symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key);
 
 
-// ============================================================================
-// LINKED LIST FUNCTIONS (Parameter Handling)
-// ============================================================================
+
+// LINKED LIST FUNCTIONS
+
 
 /**
  * @brief Initialization of the parameter list.
