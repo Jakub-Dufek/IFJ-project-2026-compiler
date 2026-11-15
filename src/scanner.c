@@ -269,53 +269,56 @@ void handle_indent(token_t *token)
             error_exit(LEX_ERR, token->line_num, "Tabulator found on the start of a non-empty line.");
         }
 
+        if (token->type == T_L_ROUND_BRACKET) {
+            depth_of_brackets++;
+        }
+
         line_start = false;
+        // ...and if I am not inside of round brackets...
         if (depth_of_brackets == 0) {
-            next_token = *token;
-            *token = new_token(0);
-            bool same_indent = false;
-            //...and then I compare its indentation value with all values I have stored.
-            for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
-                // If I find the indentation value in the list, but it is not the furthest,...
-                if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
-                    token->type = T_LESS_INDENT; //...I send token representing less indentation,...
-                    token->line_num = current_line_num;
-                    indent_values[last_indent_idx] = NO_VALUE; //...remove the furthest indentation,...
-                    last_indent_idx--;                         //...subtract one from the indentation index...
-                    line_start = true; //...and set line_start to true in case there is even less indentation
-                }
-                // If there is no change in indent, note it and delete next_token (no need for it)
-                else if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
-                    same_indent = true;
-                    *token = next_token;
-                    next_token = new_token(NO_VALUE);
-                    break;
-                }
-            }
-            // In case current indent is not in the list of previous indents...
-            if (token->type != T_LESS_INDENT && same_indent == false) {
-                // ...and the indent is lesser than the last indent, exit with error...
-                if (indent_depth < indent_values[last_indent_idx]) {
-                    error_exit(SYNT_ERR, token->line_num, "Invalid indentation level.");
-                    // ...otherwise, note new indent value.
-                } else {
-                    if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
-                        error_exit(INTERNAL_ERR, token->line_num, "Too many indentation levels, buffer overflow.");
-                    } else {
-                        last_indent_idx++;
-                        indent_values[last_indent_idx] = indent_depth;
-                        token->type = T_MORE_INDENT;
+            if (token->type != T_R_ROUND_BRACKET) {
+                next_token = *token;
+                *token = new_token(0);
+                bool same_indent = false;
+                //...and then I compare its indentation value with all values I have stored.
+                for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
+                    // If I find the indentation value in the list, but it is not the furthest,...
+                    if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
+                        token->type = T_LESS_INDENT; //...I send token representing less indentation,...
                         token->line_num = current_line_num;
+                        indent_values[last_indent_idx] = NO_VALUE; //...remove the furthest indentation,...
+                        last_indent_idx--;                         //...subtract one from the indentation index...
+                        line_start = true; //...and set line_start to true in case there is even less indentation
+                    }
+                    // If there is no change in indent, note it and delete next_token (no need for it)
+                    else if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
+                        same_indent = true;
+                        *token = next_token;
+                        next_token = new_token(NO_VALUE);
+                        break;
+                    }
+                }
+                // In case current indent is not in the list of previous indents...
+                if (token->type != T_LESS_INDENT && same_indent == false) {
+                    // ...and the indent is lesser than the last indent, exit with error...
+                    if (indent_depth < indent_values[last_indent_idx]) {
+                        error_exit(SYNT_ERR, token->line_num, "Invalid indentation level.");
+                        // ...otherwise, note new indent value.
+                    } else {
+                        if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
+                            error_exit(INTERNAL_ERR, token->line_num, "Too many indentation levels, buffer overflow.");
+                        } else {
+                            last_indent_idx++;
+                            indent_values[last_indent_idx] = indent_depth;
+                            token->type = T_MORE_INDENT;
+                            token->line_num = current_line_num;
+                        }
                     }
                 }
             }
         } else if (depth_of_brackets > 0 &&
                    indent_depth <= indent_values[last_indent_idx]) { // Check indent for inside of brackets
             error_exit(LEX_ERR, token->line_num, "Lesser or equal indentation level inside of brackets than before them.");
-        }
-
-        if (token->type == T_L_ROUND_BRACKET) {
-            depth_of_brackets++;
         }
     } else if (token->type == T_LF) { // If the current line ends,...
         indent_depth = 0;             //...reset indent depth for another line...
@@ -332,33 +335,36 @@ int compare(const void *string, const void *keyword_string)
 
 token_t first_alpha (int character, token_t token) {
     // Check for interpolated s
-    if (character == 's' && (character = getchar()) == '"') {
-        interpolated_s = true;
-        if ((character = getchar()) == '"') {
-            if ((character = getchar()) == '"') {
-                multiline_interpolation = true;
+    if (character == 's') {
+        int next_character = getchar();
+        if (next_character == '"') {
+            interpolated_s = true;
+            if ((next_character = getchar()) == '"') {
+                if ((next_character = getchar()) == '"') {
+                    multiline_interpolation = true;
+                }
+                else {
+                    multiline_interpolation = false;
+                    if (next_character != EOF) {
+                        ungetc(next_character, stdin);
+                    }
+                    ungetc('"', stdin);
+                }
             }
             else {
                 multiline_interpolation = false;
-                if (character != EOF) {
-                    ungetc(character, stdin);
+                if (next_character != EOF) {
+                    ungetc(next_character, stdin);
                 }
-                ungetc('"', stdin);
             }
-        }
-        else {
+            token = process_interpolation(token);
+            interpolated_s = false;
             multiline_interpolation = false;
-            if (character != EOF) {
-                ungetc(character, stdin);
-            }
+            return token;
         }
-        return token = process_interpolation(token);
-    }
-    else if (character != EOF) {
-        ungetc(character, stdin);
-    }
-    else {
-        character = 's';
+        else if (next_character != EOF) {
+            ungetc(next_character, stdin);
+        }
     }
 
     bool valid = false;
@@ -690,17 +696,27 @@ token_t get_next_token()
         } else if (isdigit(character) || character == '.') {
             if (character == '.') {
                 if (isdigit(next_character = getchar())) {
+                    if (next_character != EOF) {
+                        ungetc(next_character, stdin);
+                    }
                     token = first_digit(character, token, CASE_DOUBLE_LITERAL);
                 }
                 else {
                     token.type = T_DOT;
-                    ungetc(next_character, stdin);
+                    if (next_character != EOF) {
+                        ungetc(next_character, stdin);
+                    }
                 }
             }
-            else if (character != '0') {
+            else if (isdigit(next_character = getchar()) && character == '0') {
+                error_exit(LEX_ERR, current_line_num, "Non-Zero number starting with zero.");
+            }
+            else {
+                if (next_character != EOF) {
+                    ungetc(next_character, stdin);
+                }
                 token = first_digit(character, token, CASE_INT_LITERAL);
             }
-            else { error_exit(LEX_ERR, current_line_num, "Non-Zero number starting with zero."); }
         }
         else if (!isspace(character)) {
             token = first_special(character, token, current_case);
