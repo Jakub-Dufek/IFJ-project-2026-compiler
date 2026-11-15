@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdalign.h>
+#include "error.h"
 
 #include "memory.h"
 #include "structures.h"
