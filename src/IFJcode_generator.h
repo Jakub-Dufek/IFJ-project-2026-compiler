@@ -17,6 +17,7 @@
 typedef struct Context {
     char *function_name;
     token_type return_type;
+    ast_node_t *root;
 } context_t;
 
 /**
@@ -74,7 +75,12 @@ void generate_return(ast_node_t *node, context_t *context);
  * @param node Pointer to the node strucutre to check
  * @return true if the node represents an expression, false otherwise
  */
-bool is_expression (ast_node_t *node);
+bool is_expression (ast_node_t *node, context_t *context);
+
+/**
+ * TODO
+ */
+token_type function_return_type(char *id_val, context_t *context);
 
 /**
  * TODO

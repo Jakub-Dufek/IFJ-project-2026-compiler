@@ -13,6 +13,7 @@
 #include "IFJcode_generator.h"
 #include "ast.h"
 #include <stdio.h>
+#include <string.h>
 
 
 void print_string_literal(char *string, bool flag) {
@@ -107,7 +108,7 @@ void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
         process_node(block_node, "PUSHS ", context);
         // Throw away any expressions that are not needed, but only if they are not the last instruction in the block 
         // and its result is needed by the caller
-        if (is_expression(block_node) && (block_node->next != NULL || result_needed == false)) {
+        if (is_expression(block_node, context) == true && (block_node->next != NULL || result_needed == false)) {
             printf("POPS LF@discard_top_stack\n");
         }
 
@@ -161,7 +162,7 @@ void generate_function(ast_node_t *node, context_t *context) {
         }
         else {
             process_node(def_node.body, "PUSHS ", context);
-            if (result_needed == false && is_expression(def_node.body) == true) {
+            if (result_needed == false && is_expression(def_node.body, context) == true) {
                 printf("POPS LF@discard_top_stack\n");
             }
         }
@@ -188,14 +189,14 @@ void generate_return(ast_node_t *node, context_t *context) {
         process_node(last_instruction, "PUSHS ", context);
     }
 
-    if (context->return_type == T_KEY_UNIT && is_expression(last_instruction) == true) {
+    if (context->return_type == T_KEY_UNIT && is_expression(last_instruction, context) == true) {
         printf("POPS LF@discard_top_stack\n");
     }
 
     printf("JUMP $%s_end\n", context->function_name);
 }
 
-bool is_expression (ast_node_t *node) {
+bool is_expression (ast_node_t *node, context_t *context) {
     if (node == NULL) {
         return false;
     }
@@ -203,8 +204,21 @@ bool is_expression (ast_node_t *node) {
         node->stmt_type == EXPR_IDENTIFIER || node->stmt_type == EXPR_INT2FLOAT) {
         return true;
     }
+    else if (node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_KEY_UNIT 
+    && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) {
+        return true;
+    }
     
     return false;
+}
+
+token_type function_return_type(char *id_val, context_t *context) {
+    for (ast_node_t *node = context->root; node != NULL; node = node->next) {
+        if (node->stmt_type == AST_DEFINITION && strcmp(node->data->definition_node.id_val, id_val) == 0) {
+            return node->data->definition_node.data_type;
+        }
+    }
+    return T_UNDEFINED;
 }
 
 void generate_call(ast_node_t *node, context_t *context) {
@@ -672,6 +686,7 @@ void generate_IFJcode26(ast_node_t *root) {
 
     ast_node_t *node = root;
     context_t context = {0};
+    context.root = root;
     while(node != NULL) {
         process_node(node, NULL, &context);
         node = node->next;
