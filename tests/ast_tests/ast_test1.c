@@ -3,6 +3,8 @@
 #include "../../src/semantic_anal.h"
 #include "ast_print_module.h"
 
+#include <stdio.h>
+
 #define LINE_NUM 999
 
 /*

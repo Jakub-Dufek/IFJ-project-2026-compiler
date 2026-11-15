@@ -4,6 +4,8 @@
 #include "../../src/IFJcode_generator.h"
 #include "ast_print_module.h"
 
+#include <stdio.h>
+
 #define LINE_NUM 999
 
 /*
@@ -18,6 +20,7 @@
 int main()
 {
     arena_init(); // DO NOT REMOVE, KEEP AT BEGINNING
+    scratch_init();
 
     // 1
     token_value_t one_int; one_int.int_value = 1;
@@ -36,7 +39,7 @@ int main()
 
     // var x = 12
     scratch_append('x');
-    char *x_str = scratch_save_to_arena;
+    char *x_str = scratch_save_to_arena();
     ast_node_t *x_declaration = ast_insert_var_declaration(x_str, LINE_NUM, true, T_NO_TYPE, twelve_lit);
 
     // x
@@ -98,5 +101,6 @@ int main()
 
 
 
+    scratch_free();
     arena_free_all(); // DO NOT REMOVE, KEEP AT END
 }

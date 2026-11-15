@@ -4,6 +4,8 @@
 #include "../../src/IFJcode_generator.h"
 #include "ast_print_module.h"
 
+#include <stdio.h>
+
 #define LINE_NUM 999
 
 /*  @main
@@ -12,6 +14,7 @@
 int main()
 {
     arena_init(); // DO NOT REMOVE, KEEP AT BEGINNING
+    scratch_init();
 
     // 10
     token_value_t ten_int; ten_int.int_value = 10;
@@ -55,6 +58,6 @@ int main()
 
 
 
-
+    scratch_free();
     arena_free_all(); // DO NOT REMOVE, KEEP AT END
 }

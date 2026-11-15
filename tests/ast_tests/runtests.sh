@@ -22,7 +22,7 @@ cd "$(dirname "$0")"
 NEEDED_OBJS="../../build/ast.o ../../build/semantic_anal.o ../../build/symtable.o ../../build/error.o ../../build/memory.o"
 
 # Additional objects required by fake_main (build_ast requires parser + scanner):
-PARSER_OBJS="../../build/parser.o ../../build/scanner.o"
+PARSER_OBJS="../../build/parser.o ../../build/scanner.o ../../build/expr_parser.o ../../build/expr_parser_stack.o"
 
 # Local helper source file required by AST tests:
 HELPER_SRC="ast_print_module.c"
