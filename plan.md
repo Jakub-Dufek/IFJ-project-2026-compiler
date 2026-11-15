@@ -111,3 +111,16 @@ Deadline xlehots00:
 - 11\. 11. 2026: print(), boolean, defence, code enhancing??
 - 13\. 11. 2026: scanner diagramme
 - 15\. 11. 2026: other fns
+
+# 15. 11. 2026
+Deadline 274855:
+- 17\. 11. 2026: parser + expr parser tests, sync small_prog.scala, sync medium_prog.scala
+Deadline kyclon00:
+- 17\. 11. Comments, fix sudden bugs
+Deadline xgreges00:
+- 17\. 11. medium_prog.scala compiling
+Deadline xlehots00:
+- 15\. 11. 2026: Merge ifjcode26, error calls
+- 17\. 11. 2026: Comments, identifiers in parameters of builtin
+Deadline xkyclon00 + xgreges00 + xlehots00:
+- 16\. 11. 2026: Boolean literals
