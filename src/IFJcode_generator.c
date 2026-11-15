@@ -4,6 +4,7 @@
  *
  * @brief FSM for code generator
  * @author Šimon Greger (xgreges00)
+ * @author Samuel Vít Lehotský (xlehots00)
  * @date 25.10.2026
  *
  * @details This file contains finite state machine representing the functions of a IFJcode26 generator
@@ -436,6 +437,219 @@ void generate_print(ast_node_t *node) {
         default:
             //TODO ERRO
             break;
+    }
+}
+
+void generate_readLine(char *target_var) {
+    printf("READ %s string\n", target_var);
+}
+
+void generate_readInt(char *target_var) {
+    printf("READ %s int\n", target_var);
+}
+
+void generate_readDouble(char *target_var) {
+    printf("READ %s float\n", target_var);
+}
+
+void generate_Boolean(char *target_var) {
+    printf("READ %s bool\n", target_var);
+}
+
+void generate_toStr(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        switch (node->data->lit_leaf_node.lit_type) {
+            case T_STRING_LITERAL:
+                printf("MOVE %s string@", target_var);
+                print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+                break;
+
+            case T_INT_LITERAL:
+                printf("INT2STR %s int@%d\n", target_var, node->data->lit_leaf_node.lit_value.int_value);
+                break;
+
+            case T_DOUBLE_LITERAL:
+                printf("FLOAT2STR %s float@%a\n", target_var, node->data->lit_leaf_node.lit_value.double_value);
+                break;
+
+            case T_UNIT_LITERAL:
+                printf("MOVE %s string@\\032()\\032\n", target_var);
+                break;
+            
+            default:
+                //TODO ERROR
+        }
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_toInt(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(node->data->lit_leaf_node.lit_type == T_DOUBLE_LITERAL) {
+            printf("FLOAT2INT %s float@%a\n", target_var, node->data->lit_leaf_node.lit_value.double_value);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_strLength(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(node->data->lit_leaf_node.lit_type == T_STRING_LITERAL) {
+            printf("STRLEN %s string@", target_var);
+            print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_subStr(char *target_var, ast_node_t *node) {
+    ast_node_t *arg1 = node->data->call_node.first_arg;
+    ast_node_t *arg2 = arg1->next;
+    ast_node_t *arg3 = arg2->next;
+
+    printf("CREATEFRAME\n");
+    printf("DEFVAR TF@str\n");
+    printf("DEFVAR TF@idx\n");
+    printf("DEFVAR TF@end\n");
+
+    if (arg1->stmt_type == EXPR_LITERAL) {
+        printf("MOVE TF@str");
+        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
+    }
+    else if (arg1->stmt_type == EXPR_IDENTIFIER) {
+
+    }
+
+    if (arg2->stmt_type == EXPR_LITERAL) {
+        printf("MOVE TF@idx %d\n", arg2->data->lit_leaf_node.lit_value.int_value);
+    }
+    else if (arg2->stmt_type == EXPR_IDENTIFIER) {
+        
+    }
+
+    if (arg3->stmt_type == EXPR_LITERAL) {
+        printf("MOVE TF@end %d\n", arg3->data->lit_leaf_node.lit_value.int_value);
+    }
+    else if (arg3->stmt_type == EXPR_IDENTIFIER) {
+        
+    }
+
+    printf("CALL $builtin_subStr_begin\n");
+    if (target_var != NULL) { printf("MOVE %s TF@return\n", target_var); }
+}
+
+void generate_builtin_subStr() {
+    printf("\nLABEL $builtin_subStr_begin\n");
+    printf("PUSHFRAME\n");
+
+    printf("DEFVAR LF@len\n");
+    printf("DEFVAR LF@bool\n");
+    printf("DEFVAR LF@char\n");
+    printf("DEFVAR LF@$return\n");
+
+    //value: str
+    printf("STRLEN LF@len LF@str\n");
+    printf("MOVE LF@$return string@\n");
+
+    //start<0 start: idx
+    printf("LT LF@bool LF@idx int@0\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //end<0 end: end
+    printf("LT LF@bool LF@end int@0\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //start>end
+    printf("GT LF@bool LF@idx LF@end\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //start>=strLength(value)
+    printf("LT LF@bool LF@idx LF@len\n");
+    printf("NOT LF@bool LF@bool\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //end>strLength(value)
+    printf("GT LF@bool LF@end LF@len\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    printf("JUMP $loop\n");
+    
+    printf("LABEL $error\n");
+    printf("EXIT int@40\n");
+
+    printf("LABEL $loop\n");
+    printf("JUMPIFEQ $subStr_end LF@idx LF@end\n");
+    printf("GETCHAR LF@char LF@str LF@idx\n");
+    printf("CONCAT LF@$return LF@$return LF@char\n");
+    printf("ADD LF@idx LF@idx int@1\n");
+    printf("JUMP $loop\n");
+    
+    printf("LABEL $subStr_end\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+}
+
+void generate_ord(char *target_var, ast_node_t *node) {
+    ast_node_t *arg1 = node->data->call_node.first_arg;
+    ast_node_t *arg2 = arg1->next;
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(arg2->data->lit_leaf_node.lit_value.int_value == T_INT_LITERAL && (*(arg1->data->lit_leaf_node.lit_value.string_value) == T_STRING_LITERAL)) {
+            printf("STRI2INT %s string@%s int@%d\n", target_var, arg1->data->lit_leaf_node.lit_value.string_value, arg2->data->lit_leaf_node.lit_value.int_value);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_chr(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(node->data->lit_leaf_node.lit_type == T_INT_LITERAL) {
+            printf("INT2CHAR %s int@%d\n", target_var, node->data->lit_leaf_node.lit_value.int_value);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
     }
 }
 
