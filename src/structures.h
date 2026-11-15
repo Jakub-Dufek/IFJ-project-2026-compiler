@@ -17,8 +17,6 @@
 #define MAX_INDENT_LENGTH 256
 #define NO_VALUE 0
 
-#include "error.h"
-
 typedef enum token_type {
     T_UNDEFINED = NO_VALUE,
 
