@@ -14,6 +14,12 @@
 
 #include "ast.h"
 
+typedef struct Context {
+    char *function_name;
+    token_type return_type;
+    ast_node_t *root;
+} context_t;
+
 /**
  * @brief Prints string literal to stdout in IFJcode26 style
  *
@@ -34,8 +40,9 @@ token_type find_operand_type (ast_node_t *node);
  * @brief Generates IFJcode26 for one block of code
  *
  * @param node Pointer to a node that stores the start of a block
+ * @param result_needed Boolean indicating if the result of the block is needed
  */
-void generate_block(ast_node_t *node);
+void generate_block(ast_node_t *node, context_t *context, bool result_needed);
 
 /**
  * @brief Generates IFJcode26 for a declaration of a variable
@@ -43,26 +50,54 @@ void generate_block(ast_node_t *node);
  * @param node Pointer to a node with the variable declaration
  * @param frame String representing the frame in which the variable should be (TF, LF, GF)
  */
-void generate_declaration(ast_node_t *node, char *frame);
+void generate_declaration(ast_node_t *node, char *frame, context_t *context);
+
+/**
+ * TODO
+ */
+void generate_assignment(ast_node_t *node, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for a definition of a function
  *
  * @param node Pointer to a node that is holding the definition of a function
  */
-void generate_function(ast_node_t *node);
+void generate_function(ast_node_t *node, context_t *context);
+
+/**
+ * TODO
+ */
+void generate_return(ast_node_t *node, context_t *context);
+
+/**
+ * @brief Checks if a node represents an expression, aka. if it leaves a value on the stack
+ *
+ * @param node Pointer to the node strucutre to check
+ * @return true if the node represents an expression, false otherwise
+ */
+bool is_expression (ast_node_t *node, context_t *context);
+
+/**
+ * TODO
+ */
+token_type function_return_type(char *id_val, context_t *context);
+
+/**
+ * TODO
+ */
+void generate_call(ast_node_t *node, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for an aritmetical operation
  *
  * @param node Pointer to a node that stores the operation
  */
-void generate_operation(ast_node_t *node);
+void generate_operation(ast_node_t *node, context_t *context);
 
 /**
  * TODO
  */
-void generate_identifier(ast_node_t *node, char *print_before);
+void generate_identifier(ast_node_t *node, char *print_before, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for any type of literal
@@ -70,7 +105,7 @@ void generate_identifier(ast_node_t *node, char *print_before);
  * @param node Pointer to a node that holds the literal
  * @param print_before String with the information that should be printed before the literal. If empty, is NULL
  */
-void generate_literal(ast_node_t *node, char *print_before);
+void generate_literal(ast_node_t *node, char *print_before, context_t *context);
 
 
 /**
@@ -79,7 +114,36 @@ void generate_literal(ast_node_t *node, char *print_before);
  * @param node Pointer to a node
  * @param message_before String with the information that should be printed before anything else. If empty, is NULL
  */
-void process_node(ast_node_t *node, char *message_before);
+void process_node(ast_node_t *node, char *message_before, context_t *context);
+
+void generate_print(ast_node_t *node);
+
+void generate_readLine(char *target_var);
+
+void generate_readInt(char *target_var);
+
+void generate_readDouble(char *target_var); 
+
+void generate_Boolean(char *target_var);
+
+void generate_toStr(char *target_var, ast_node_t *node);
+
+void generate_toInt(char *target_var, ast_node_t *node);
+
+void generate_strLength(char *target_var, ast_node_t *node);
+
+void generate_subStr(ast_node_t *node);
+
+void generate_builtin_subStr();
+
+void generate_ord(char *target_var, ast_node_t *node);
+
+void generate_chr(char *target_var, ast_node_t *node);
+
+/**
+ * TODO
+ */
+char *find_main_function(ast_node_t *root);
 
 /**
  * @brief Entry function for this module

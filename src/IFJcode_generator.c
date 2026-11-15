@@ -4,6 +4,7 @@
  *
  * @brief FSM for code generator
  * @author Šimon Greger (xgreges00)
+ * @author Samuel Vít Lehotský (xlehots00)
  * @date 25.10.2026
  *
  * @details This file contains finite state machine representing the functions of a IFJcode26 generator
@@ -12,6 +13,7 @@
 #include "IFJcode_generator.h"
 #include "ast.h"
 #include <stdio.h>
+#include <string.h>
 
 
 void print_string_literal(char *string, bool flag) {
@@ -45,6 +47,10 @@ token_type find_operand_type (ast_node_t *node) {
         case T_STRING_LITERAL:
             type = T_KEY_STRING;
             break;
+
+        case T_KEY_BOOLEAN:
+            type = T_KEY_BOOLEAN;
+            break;
         
         default:
             type = T_UNDEFINED;
@@ -61,6 +67,20 @@ token_type find_operand_type (ast_node_t *node) {
         break;
     
     case EXPR_OPERATION: {
+        // Handle unary operations seperatelly
+        if (node->data->op_node.op_type == EP_UNARY_MINUS) {
+            return find_operand_type(node->data->op_node.right);
+        }
+        else if (node->data->op_node.op_type == EP_UNARY_NEG) {
+            return T_KEY_BOOLEAN;
+        }
+
+        if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
+            node->data->op_node.op_type == T_GT || node->data->op_node.op_type == T_GTE ||
+            node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE) {
+            return T_KEY_BOOLEAN;
+        }
+
         token_type type_left = find_operand_type(node->data->op_node.left);
         token_type type_right = find_operand_type(node->data->op_node.right);
         if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
@@ -82,44 +102,166 @@ token_type find_operand_type (ast_node_t *node) {
 }
 
 
-void generate_block(ast_node_t *node) {
+void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
     ast_node_t *block_node = node->data->block_node.first;
     while (block_node != NULL) {
-        process_node(block_node, NULL);
+        process_node(block_node, "PUSHS ", context);
+        // Throw away any expressions that are not needed, but only if they are not the last instruction in the block 
+        // and its result is needed by the caller
+        if (is_expression(block_node, context) == true && (block_node->next != NULL || result_needed == false)) {
+            printf("POPS LF@discard_top_stack\n");
+        }
+
         block_node = block_node->next;
     }
 }
 
-void generate_declaration(ast_node_t *node, char *frame) {
+void generate_declaration(ast_node_t *node, char *frame, context_t *context) {
     printf("DEFVAR %s@%s\n", frame, node->data->declaration_node.id_val);
-    process_node(node->data->declaration_node.expr_or_call, "PUSHS ");
+    process_node(node->data->declaration_node.expr_or_call, "PUSHS ", context);
     printf("POPS %s@%s\n", frame, node->data->declaration_node.id_val);
 }
 
-void generate_function(ast_node_t *node) {
-    ast_definition_node_t def_node = node->data->definition_node;
-    printf("LABEL $%s\n", def_node.id_val);
-    
-    if (def_node.is_main) {
-        printf("CREATEFRAME\n");
-    }
-
-    printf("PUSHFRAME\n");
-
-    generate_block(def_node.body);
-
-    printf("POPFRAME\n");
-    if (def_node.is_main) {
-        printf("EXIT int@0\n");
-    }
-    else {
-        printf("RETURN\n");
-    }
+void generate_assignment(ast_node_t *node, context_t *context) {
+    process_node(node->data->assign_node.expr_or_call, "PUSHS ", context);
+    printf("POPS LF@%s\n", node->data->assign_node.id_val);
 }
 
-void generate_operation(ast_node_t *node) {
-    process_node(node->data->op_node.left, "PUSHS ");
-    process_node(node->data->op_node.right, "PUSHS ");
+void generate_function(ast_node_t *node, context_t *context) {
+    ast_definition_node_t def_node = node->data->definition_node;
+    context->function_name = def_node.id_val;
+    context->return_type = def_node.data_type;
+    bool result_needed = false;
+    if (def_node.data_type == T_KEY_INT || def_node.data_type == T_KEY_DOUBLE || 
+        def_node.data_type == T_KEY_STRING || def_node.data_type == T_KEY_BOOLEAN) {
+        result_needed = true;
+    }
+
+    // Create label and frame
+    printf("LABEL $%s\n", def_node.id_val);
+    printf("PUSHFRAME\n");
+    // Variable used as a trash bin
+    printf("DEFVAR LF@discard_top_stack\n");
+
+    // Prepare and load parameters
+    int param_count = 0;
+    for (ast_node_t *param = def_node.first_param; param != NULL; param = param->next) {
+        printf("DEFVAR LF@%s\n", param->data->param_node.id_val);
+        printf("PUSHS LF@arg%i\n", param_count);
+        printf("POPS LF@%s\n", param->data->param_node.id_val);
+        param_count++;
+    }
+
+    // Handle body
+    if (def_node.body->stmt_type == AST_BLOCK) {
+        generate_block(def_node.body, context, result_needed);
+    }
+    else {
+        if (def_node.body->stmt_type == AST_RETURN) {
+            generate_return(def_node.body, context);
+        }
+        else {
+            process_node(def_node.body, "PUSHS ", context);
+            if (result_needed == false && is_expression(def_node.body, context) == true) {
+                printf("POPS LF@discard_top_stack\n");
+            }
+        }
+    }
+
+
+    /* Generated by ChatGPT
+       Prompt: Jak můžu elegantně vyřešit "return" v rámci zanořených podmínek uvnitř funkce?
+    */
+    printf("LABEL $%s_end\n", def_node.id_val);
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+
+    // Remove information from context
+    context->function_name = NULL;
+    context->return_type = T_UNDEFINED;
+}
+
+void generate_return(ast_node_t *node, context_t *context) {
+    // If the function type is not Unit, process the return expression
+    ast_node_t *last_instruction = node->data->return_node.expr_or_call;
+
+    if (last_instruction != NULL) {
+        process_node(last_instruction, "PUSHS ", context);
+    }
+
+    if (context->return_type == T_KEY_UNIT && is_expression(last_instruction, context) == true) {
+        printf("POPS LF@discard_top_stack\n");
+    }
+
+    printf("JUMP $%s_end\n", context->function_name);
+}
+
+bool is_expression (ast_node_t *node, context_t *context) {
+    if (node == NULL) {
+        return false;
+    }
+    else if (node->stmt_type == EXPR_OPERATION || node->stmt_type == EXPR_LITERAL || 
+        node->stmt_type == EXPR_IDENTIFIER || node->stmt_type == EXPR_INT2FLOAT) {
+        return true;
+    }
+    else if (node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_KEY_UNIT 
+    && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) {
+        return true;
+    }
+    
+    return false;
+}
+
+token_type function_return_type(char *id_val, context_t *context) {
+    for (ast_node_t *node = context->root; node != NULL; node = node->next) {
+        if (node->stmt_type == AST_DEFINITION && strcmp(node->data->definition_node.id_val, id_val) == 0) {
+            return node->data->definition_node.data_type;
+        }
+    }
+    return T_UNDEFINED;
+}
+
+void generate_call(ast_node_t *node, context_t *context) {
+    ast_call_node_t call_node = node->data->call_node;
+    int arg_count = 0;
+    for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
+        process_node(arg, "PUSHS ", context);
+        arg_count++;
+    }
+
+    printf("CREATEFRAME\n");
+
+    for (int counter = arg_count - 1; counter >= 0; counter--) {
+        printf("DEFVAR TF@arg%i\n", counter);
+        printf("POPS TF@arg%i\n", counter);
+    }
+
+    printf("CALL $%s\n", call_node.id_val);
+}
+
+void generate_operation(ast_node_t *node, context_t *context) {
+    // Special handling for unary minus, because all other operations are binary
+    if (node->data->op_node.op_type == EP_UNARY_MINUS) {
+        // Push a zero on the stack
+        if (find_operand_type(node) == T_KEY_INT) {
+            printf("PUSHS int@0\n");
+        }
+        else {
+            printf("PUSHS float@0x0p+0\n");
+        }
+
+        process_node(node->data->op_node.right, "PUSHS ", context);
+        printf("SUBS\n");
+        return;
+    } 
+    else if (node->data->op_node.op_type == EP_UNARY_NEG) {
+        process_node(node->data->op_node.right, "PUSHS ", context);
+        printf("NOTS\n");
+        return;
+    }
+
+    process_node(node->data->op_node.left, "PUSHS ", context);
+    process_node(node->data->op_node.right, "PUSHS ", context);
 
     //Print the type of the operation
     switch (node->data->op_node.op_type)
@@ -184,17 +326,18 @@ void generate_operation(ast_node_t *node) {
         // #TODO chyba, neznama operace
         break;
     }
-
-    return;
 }
 
-void generate_identifier(ast_node_t *node, char *print_before) {
-    // #TODO implementace
+void generate_identifier(ast_node_t *node, char *print_before, context_t *context) {
+    if (print_before != NULL) {
+        printf("%s", print_before);
+    }
 
-    return;
+    printf("LF@%s\n", node->data->id_leaf_node.id_val);
+    //TODO... dokončit funkci
 }
 
-void generate_literal(ast_node_t *node, char *print_before) {
+void generate_literal(ast_node_t *node, char *print_before, context_t *context) {
     if (print_before != NULL) {
         printf("%s", print_before);
     }
@@ -215,55 +358,64 @@ void generate_literal(ast_node_t *node, char *print_before) {
         break;
 
     case T_UNIT_LITERAL:
-        printf("nil@nil");
+        printf("nil@nil\n");
         break;
 
     default:
         // #TODO error, nerozpoznaný typ literálu
         break;
     }
-
-    return;
 }
 
-void process_node(ast_node_t *node, char *message_before) {
+void process_node(ast_node_t *node, char *message_before, context_t *context) {
     switch (node->stmt_type)
     {
-    case AST_BLOCK:
-        generate_block(node);
+    case AST_BLOCK: {
+        generate_block(node, context, false);
         break;
+    }
 
     case AST_DECLARATION:
-        generate_declaration(node, "LF");   //mozna neni vzdy LF
+        generate_declaration(node, "LF", context);   // TODO mozna neni vzdy LF
         break;
 
     case AST_DEFINITION:
-       generate_function(node);
+       generate_function(node, context);
         break;
 
     case EXPR_OPERATION:
-        generate_operation(node);
+        generate_operation(node, context);
         break;
 
     case EXPR_IDENTIFIER:
-        generate_identifier(node, message_before);
+        generate_identifier(node, message_before, context);
         break;
 
     case EXPR_LITERAL:
-        generate_literal(node, message_before);
+        generate_literal(node, message_before, context);
         break;
 
     case EXPR_INT2FLOAT:
-        process_node(node->data->imp_conversion.operand, "PUSHS ");
+        process_node(node->data->imp_conversion.operand, "PUSHS ", context);
         printf("INT2FLOATS\n");
+        break;
+
+    case AST_ASSIGN:
+        generate_assignment(node, context);
+        break;
+
+    case AST_CALL:
+        generate_call(node, context);
+        break;
+
+    case AST_RETURN:
+        generate_return(node, context);
         break;
     
     default:
         // #TODO error, nerozpoznaný typ uzlu
         break;
     }
-
-    return;
 }
 
 void generate_print(ast_node_t *node) {
@@ -284,7 +436,7 @@ void generate_print(ast_node_t *node) {
                     break;
 
                 case T_UNIT_LITERAL:
-                    printf("WRITE string@\\032()\\032\n");
+                    printf("WRITE string@\\032()\\032\n");  // Mezery navíc kolem závorek?
                     break;
 
                 default:
@@ -302,12 +454,241 @@ void generate_print(ast_node_t *node) {
     }
 }
 
+void generate_readLine(char *target_var) {
+    printf("READ %s string\n", target_var);
+}
+
+void generate_readInt(char *target_var) {
+    printf("READ %s int\n", target_var);
+}
+
+void generate_readDouble(char *target_var) {
+    printf("READ %s float\n", target_var);
+}
+
+void generate_Boolean(char *target_var) {
+    printf("READ %s bool\n", target_var);
+}
+
+void generate_toStr(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        switch (node->data->lit_leaf_node.lit_type) {
+            case T_STRING_LITERAL:
+                printf("MOVE %s string@", target_var);
+                print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+                break;
+
+            case T_INT_LITERAL:
+                printf("INT2STR %s int@%d\n", target_var, node->data->lit_leaf_node.lit_value.int_value);
+                break;
+
+            case T_DOUBLE_LITERAL:
+                printf("FLOAT2STR %s float@%a\n", target_var, node->data->lit_leaf_node.lit_value.double_value);
+                break;
+
+            case T_UNIT_LITERAL:
+                printf("MOVE %s string@\\032()\\032\n", target_var);
+                break;
+            
+            default:
+                //TODO ERROR
+        }
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_toInt(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(node->data->lit_leaf_node.lit_type == T_DOUBLE_LITERAL) {
+            printf("FLOAT2INT %s float@%a\n", target_var, node->data->lit_leaf_node.lit_value.double_value);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_strLength(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(node->data->lit_leaf_node.lit_type == T_STRING_LITERAL) {
+            printf("STRLEN %s string@", target_var);
+            print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_subStr(ast_node_t *node) {
+    ast_node_t *arg1 = node->data->call_node.first_arg;
+    ast_node_t *arg2 = arg1->next;
+    ast_node_t *arg3 = arg2->next;
+
+    printf("CREATEFRAME\n");
+    printf("DEFVAR TF@str\n");
+    printf("DEFVAR TF@idx\n");
+    printf("DEFVAR TF@end\n");
+
+    if (arg1->stmt_type == EXPR_LITERAL) {
+        printf("MOVE TF@str");
+        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
+    }
+    else if (arg1->stmt_type == EXPR_IDENTIFIER) {
+
+    }
+
+    if (arg2->stmt_type == EXPR_LITERAL) {
+        printf("MOVE TF@idx %d\n", arg2->data->lit_leaf_node.lit_value.int_value);
+    }
+    else if (arg2->stmt_type == EXPR_IDENTIFIER) {
+        
+    }
+
+    if (arg3->stmt_type == EXPR_LITERAL) {
+        printf("MOVE TF@end %d\n", arg3->data->lit_leaf_node.lit_value.int_value);
+    }
+    else if (arg3->stmt_type == EXPR_IDENTIFIER) {
+        
+    }
+
+    printf("CALL $builtin_subStr_begin\n");
+    printf("PUSH TF@return\n");
+}
+
+void generate_builtin_subStr() {
+    printf("\nLABEL $builtin_subStr_begin\n");
+    printf("PUSHFRAME\n");
+
+    printf("DEFVAR LF@len\n");
+    printf("DEFVAR LF@bool\n");
+    printf("DEFVAR LF@char\n");
+    printf("DEFVAR LF@$return\n");
+
+    //value: str
+    printf("STRLEN LF@len LF@str\n");
+    printf("MOVE LF@$return string@\n");
+
+    //start<0 start: idx
+    printf("LT LF@bool LF@idx int@0\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //end<0 end: end
+    printf("LT LF@bool LF@end int@0\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //start>end
+    printf("GT LF@bool LF@idx LF@end\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //start>=strLength(value)
+    printf("LT LF@bool LF@idx LF@len\n");
+    printf("NOT LF@bool LF@bool\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    //end>strLength(value)
+    printf("GT LF@bool LF@end LF@len\n");
+    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    printf("JUMP $loop\n");
+    
+    printf("LABEL $error\n");
+    printf("EXIT int@40\n");
+
+    printf("LABEL $loop\n");
+    printf("JUMPIFEQ $subStr_end LF@idx LF@end\n");
+    printf("GETCHAR LF@char LF@str LF@idx\n");
+    printf("CONCAT LF@$return LF@$return LF@char\n");
+    printf("ADD LF@idx LF@idx int@1\n");
+    printf("JUMP $loop\n");
+    
+    printf("LABEL $subStr_end\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+}
+
+void generate_ord(char *target_var, ast_node_t *node) {
+    ast_node_t *arg1 = node->data->call_node.first_arg;
+    ast_node_t *arg2 = arg1->next;
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(arg2->data->lit_leaf_node.lit_value.int_value == T_INT_LITERAL && (*(arg1->data->lit_leaf_node.lit_value.string_value) == T_STRING_LITERAL)) {
+            printf("STRI2INT %s string@%s int@%d\n", target_var, arg1->data->lit_leaf_node.lit_value.string_value, arg2->data->lit_leaf_node.lit_value.int_value);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+void generate_chr(char *target_var, ast_node_t *node) {
+    switch (node->stmt_type)
+    {
+    case EXPR_LITERAL:
+        if(node->data->lit_leaf_node.lit_type == T_INT_LITERAL) {
+            printf("INT2CHAR %s int@%d\n", target_var, node->data->lit_leaf_node.lit_value.int_value);
+        }
+        else {/*TODO ERROR*/}
+        break;
+
+    case EXPR_IDENTIFIER:
+        break;
+    
+    default:
+        //TODO ERROR
+        break;
+    }
+}
+
+char *find_main_function(ast_node_t *root) {
+    for (ast_node_t *node = root; node != NULL; node = node->next) {
+        if (node->stmt_type == AST_DEFINITION && node->data->definition_node.is_main == true) {
+            return node->data->definition_node.id_val;
+        }
+    }
+
+    // TODO chyba, nebyl nalezen main??
+    return NULL;
+}
+
 void generate_IFJcode26(ast_node_t *root) {
-    printf(".IFJcode26\n"); //Every code has to start with this notation
+    printf(".IFJcode26\n"); // Every code has to start with this notation
+    printf("CREATEFRAME\n");
+    printf("CALL $%s\n", find_main_function(root)); // Make sure interpret starts processing code at main
+    printf("EXIT int@0\n");
 
     ast_node_t *node = root;
+    context_t context = {0};
+    context.root = root;
     while(node != NULL) {
-        process_node(node, NULL);
+        process_node(node, NULL, &context);
         node = node->next;
     }
 

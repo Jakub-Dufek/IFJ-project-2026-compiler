@@ -19,7 +19,7 @@ void stack_init(TStack *stack) {
 
 void stack_push(TStack *stack, token_t *token) {
     TStack_Element *new_element = (TStack_ElementPtr)malloc(sizeof(TStack_Element));
-    if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, ""); }
+    if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, "Internal memmory allocation error."); }
     new_element->token = *token;
     new_element->next = stack->top;
     stack->top = new_element;
@@ -31,7 +31,7 @@ void stack_push_after_top_terminal(TStack *stack, token_t *token) {
     while (temp_element != NULL) {
         if (temp_element->token.type != EP_EXPR && temp_element->token.type != EP_LT_MARKER) {
             TStack_Element *new_element = (TStack_ElementPtr)malloc(sizeof(TStack_Element));
-            if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, ""); }
+            if (new_element == NULL) { error_exit(INTERNAL_ERR, token->line_num, "Internal memmory allocation error."); }
             if (temp_element == stack->top) {
                 new_element->next = stack->top;
                 stack->top = new_element;
@@ -58,12 +58,12 @@ void stack_pop(TStack *stack) {
 }
 
 token_t top(TStack *stack) {
-    if (empty(stack)) { error_exit(SYNT_ERR, 0, ""); } //TODO
+    if (empty(stack)) { error_exit(SYNT_ERR, 0, "Internal expression parser stack error."); }
     return (stack->top->token);
 }
 
 token_t top_terminal(TStack *stack) {
-    if (empty(stack)) { error_exit(SYNT_ERR, 0, ""); } //TODO
+    if (empty(stack)) { error_exit(SYNT_ERR, 0, "Internal expression parser stack error."); }
     TStack_ElementPtr temp_element = stack->top;
     while (temp_element != NULL) {
         if (temp_element->token.type != EP_EXPR && temp_element->token.type != EP_LT_MARKER) {
@@ -71,7 +71,7 @@ token_t top_terminal(TStack *stack) {
         }
         temp_element = temp_element->next;
     }
-    error_exit(SYNT_ERR, 0, ""); //TODO
+    error_exit(SYNT_ERR, 0, "No terminal found on expression parser stack."); 
     token_t token = {0};
     return token;
 }
