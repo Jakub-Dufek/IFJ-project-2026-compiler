@@ -278,6 +278,11 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
 
 static data_type sem_check_return(ast_node_t *ast_node, symtable_stack_t *stack) {
     data_type ret_expr_type;
+
+    if (curr_func_ret_type == T_NO_TYPE) {
+        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: 'return' used in function without explicit return type!");
+    }
+
     if (ast_node->data->return_node.expr_or_call == NULL){
         ret_expr_type = T_KEY_UNIT;
     }
@@ -302,6 +307,10 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
     symtable_bvs_node_t *func_symbol = symtable_stack_search(stack, ast_node->data->call_node.id_val);
     if (func_symbol == NULL || func_symbol->symbol_data.id_type != ID_FUNC){
         error_exit(SEM_VAR_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Attempted to call undefined function");
+    }
+
+    if (func_symbol->symbol_data.data_type == T_NO_TYPE) {
+        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Direct or indirect recursion requires explicit return type!");
     }
 
     ast_node_t *curr_arg = ast_node->data->call_node.first_arg;
@@ -360,6 +369,10 @@ static data_type sem_check_if(ast_node_t *ast_node, symtable_stack_t *stack) {
 static data_type sem_check_declaration(ast_node_t *ast_node, symtable_stack_t *stack) {
     data_type expr_type = sem_anal(ast_node->data->declaration_node.expr_or_call, stack);
     data_type var_type = ast_node->data->declaration_node.data_type;
+
+    if (strcmp(ast_node->data->declaration_node.id_val, "_") == 0){
+        return T_KEY_UNIT;  //No symtable_insertion
+    }  
 
     // Static type deduction
     if (var_type == T_NO_TYPE){
@@ -438,6 +451,16 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
     
     // Arithmetics and concatenation
     if (op == T_PLUS || op == T_MINUS || op == T_MULT || op == T_DIV){
+        // Unary operators
+        if (right_type == T_NO_TYPE) {
+            if (op == T_PLUS || op == T_MINUS) {
+                if (left_type == T_KEY_INT || left_type == T_KEY_DOUBLE) {
+                    return left_type; // Unary operator doesn't change type
+                }
+            }
+            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid operand for unary arithmetic");
+        }
+        
         if (left_type == T_KEY_STRING && right_type == T_KEY_STRING && op == T_PLUS) {
             return T_KEY_STRING; // String concatenation
         }
@@ -488,9 +511,9 @@ static data_type sem_check_literal(ast_node_t *ast_node, symtable_stack_t *stack
     else if (lit_type == T_UNIT_LITERAL){
         return T_KEY_UNIT;
     }
-    /*else if (lit_type == T_KEY_BOOLEAN){
+    else if (lit_type == T_BOOLEAN_LITERAL){
         return T_KEY_BOOLEAN;
-    }*/
+    }
     else {
         error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown literal type");
     }

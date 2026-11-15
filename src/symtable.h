@@ -30,8 +30,6 @@
  * @brief More convenient rename for symbol table data types.
  * 
  * @details Description of data types with enum from "structures.h":
- * 0-6 - (T_UNDEFINED = NO_VALUE = 0, T_KEY_INT = 1, T_KEY_DOUBLE = 2,
- * T_KEY_STRING = 3, T_KEY_BOOLEAN = 4, T_KEY_UNIT = 5, T_NO_TYPE = 6).
  * token_type is renamed to data_type to match situation better.
  */
 typedef token_type data_type;
