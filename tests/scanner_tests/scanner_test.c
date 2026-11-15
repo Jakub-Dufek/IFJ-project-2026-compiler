@@ -138,6 +138,7 @@ void print_token(token_t token)
 }
 
 int main (void) {
+    arena_init();
     scratch_init();
 
     token_t output;
@@ -148,5 +149,6 @@ int main (void) {
 
 
     scratch_free();
+    arena_free_all();
     return 0;
 }
