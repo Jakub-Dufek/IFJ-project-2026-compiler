@@ -45,6 +45,10 @@ token_type find_operand_type (ast_node_t *node) {
         case T_STRING_LITERAL:
             type = T_KEY_STRING;
             break;
+
+        case T_KEY_BOOLEAN:
+            type = T_KEY_BOOLEAN;
+            break;
         
         default:
             type = T_UNDEFINED;
@@ -69,6 +73,12 @@ token_type find_operand_type (ast_node_t *node) {
             return T_KEY_BOOLEAN;
         }
 
+        if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
+            node->data->op_node.op_type == T_GT || node->data->op_node.op_type == T_GTE ||
+            node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE) {
+            return T_KEY_BOOLEAN;
+        }
+
         token_type type_left = find_operand_type(node->data->op_node.left);
         token_type type_right = find_operand_type(node->data->op_node.right);
         if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
@@ -90,29 +100,16 @@ token_type find_operand_type (ast_node_t *node) {
 }
 
 
-void generate_block(ast_node_t *node, context_t *context) {
+void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
     ast_node_t *block_node = node->data->block_node.first;
     while (block_node != NULL) {
-        // If there is an implicite return in the function, detect that and act as there was
-        // an actual return
-        if (block_node->next == NULL && block_node->stmt_type != AST_RETURN && 
-            context->in_function == true) {
-            generate_return(node, context);
-            return;
-        }
-        else {
-            process_node(block_node, NULL, context);
+        process_node(block_node, "PUSHS ", context);
+        // Throw away any expressions that are not needed, but only if they are not the last instruction in the block 
+        // and its result is needed by the caller
+        if (is_expression(block_node) && (block_node->next != NULL || result_needed == false)) {
+            printf("POPS LF@discard_top_stack\n");
         }
 
-        if (block_node->next != NULL && (block_node->stmt_type == EXPR_OPERATION || 
-            block_node->stmt_type == EXPR_LITERAL || block_node->stmt_type == EXPR_IDENTIFIER || 
-            block_node->stmt_type == EXPR_INT2FLOAT)) {
-            printf("POPS LF@discard_top_stack\n");
-        }
-        else if (block_node->next != NULL && block_node->stmt_type == AST_CALL && 
-            block_node->data->definition_node.data_type != T_KEY_UNIT) {
-            printf("POPS LF@discard_top_stack\n");
-        }
         block_node = block_node->next;
     }
 }
@@ -132,7 +129,11 @@ void generate_function(ast_node_t *node, context_t *context) {
     ast_definition_node_t def_node = node->data->definition_node;
     context->function_name = def_node.id_val;
     context->return_type = def_node.data_type;
-    context->in_function = true;
+    bool result_needed = false;
+    if (def_node.data_type == T_KEY_INT || def_node.data_type == T_KEY_DOUBLE || 
+        def_node.data_type == T_KEY_STRING || def_node.data_type == T_KEY_BOOLEAN) {
+        result_needed = true;
+    }
 
     // Create label and frame
     printf("LABEL $%s\n", def_node.id_val);
@@ -151,10 +152,18 @@ void generate_function(ast_node_t *node, context_t *context) {
 
     // Handle body
     if (def_node.body->stmt_type == AST_BLOCK) {
-        generate_block(def_node.body, context);
+        generate_block(def_node.body, context, result_needed);
     }
     else {
-        process_node(def_node.body, "PUSHS ", context);
+        if (def_node.body->stmt_type == AST_RETURN) {
+            generate_return(def_node.body, context);
+        }
+        else {
+            process_node(def_node.body, "PUSHS ", context);
+            if (result_needed == false && is_expression(def_node.body) == true) {
+                printf("POPS LF@discard_top_stack\n");
+            }
+        }
     }
 
 
@@ -168,18 +177,33 @@ void generate_function(ast_node_t *node, context_t *context) {
     // Remove information from context
     context->function_name = NULL;
     context->return_type = T_UNDEFINED;
-    context->in_function = false;
 }
 
 void generate_return(ast_node_t *node, context_t *context) {
-    // If the function type is not Unit process the return expression
-    if (node->data->return_node.expr_or_call != NULL) {
-        process_node(node->data->return_node.expr_or_call, "PUSHS ", context);
-        if (context->return_type == T_KEY_UNIT) {
-            printf("POPS LF@discard_top_stack\n");
-        }
+    // If the function type is not Unit, process the return expression
+    ast_node_t *last_instruction = node->data->return_node.expr_or_call;
+
+    if (last_instruction != NULL) {
+        process_node(last_instruction, "PUSHS ", context);
     }
+
+    if (context->return_type == T_KEY_UNIT && is_expression(last_instruction) == true) {
+        printf("POPS LF@discard_top_stack\n");
+    }
+
     printf("JUMP $%s_end\n", context->function_name);
+}
+
+bool is_expression (ast_node_t *node) {
+    if (node == NULL) {
+        return false;
+    }
+    else if (node->stmt_type == EXPR_OPERATION || node->stmt_type == EXPR_LITERAL || 
+        node->stmt_type == EXPR_IDENTIFIER || node->stmt_type == EXPR_INT2FLOAT) {
+        return true;
+    }
+    
+    return false;
 }
 
 void generate_call(ast_node_t *node, context_t *context) {
@@ -331,9 +355,10 @@ void generate_literal(ast_node_t *node, char *print_before, context_t *context) 
 void process_node(ast_node_t *node, char *message_before, context_t *context) {
     switch (node->stmt_type)
     {
-    case AST_BLOCK:
-        generate_block(node, context);
+    case AST_BLOCK: {
+        generate_block(node, context, false);
         break;
+    }
 
     case AST_DECLARATION:
         generate_declaration(node, "LF", context);   // TODO mozna neni vzdy LF

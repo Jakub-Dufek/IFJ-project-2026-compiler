@@ -17,7 +17,6 @@
 typedef struct Context {
     char *function_name;
     token_type return_type;
-    bool in_function;   // True when in first block body of a function, false when in nested block
 } context_t;
 
 /**
@@ -40,8 +39,9 @@ token_type find_operand_type (ast_node_t *node);
  * @brief Generates IFJcode26 for one block of code
  *
  * @param node Pointer to a node that stores the start of a block
+ * @param result_needed Boolean indicating if the result of the block is needed
  */
-void generate_block(ast_node_t *node, context_t *context);
+void generate_block(ast_node_t *node, context_t *context, bool result_needed);
 
 /**
  * @brief Generates IFJcode26 for a declaration of a variable
@@ -67,6 +67,14 @@ void generate_function(ast_node_t *node, context_t *context);
  * TODO
  */
 void generate_return(ast_node_t *node, context_t *context);
+
+/**
+ * @brief Checks if a node represents an expression, aka. if it leaves a value on the stack
+ *
+ * @param node Pointer to the node strucutre to check
+ * @return true if the node represents an expression, false otherwise
+ */
+bool is_expression (ast_node_t *node);
 
 /**
  * TODO
