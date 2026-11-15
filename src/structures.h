@@ -86,6 +86,7 @@ typedef enum token_type {
     T_INT_LITERAL,
     T_DOUBLE_LITERAL,
     T_UNIT_LITERAL,
+    T_BOOLEAN_LITERAL,
 
     EP_DOLLAR,
     EP_UNARY_NEG,

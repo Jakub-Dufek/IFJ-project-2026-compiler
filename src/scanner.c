@@ -377,9 +377,9 @@ token_t first_alpha (int character, token_t token) {
     keyword *the_keyword = bsearch(scratch_get_string(), keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
     if (the_keyword == NULL) {
         token.type = T_IDENTIFIER;
-    } else if (the_keyword == T_KEY_TRUE || the_keyword == T_KEY_FALSE) {
+    } else if (the_keyword->type == T_KEY_TRUE || the_keyword->type == T_KEY_FALSE) {
         token.type = T_BOOLEAN_LITERAL;
-        token.value.int_value = (the_keyword == T_KEY_TRUE) ? 1 : 0;
+        token.value.int_value = (the_keyword->type == T_KEY_TRUE) ? 1 : 0;
     } else {
         token.type = the_keyword->type;
     }
