@@ -116,6 +116,30 @@ void generate_literal(ast_node_t *node, char *print_before, context_t *context);
  */
 void process_node(ast_node_t *node, char *message_before, context_t *context);
 
+void generate_print(ast_node_t *node);
+
+void generate_readLine(char *target_var);
+
+void generate_readInt(char *target_var);
+
+void generate_readDouble(char *target_var); 
+
+void generate_Boolean(char *target_var);
+
+void generate_toStr(char *target_var, ast_node_t *node);
+
+void generate_toInt(char *target_var, ast_node_t *node);
+
+void generate_strLength(char *target_var, ast_node_t *node);
+
+void generate_subStr(ast_node_t *node);
+
+void generate_builtin_subStr();
+
+void generate_ord(char *target_var, ast_node_t *node);
+
+void generate_chr(char *target_var, ast_node_t *node);
+
 /**
  * TODO
  */

@@ -545,7 +545,7 @@ void generate_strLength(char *target_var, ast_node_t *node) {
     }
 }
 
-void generate_subStr(char *target_var, ast_node_t *node) {
+void generate_subStr(ast_node_t *node) {
     ast_node_t *arg1 = node->data->call_node.first_arg;
     ast_node_t *arg2 = arg1->next;
     ast_node_t *arg3 = arg2->next;
@@ -578,7 +578,7 @@ void generate_subStr(char *target_var, ast_node_t *node) {
     }
 
     printf("CALL $builtin_subStr_begin\n");
-    if (target_var != NULL) { printf("MOVE %s TF@return\n", target_var); }
+    printf("PUSH TF@return\n");
 }
 
 void generate_builtin_subStr() {
