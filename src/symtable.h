@@ -219,6 +219,12 @@ void symtable_stack_push(symtable_stack_t *stack);
 void symtable_stack_pop(symtable_stack_t *stack);
 
 /**
+ * @brief Checks if the symbol table stack is empty
+ * @return true if the stack is empty, false otherwise
+ */
+bool symtable_stack_is_empty(symtable_stack_t *stack);
+
+/**
  * @brief Function searches for a symbol in all instances on the stack.
  * 
  * @details Traverses the stack from top to bottom and returns the location 
@@ -245,11 +251,6 @@ param_type_list_t *param_type_list_initialize(void);
  */
 void param_type_list_insert(param_type_list_t *l, data_type type);
 
-/**
- * @brief Frees entire parameter's types list.
- * 
- * @note Uncomment and implement in symtable.c when necessary.
- */
-// void param_list_destroy(param_type_list_t *l);
+
 
 #endif
