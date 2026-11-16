@@ -11,5 +11,6 @@ PUSHS int@55
 ADDS
 POPS LF@x
 LABEL $main_end
+PUSHS nil@nil
 POPFRAME
 RETURN
