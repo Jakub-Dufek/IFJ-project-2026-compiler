@@ -102,7 +102,7 @@ token_type find_operand_type (ast_node_t *node) {
 }
 
 void generate_if(ast_node_t *node, context_t *context) {
-    int label_num = context->label_idx++;
+    unsigned label_num = context->label_idx++;
     ast_if_node_t if_node = node->data->if_node;
 
     // Process the condition
@@ -110,40 +110,40 @@ void generate_if(ast_node_t *node, context_t *context) {
     // Push true for JUMP to compare to
     printf("PUSHS bool@true\n");
     if (if_node.else_body != NULL) {
-        printf("JUMPIFNEQS $else%i\n", label_num);
+        printf("JUMPIFNEQS $else%u\n", label_num);
     }
     else {
-        printf("JUMPIFNEQS $fi%i\n", label_num);
+        printf("JUMPIFNEQS $fi%u\n", label_num);
     }
 
     // Process 'then' block
     process_node(if_node.then_body, NULL, context);
 
     if (if_node.else_body != NULL) {
-        printf("JUMP $fi%i\n", label_num);
-        printf("LABEL $else%i\n", label_num);
+        printf("JUMP $fi%u\n", label_num);
+        printf("LABEL $else%u\n", label_num);
         process_node(if_node.else_body, NULL, context);
     }
 
     // End of this if
-    printf("LABEL $fi%i\n", label_num);
+    printf("LABEL $fi%u\n", label_num);
 }
 
 void generate_while(ast_node_t *node, context_t *context) {
-    int label_num = context->label_idx++;
+    unsigned label_num = context->label_idx++;
     ast_while_node_t while_node = node->data->while_node;
 
-    printf("LABEL $while%i\n", label_num);
+    printf("LABEL $while%u\n", label_num);
 
     // Process the condition
     process_node(while_node.condition, NULL, context);
     printf("PUSHS bool@true\n");
-    printf("JUMPIFNEQS $elihw%i\n", label_num);
+    printf("JUMPIFNEQS $elihw%u\n", label_num);
 
     process_node(while_node.body, NULL, context);
-    printf("JUMP $while%i\n", label_num);
+    printf("JUMP $while%u\n", label_num);
 
-    printf("LABEL $elihw%i\n", label_num);
+    printf("LABEL $elihw%u\n", label_num);
 }
 
 void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
@@ -161,14 +161,54 @@ void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
 }
 
 void generate_declaration(ast_node_t *node, char *frame, context_t *context) {
-    printf("DEFVAR %s@%s\n", frame, node->data->declaration_node.id_val);
-    process_node(node->data->declaration_node.expr_or_call, "PUSHS ", context);
-    printf("POPS %s@%s\n", frame, node->data->declaration_node.id_val);
+    ast_declaration_node_t dec_node = node->data->declaration_node;
+
+    if (dec_node.expr_or_call == NULL) { 
+        return; 
+    }
+    else {
+        process_node(dec_node.expr_or_call, "PUSHS ", context);
+        printf("POPS %s@%s%u\n", frame, dec_node.id_val, dec_node.symbol_data.unique_id);
+    }
 }
 
 void generate_assignment(ast_node_t *node, context_t *context) {
     process_node(node->data->assign_node.expr_or_call, "PUSHS ", context);
-    printf("POPS LF@%s\n", node->data->assign_node.id_val);
+    printf("POPS LF@%s%u\n", node->data->assign_node.id_val, node->data->assign_node.symbol_data.unique_id);
+}
+
+void generate_definitions_in_function(ast_node_t *node) {
+    if (node == NULL) {
+        return;
+    }
+
+    switch (node->stmt_type) {
+        case AST_BLOCK:
+            for (ast_node_t *stmt = node->data->block_node.first;
+                 stmt != NULL;
+                 stmt = stmt->next) {
+                generate_definitions_in_function(stmt);
+            }
+            break;
+
+        case AST_DECLARATION:
+            printf("DEFVAR LF@%s%u\n",
+                   node->data->declaration_node.id_val,
+                   node->data->declaration_node.symbol_data.unique_id);
+            break;
+
+        case AST_IF:
+            generate_definitions_in_function(node->data->if_node.then_body);
+            generate_definitions_in_function(node->data->if_node.else_body);
+            break;
+
+        case AST_WHILE:
+            generate_definitions_in_function(node->data->while_node.body);
+            break;
+
+        default:
+            break;
+    }
 }
 
 void generate_function(ast_node_t *node, context_t *context) {
@@ -184,17 +224,19 @@ void generate_function(ast_node_t *node, context_t *context) {
     // Create label and frame
     printf("LABEL $%s\n", def_node.id_val);
     printf("PUSHFRAME\n");
-    // Variable used as a trash bin
-    printf("DEFVAR LF@discard_top_stack\n");
 
     // Prepare and load parameters
     int param_count = 0;
     for (ast_node_t *param = def_node.first_param; param != NULL; param = param->next) {
-        printf("DEFVAR LF@%s\n", param->data->param_node.id_val);
+        printf("DEFVAR LF@%s%u\n", param->data->param_node.id_val, param->data->param_node.symbol_data.unique_id);
         printf("PUSHS LF@arg%i\n", param_count);
-        printf("POPS LF@%s\n", param->data->param_node.id_val);
+        printf("POPS LF@%s%u\n", param->data->param_node.id_val, param->data->param_node.symbol_data.unique_id);
         param_count++;
     }
+
+    // Define all local variables at the start of the function
+    printf("DEFVAR LF@discard_top_stack\n");
+    generate_definitions_in_function(def_node.body);
 
     // Handle body
     if (def_node.body->stmt_type == AST_BLOCK) {
@@ -381,7 +423,7 @@ void generate_identifier(ast_node_t *node, char *print_before, context_t *contex
         printf("%s", print_before);
     }
 
-    printf("LF@%s\n", node->data->id_leaf_node.id_val);
+    printf("LF@%s%u\n", node->data->id_leaf_node.id_val, node->data->id_leaf_node.symbol_data.unique_id);
     //TODO... dokončit funkci
 }
 
