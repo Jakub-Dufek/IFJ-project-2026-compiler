@@ -459,7 +459,10 @@ static data_type sem_check_assign(ast_node_t *ast_node, symtable_stack_t *stack)
 }
 
 static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *stack) {
-    data_type left_type = sem_anal(ast_node->data->op_node.left, stack);
+    data_type left_type = T_NO_TYPE;
+    if (ast_node->data->op_node.left != NULL) {
+        left_type = sem_anal(ast_node->data->op_node.left, stack);
+    }
     data_type right_type = T_NO_TYPE;
     if (ast_node->data->op_node.right != NULL) {
         right_type = sem_anal(ast_node->data->op_node.right, stack);
@@ -475,19 +478,31 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         ast_node->data->op_node.right = ast_convert_int2float(ast_node->data->op_node.right);
         right_type = T_KEY_DOUBLE;
     }
-    
-    // Arithmetics and concatenation
-    if (op == T_PLUS || op == T_MINUS || op == T_MULT || op == T_DIV || op == EP_UNARY_MINUS){
-        // Unary operators
-        if (right_type == T_NO_TYPE) {
-            if (op == T_PLUS || op == T_MINUS || EP_UNARY_MINUS) {
-                if (left_type == T_KEY_INT || left_type == T_KEY_DOUBLE) {
-                    return left_type; // Unary operator doesn't change type
-                }
-            }
-            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid operand for unary arithmetic");
-        }
+
+    if (op == EP_UNARY_MINUS || op == T_NEG) {
         
+        data_type operand_type = (ast_node->data->op_node.left != NULL) ? left_type : right_type;
+        
+        if (op == EP_UNARY_MINUS) {
+            if (operand_type == T_KEY_INT || operand_type == T_KEY_DOUBLE) {
+                return operand_type;
+            }
+            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid operand for unary minus");
+        }
+        else { 
+            if (operand_type != T_KEY_BOOLEAN) {
+                error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: ! requires a Boolean operand");
+            }
+            return T_KEY_BOOLEAN;
+        }
+    }
+
+    if (left_type == T_NO_TYPE || right_type == T_NO_TYPE) {
+        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Missing operand for binary operation");
+    }
+
+    // Arithmetics and concatenation
+    if (op == T_PLUS || op == T_MINUS || op == T_MULT || op == T_DIV){
         if (left_type == T_KEY_STRING && right_type == T_KEY_STRING && op == T_PLUS) {
             return T_KEY_STRING; // String concatenation
         }
@@ -506,16 +521,11 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         }
         return T_KEY_BOOLEAN;
     }
-    // Logical operators
+
+    // Binary Logical operators
     if (op == T_AND || op == T_OR){
         if (left_type != T_KEY_BOOLEAN || right_type != T_KEY_BOOLEAN){
             error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: && and || require Boolean operands");
-        }
-        return T_KEY_BOOLEAN;
-    }
-    if (op == T_NEG || op == EP_UNARY_NEG){
-        if (left_type != T_KEY_BOOLEAN){
-            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: ! requires a Boolean operands");
         }
         return T_KEY_BOOLEAN;
     }
