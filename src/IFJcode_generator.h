@@ -18,7 +18,9 @@ typedef struct Context {
     char *function_name;
     token_type return_type;
     ast_node_t *root;
+    int label_idx;
 } context_t;
+
 
 /**
  * @brief Prints string literal to stdout in IFJcode26 style
@@ -35,6 +37,16 @@ void print_string_literal(char *string, bool flag);
  * @return Type of the inputed node
  */
 token_type find_operand_type (ast_node_t *node);
+
+/**
+ * TODO
+ */
+void generate_if(ast_node_t *node, context_t *context);
+
+/**
+ * TODO
+ */
+void generate_while(ast_node_t *node, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for one block of code

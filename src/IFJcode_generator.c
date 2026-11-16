@@ -101,6 +101,50 @@ token_type find_operand_type (ast_node_t *node) {
     return type;
 }
 
+void generate_if(ast_node_t *node, context_t *context) {
+    int label_num = context->label_idx++;
+    ast_if_node_t if_node = node->data->if_node;
+
+    // Process the condition
+    process_node(if_node.condition, NULL, context);
+    // Push true for JUMP to compare to
+    printf("PUSHS bool@true\n");
+    if (if_node.else_body != NULL) {
+        printf("JUMPIFNEQS $else%i\n", label_num);
+    }
+    else {
+        printf("JUMPIFNEQS $fi%i\n", label_num);
+    }
+
+    // Process 'then' block
+    process_node(if_node.then_body, NULL, context);
+
+    if (if_node.else_body != NULL) {
+        printf("JUMP $fi%i\n", label_num);
+        printf("LABEL $else%i\n", label_num);
+        process_node(if_node.else_body, NULL, context);
+    }
+
+    // End of this if
+    printf("LABEL $fi%i\n", label_num);
+}
+
+void generate_while(ast_node_t *node, context_t *context) {
+    int label_num = context->label_idx++;
+    ast_while_node_t while_node = node->data->while_node;
+
+    printf("LABEL $while%i\n", label_num);
+
+    // Process the condition
+    process_node(while_node.condition, NULL, context);
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS $elihw%i\n", label_num);
+
+    process_node(while_node.body, NULL, context);
+    printf("JUMP $while%i\n", label_num);
+
+    printf("LABEL $elihw%i\n", label_num);
+}
 
 void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
     ast_node_t *block_node = node->data->block_node.first;
@@ -228,13 +272,13 @@ token_type function_return_type(char *id_val, context_t *context) {
 void generate_call(ast_node_t *node, context_t *context) {
     ast_call_node_t call_node = node->data->call_node;
     int arg_count = 0;
+
     for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
         process_node(arg, "PUSHS ", context);
         arg_count++;
     }
 
     printf("CREATEFRAME\n");
-
     for (int counter = arg_count - 1; counter >= 0; counter--) {
         printf("DEFVAR TF@arg%i\n", counter);
         printf("POPS TF@arg%i\n", counter);
@@ -365,6 +409,15 @@ void generate_literal(ast_node_t *node, char *print_before, context_t *context) 
         printf("nil@nil\n");
         break;
 
+    case T_BOOLEAN_LITERAL:
+        if (node->data->lit_leaf_node.lit_value.int_value == 1) {
+            printf("bool@true\n");
+        }
+        else {
+            printf("bool@false\n");
+        }
+        break;
+
     default:
         // #TODO error, nerozpoznaný typ literálu
         break;
@@ -416,6 +469,13 @@ void process_node(ast_node_t *node, char *message_before, context_t *context) {
         generate_return(node, context);
         break;
     
+    case AST_IF:
+        generate_if(node, context);
+        break;
+
+    case AST_WHILE:
+        generate_while(node, context);
+        break;
     default:
         // #TODO error, nerozpoznaný typ uzlu
         break;
