@@ -1,11 +1,15 @@
 .IFJcode26
-LABEL $main
 CREATEFRAME
+CALL $main
+EXIT int@0
+LABEL $main
 PUSHFRAME
+DEFVAR LF@discard_top_stack
 DEFVAR LF@x
 PUSHS int@10
 PUSHS int@55
 ADDS
 POPS LF@x
+LABEL $main_end
 POPFRAME
-EXIT int@0
+RETURN

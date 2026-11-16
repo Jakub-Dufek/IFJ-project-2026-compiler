@@ -60,13 +60,13 @@ for file in ../*.scala; do
             ;;
 
         "small_prog"*)
-            expected_exit=2
+            expected_exit=0
             expected_output=""
             expected_file=""
             ;;
 
         "medium_prog"*)
-            expected_exit=2
+            expected_exit=0
             expected_output=""
             expected_file=""
             ;;
