@@ -173,6 +173,11 @@ void generate_function(ast_node_t *node, context_t *context) {
        Prompt: Jak můžu elegantně vyřešit "return" v rámci zanořených podmínek uvnitř funkce?
     */
     printf("LABEL $%s_end\n", def_node.id_val);
+
+    if (def_node.data_type == T_KEY_UNIT) {
+        printf("PUSHS nil@nil\n");
+    }
+
     printf("POPFRAME\n");
     printf("RETURN\n");
 
@@ -204,8 +209,7 @@ bool is_expression (ast_node_t *node, context_t *context) {
         node->stmt_type == EXPR_IDENTIFIER || node->stmt_type == EXPR_INT2FLOAT) {
         return true;
     }
-    else if (node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_KEY_UNIT 
-    && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) {
+    else if (node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) {
         return true;
     }
     
