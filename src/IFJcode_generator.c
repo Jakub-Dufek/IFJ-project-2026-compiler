@@ -101,6 +101,50 @@ token_type find_operand_type (ast_node_t *node) {
     return type;
 }
 
+void generate_if(ast_node_t *node, context_t *context) {
+    unsigned label_num = context->label_idx++;
+    ast_if_node_t if_node = node->data->if_node;
+
+    // Process the condition
+    process_node(if_node.condition, NULL, context);
+    // Push true for JUMP to compare to
+    printf("PUSHS bool@true\n");
+    if (if_node.else_body != NULL) {
+        printf("JUMPIFNEQS $else%u\n", label_num);
+    }
+    else {
+        printf("JUMPIFNEQS $fi%u\n", label_num);
+    }
+
+    // Process 'then' block
+    process_node(if_node.then_body, NULL, context);
+
+    if (if_node.else_body != NULL) {
+        printf("JUMP $fi%u\n", label_num);
+        printf("LABEL $else%u\n", label_num);
+        process_node(if_node.else_body, NULL, context);
+    }
+
+    // End of this if
+    printf("LABEL $fi%u\n", label_num);
+}
+
+void generate_while(ast_node_t *node, context_t *context) {
+    unsigned label_num = context->label_idx++;
+    ast_while_node_t while_node = node->data->while_node;
+
+    printf("LABEL $while%u\n", label_num);
+
+    // Process the condition
+    process_node(while_node.condition, NULL, context);
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS $elihw%u\n", label_num);
+
+    process_node(while_node.body, NULL, context);
+    printf("JUMP $while%u\n", label_num);
+
+    printf("LABEL $elihw%u\n", label_num);
+}
 
 void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
     ast_node_t *block_node = node->data->block_node.first;
@@ -117,14 +161,52 @@ void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
 }
 
 void generate_declaration(ast_node_t *node, char *frame, context_t *context) {
-    printf("DEFVAR %s@%s\n", frame, node->data->declaration_node.id_val);
-    process_node(node->data->declaration_node.expr_or_call, "PUSHS ", context);
-    printf("POPS %s@%s\n", frame, node->data->declaration_node.id_val);
+    ast_declaration_node_t dec_node = node->data->declaration_node;
+
+    if (dec_node.expr_or_call == NULL) { 
+        return; 
+    }
+    else {
+        process_node(dec_node.expr_or_call, "PUSHS ", context);
+        printf("POPS %s@var_%u\n", frame, dec_node.symbol_data.unique_id);
+    }
 }
 
 void generate_assignment(ast_node_t *node, context_t *context) {
     process_node(node->data->assign_node.expr_or_call, "PUSHS ", context);
-    printf("POPS LF@%s\n", node->data->assign_node.id_val);
+    printf("POPS LF@var_%u\n", node->data->assign_node.symbol_data.unique_id);
+}
+
+void generate_definitions_in_function(ast_node_t *node) {
+    if (node == NULL) {
+        return;
+    }
+
+    switch (node->stmt_type) {
+        case AST_BLOCK:
+            for (ast_node_t *stmt = node->data->block_node.first;
+                 stmt != NULL;
+                 stmt = stmt->next) {
+                generate_definitions_in_function(stmt);
+            }
+            break;
+
+        case AST_DECLARATION:
+            printf("DEFVAR LF@var_%u\n", node->data->declaration_node.symbol_data.unique_id);
+            break;
+
+        case AST_IF:
+            generate_definitions_in_function(node->data->if_node.then_body);
+            generate_definitions_in_function(node->data->if_node.else_body);
+            break;
+
+        case AST_WHILE:
+            generate_definitions_in_function(node->data->while_node.body);
+            break;
+
+        default:
+            break;
+    }
 }
 
 void generate_function(ast_node_t *node, context_t *context) {
@@ -140,17 +222,19 @@ void generate_function(ast_node_t *node, context_t *context) {
     // Create label and frame
     printf("LABEL $%s\n", def_node.id_val);
     printf("PUSHFRAME\n");
-    // Variable used as a trash bin
-    printf("DEFVAR LF@discard_top_stack\n");
 
     // Prepare and load parameters
     int param_count = 0;
     for (ast_node_t *param = def_node.first_param; param != NULL; param = param->next) {
-        printf("DEFVAR LF@%s\n", param->data->param_node.id_val);
+        printf("DEFVAR LF@var_%u\n", param->data->param_node.symbol_data.unique_id);
         printf("PUSHS LF@arg%i\n", param_count);
-        printf("POPS LF@%s\n", param->data->param_node.id_val);
+        printf("POPS LF@var_%u\n", param->data->param_node.symbol_data.unique_id);
         param_count++;
     }
+
+    // Define all local variables at the start of the function
+    printf("DEFVAR LF@discard_top_stack\n");
+    generate_definitions_in_function(def_node.body);
 
     // Handle body
     if (def_node.body->stmt_type == AST_BLOCK) {
@@ -228,13 +312,13 @@ token_type function_return_type(char *id_val, context_t *context) {
 void generate_call(ast_node_t *node, context_t *context) {
     ast_call_node_t call_node = node->data->call_node;
     int arg_count = 0;
+
     for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
         process_node(arg, "PUSHS ", context);
         arg_count++;
     }
 
     printf("CREATEFRAME\n");
-
     for (int counter = arg_count - 1; counter >= 0; counter--) {
         printf("DEFVAR TF@arg%i\n", counter);
         printf("POPS TF@arg%i\n", counter);
@@ -337,7 +421,7 @@ void generate_identifier(ast_node_t *node, char *print_before, context_t *contex
         printf("%s", print_before);
     }
 
-    printf("LF@%s\n", node->data->id_leaf_node.id_val);
+    printf("LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
     //TODO... dokončit funkci
 }
 
@@ -363,6 +447,15 @@ void generate_literal(ast_node_t *node, char *print_before, context_t *context) 
 
     case T_UNIT_LITERAL:
         printf("nil@nil\n");
+        break;
+
+    case T_BOOLEAN_LITERAL:
+        if (node->data->lit_leaf_node.lit_value.int_value == 1) {
+            printf("bool@true\n");
+        }
+        else {
+            printf("bool@false\n");
+        }
         break;
 
     default:
@@ -416,6 +509,13 @@ void process_node(ast_node_t *node, char *message_before, context_t *context) {
         generate_return(node, context);
         break;
     
+    case AST_IF:
+        generate_if(node, context);
+        break;
+
+    case AST_WHILE:
+        generate_while(node, context);
+        break;
     default:
         // #TODO error, nerozpoznaný typ uzlu
         break;
