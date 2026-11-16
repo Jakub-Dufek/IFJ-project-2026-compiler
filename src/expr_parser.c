@@ -122,10 +122,10 @@ ast_node_t *parse_expression(token_t token)
     while (value) {
 
         if (next_token.type == T_MINUS || next_token.type == T_NEG) {
-            bool valid = (last_token == T_IDENTIFIER || last_token == T_INT_LITERAL || last_token == T_DOUBLE_LITERAL ||
+            bool valid = (last_token == T_IDENTIFIER || last_token == T_STRING_LITERAL || last_token == T_INT_LITERAL || last_token == T_DOUBLE_LITERAL ||
                           last_token == T_BOOLEAN_LITERAL || last_token == T_UNIT_LITERAL || last_token == T_R_ROUND_BRACKET);
 
-            if (!valid) { next_token.type == (next_token.type == T_MINUS) ? EP_UNARY_MINUS : EP_UNARY_NEG; }
+            if (!valid) { next_token.type = (next_token.type == T_MINUS) ? EP_UNARY_MINUS : EP_UNARY_NEG; }
         }
 
         int row = table_index(top_terminal(&stack).type);
