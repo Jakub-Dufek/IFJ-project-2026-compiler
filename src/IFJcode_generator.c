@@ -168,13 +168,13 @@ void generate_declaration(ast_node_t *node, char *frame, context_t *context) {
     }
     else {
         process_node(dec_node.expr_or_call, "PUSHS ", context);
-        printf("POPS %s@%s%u\n", frame, dec_node.id_val, dec_node.symbol_data.unique_id);
+        printf("POPS %s@var_%u\n", frame, dec_node.symbol_data.unique_id);
     }
 }
 
 void generate_assignment(ast_node_t *node, context_t *context) {
     process_node(node->data->assign_node.expr_or_call, "PUSHS ", context);
-    printf("POPS LF@%s%u\n", node->data->assign_node.id_val, node->data->assign_node.symbol_data.unique_id);
+    printf("POPS LF@var_%u\n", node->data->assign_node.symbol_data.unique_id);
 }
 
 void generate_definitions_in_function(ast_node_t *node) {
@@ -192,9 +192,7 @@ void generate_definitions_in_function(ast_node_t *node) {
             break;
 
         case AST_DECLARATION:
-            printf("DEFVAR LF@%s%u\n",
-                   node->data->declaration_node.id_val,
-                   node->data->declaration_node.symbol_data.unique_id);
+            printf("DEFVAR LF@var_%u\n", node->data->declaration_node.symbol_data.unique_id);
             break;
 
         case AST_IF:
@@ -228,9 +226,9 @@ void generate_function(ast_node_t *node, context_t *context) {
     // Prepare and load parameters
     int param_count = 0;
     for (ast_node_t *param = def_node.first_param; param != NULL; param = param->next) {
-        printf("DEFVAR LF@%s%u\n", param->data->param_node.id_val, param->data->param_node.symbol_data.unique_id);
+        printf("DEFVAR LF@var_%u\n", param->data->param_node.symbol_data.unique_id);
         printf("PUSHS LF@arg%i\n", param_count);
-        printf("POPS LF@%s%u\n", param->data->param_node.id_val, param->data->param_node.symbol_data.unique_id);
+        printf("POPS LF@var_%u\n", param->data->param_node.symbol_data.unique_id);
         param_count++;
     }
 
@@ -423,7 +421,7 @@ void generate_identifier(ast_node_t *node, char *print_before, context_t *contex
         printf("%s", print_before);
     }
 
-    printf("LF@%s%u\n", node->data->id_leaf_node.id_val, node->data->id_leaf_node.symbol_data.unique_id);
+    printf("LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
     //TODO... dokončit funkci
 }
 
