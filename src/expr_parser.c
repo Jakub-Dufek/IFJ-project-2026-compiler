@@ -114,18 +114,18 @@ ast_node_t *parse_expression(token_t token)
     token_t next_token = {0};
     next_token = token;
 
+    token_type last_token = T_EOF;
+
     ast_node_t *tree = NULL;
 
     bool value = true;
     while (value) {
-        token_type top_ter = top_terminal(&stack).type;
 
-        if (next_token.type == T_MINUS && (top_ter == EP_DOLLAR || top_ter == T_L_ROUND_BRACKET)) {
-            next_token.type = EP_UNARY_MINUS;
-        }
+        if (next_token.type == T_MINUS || next_token.type == T_NEG) {
+            bool valid = (last_token == T_IDENTIFIER || last_token == T_INT_LITERAL || last_token == T_DOUBLE_LITERAL ||
+                          last_token == T_BOOLEAN_LITERAL || last_token == T_UNIT_LITERAL || last_token == T_R_ROUND_BRACKET);
 
-        if (next_token.type == T_NEG && (top_ter == EP_DOLLAR || top_ter == T_L_ROUND_BRACKET)) {
-            next_token.type = EP_UNARY_NEG;
+            if (!valid) { next_token.type == (next_token.type == T_MINUS) ? EP_UNARY_MINUS : EP_UNARY_NEG; }
         }
 
         int row = table_index(top_terminal(&stack).type);
@@ -137,6 +137,7 @@ ast_node_t *parse_expression(token_t token)
                 token.type = EP_LT_MARKER;
                 stack_push_after_top_terminal(&stack, &token);
                 stack_push(&stack, &next_token);
+                last_token = next_token.type;
                 next_token = get_next_token();
                 break;
             }
@@ -152,6 +153,7 @@ ast_node_t *parse_expression(token_t token)
 
             case '=': 
                 stack_push(&stack, &next_token);
+                last_token = next_token.type;
                 next_token = get_next_token();
                 break;
 
@@ -178,6 +180,7 @@ ast_node_t *parse_expression(token_t token)
 void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
     token_t new_token = {0};
     new_token.type = EP_EXPR;
+    new_token.line_num = array[0].token.line_num;
     switch(array_counter) {
         case 1:
             if (array[0].token.type == T_IDENTIFIER) {
