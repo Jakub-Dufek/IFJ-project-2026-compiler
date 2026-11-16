@@ -477,10 +477,10 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
     }
     
     // Arithmetics and concatenation
-    if (op == T_PLUS || op == T_MINUS || op == T_MULT || op == T_DIV){
+    if (op == T_PLUS || op == T_MINUS || op == T_MULT || op == T_DIV || op == EP_UNARY_MINUS){
         // Unary operators
         if (right_type == T_NO_TYPE) {
-            if (op == T_PLUS || op == T_MINUS) {
+            if (op == T_PLUS || op == T_MINUS || EP_UNARY_MINUS) {
                 if (left_type == T_KEY_INT || left_type == T_KEY_DOUBLE) {
                     return left_type; // Unary operator doesn't change type
                 }
@@ -513,14 +513,14 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         }
         return T_KEY_BOOLEAN;
     }
-    if (op == T_NEG){
+    if (op == T_NEG || op == EP_UNARY_NEG){
         if (left_type != T_KEY_BOOLEAN){
             error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: ! requires a Boolean operands");
         }
         return T_KEY_BOOLEAN;
     }
 
-    error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown operator in 'if' condition check");
+    error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown operator in expression");
     return T_NO_TYPE; 
 }
 
