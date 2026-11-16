@@ -83,6 +83,7 @@ typedef struct {
  * @brief symbol_data_t is a structure for storage of data related to a symbol.
  */
 typedef struct {
+    unsigned unique_id;
     data_type data_type; 
     id_type id_type;
     func_info_t func_info;

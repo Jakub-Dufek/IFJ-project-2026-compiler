@@ -19,6 +19,7 @@
 
 static data_type curr_func_ret_type; // current function return type helper variable
 static symtable_stack_t *active_sem_stack = NULL;
+static unsigned unique_symbol_counter = 1;
 
 // BUILT-IN FUNCTIONS INSERTION
 
@@ -249,12 +250,17 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
     while (parameter != NULL){
         // Preparing parameter for getting inserted into symtable
         symbol_data_t new_symbol = {0};
+        new_symbol.unique_id = unique_symbol_counter++;
         new_symbol.data_type = parameter->data->param_node.data_type;
         new_symbol.id_type = ID_VAL;
+        
+
         if (symtable_find_symbol(stack->top->symtable, parameter->data->param_node.id_val) != NULL){
             error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Duplicate parameter names!");
         }
         stack->top->symtable = symtable_insert(stack->top->symtable, parameter->data->param_node.id_val, new_symbol);
+        parameter->data->param_node.symbol_data = new_symbol;
+
         parameter = parameter->next;
     }
 
@@ -398,6 +404,7 @@ static data_type sem_check_declaration(ast_node_t *ast_node, symtable_stack_t *s
     }
     // Preparation for inserting into symtable
     symbol_data_t new_symbol = {0};
+    new_symbol.unique_id = unique_symbol_counter++;
     new_symbol.data_type = ast_node->data->declaration_node.data_type;
     new_symbol.id_type = ast_node->data->declaration_node.is_mutable ? ID_VAR : ID_VAL;
     
@@ -406,6 +413,8 @@ static data_type sem_check_declaration(ast_node_t *ast_node, symtable_stack_t *s
         error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Redefinition of a variable!");
     }
     stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->declaration_node.id_val, new_symbol);
+    ast_node->data->declaration_node.symbol_data = new_symbol;
+
     return T_KEY_UNIT;
 }
 
@@ -428,6 +437,9 @@ static data_type sem_check_assign(ast_node_t *ast_node, symtable_stack_t *stack)
     else{
         error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Incompatible types assignment");
     }
+
+    ast_node->data->assign_node.symbol_data = symbol->symbol_data;
+
     return T_KEY_UNIT;
 }
 

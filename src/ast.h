@@ -73,6 +73,7 @@ struct ast_block_node {
 typedef struct {
     char *id_val;   /// var name
     token_type data_type;
+    symbol_data_t symbol_data;
 } ast_param_node_t;
 
 
@@ -86,6 +87,7 @@ typedef struct {
     bool is_mutable;
     token_type data_type;
     ast_node_t *expr_or_call;   // expr (op or leaf(id/lit)) or fn call
+    symbol_data_t symbol_data;
 } ast_declaration_node_t;
 
 /**
@@ -95,6 +97,7 @@ typedef struct {
 typedef struct {
     char *id_val;   /// var name
     ast_node_t *expr_or_call; // expr (op or leaf(id/lit)) or fn call
+    symbol_data_t symbol_data;
 } ast_assign_node_t;
 
 /**
