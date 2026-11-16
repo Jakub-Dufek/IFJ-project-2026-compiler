@@ -158,7 +158,7 @@ ast_node_t *parse_expression(token_t token)
                 break;
 
             default:
-                if(top_terminal(&stack).type == EP_DOLLAR && (next_token.type == T_EOF || next_token.type == T_LF || 
+                if(top_terminal(&stack).type == EP_DOLLAR && (next_token.type == T_EOF || next_token.type == T_LF || next_token.type == T_SEMICOLON ||
                                                               next_token.type == T_KEY_THEN || next_token.type ==  T_KEY_DO)) {
                     if (next_token.type == T_KEY_THEN || next_token.type ==  T_KEY_DO) {
                         return_buffer_token(next_token);
