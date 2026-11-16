@@ -18,28 +18,8 @@ LOG_DIR="../test_logs/scanner"
 mkdir -p "$BUILD_DIR"
 mkdir -p "$LOG_DIR"
 
-# --- 1. Compile Scanner Test Binary ---
-echo "============================================================"
-echo "               COMPILING SCANNER TEST BINARY"
-echo "============================================================"
 
-# Compiling scanner_test.c + scanner.c (add error.c or memory.c if needed)
-gcc -std=c11 -Wall -Wextra -g \
-    "$TEST_SRC" \
-    "$SRC_DIR/scanner.c" \
-    "$SRC_DIR/error.c" \
-    "$SRC_DIR/memory.c" \
-    "$SRC_DIR/ast.c" \
-    -I"$SRC_DIR" \
-    -o "$BINARY"
-
-if [ $? -ne 0 ]; then
-    echo -e "\e[31m✘ Compilation failed! Fix errors above.\e[0m"
-    exit 1
-fi
-echo -e "\e[32m✔ Scanner test binary built successfully.\e[0m\n"
-
-# --- 2. Run Tests ---
+# --- Run Tests ---
 PASS="\e[32m✔ PASS\e[0m"
 FAIL="\e[31m✘ FAIL\e[0m"
 

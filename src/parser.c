@@ -24,8 +24,13 @@
 
 void parse_prologue()
 {
-    // import
+    // newline handling
     token_t current_token = get_next_token();
+    while(current_token.type == T_LF) {
+        current_token = get_next_token();
+    }
+
+    // import
     if(current_token.type != T_KEY_IMPORT) {
         error_exit(SYNT_ERR, 0, "Programme missing prologue");
     }

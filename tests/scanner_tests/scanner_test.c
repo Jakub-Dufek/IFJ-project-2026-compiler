@@ -137,6 +137,8 @@ void print_token(token_t token)
     }
 }
 
+void sem_anal_error_exit(void) {}
+
 int main (void) {
     arena_init();
     scratch_init();
