@@ -272,10 +272,6 @@ void handle_indent(token_t *token)
             error_exit(LEX_ERR, token->line_num, "Tabulator found on the start of a non-empty line.");
         }
 
-        if (token->type == T_L_ROUND_BRACKET) {
-            depth_of_brackets++;
-        }
-
         line_start = false;
         // ...and if I am not inside of round brackets...
         if (depth_of_brackets == 0) {
@@ -319,13 +315,17 @@ void handle_indent(token_t *token)
                     }
                 }
             }
-        } else if (depth_of_brackets > 0 &&
+        } else if (depth_of_brackets > 0 && token->type != T_R_ROUND_BRACKET &&
                    indent_depth <= indent_values[last_indent_idx]) { // Check indent for inside of brackets
             error_exit(LEX_ERR, token->line_num, "Lesser or equal indentation level inside of brackets than before them.");
         }
     } else if (token->type == T_LF) { // If the current line ends,...
         indent_depth = 0;             //...reset indent depth for another line...
         line_start = true;            //...and reset start of line variable
+    }
+
+    if (token->type == T_L_ROUND_BRACKET) {
+        depth_of_brackets++;
     }
     return;
 } // end of return_indent()
@@ -512,10 +512,6 @@ token_t first_special(int character, token_t token, scanner_case current_case)
                 current_case = CASE_SLASH;
                 break;
             case '(':
-                // If we are at the start of the line, depth of brackets will be increased in handle_indent()
-                if (line_start != true) {
-                    depth_of_brackets++;
-                }
                 token.type = T_L_ROUND_BRACKET;
                 break;
             case ')':
