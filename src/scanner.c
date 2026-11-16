@@ -249,6 +249,9 @@ token_t handle_white_spaces(int *character, token_t token)
                 tab_on_line_start = false;
             }
             current_line_num++;
+            if (token.type == T_UNDEFINED) {
+                token.line_num = current_line_num;
+            }
             indent_depth = 0;
             break;
         default:
