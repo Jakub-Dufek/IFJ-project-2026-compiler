@@ -102,8 +102,9 @@ token_type find_operand_type (ast_node_t *node) {
 }
 
 void generate_if(ast_node_t *node, context_t *context) {
-    int label_num = context->if_label_idx++;
+    int label_num = context->label_idx++;
     ast_if_node_t if_node = node->data->if_node;
+
     // Process the condition
     process_node(if_node.condition, NULL, context);
     // Push true for JUMP to compare to
@@ -129,7 +130,20 @@ void generate_if(ast_node_t *node, context_t *context) {
 }
 
 void generate_while(ast_node_t *node, context_t *context) {
+    int label_num = context->label_idx++;
+    ast_while_node_t while_node = node->data->while_node;
 
+    printf("LABEL $while%i\n", label_num);
+
+    // Process the condition
+    process_node(while_node.condition, NULL, context);
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS $elihw%i\n", label_num);
+
+    process_node(while_node.body, NULL, context);
+    printf("JUMP $while%i\n", label_num);
+
+    printf("LABEL $elihw%i\n", label_num);
 }
 
 void generate_block(ast_node_t *node, context_t *context, bool result_needed) {

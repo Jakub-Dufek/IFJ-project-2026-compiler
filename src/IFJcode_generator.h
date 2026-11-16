@@ -18,7 +18,7 @@ typedef struct Context {
     char *function_name;
     token_type return_type;
     ast_node_t *root;
-    int if_label_idx;
+    int label_idx;
 } context_t;
 
 
