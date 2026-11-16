@@ -76,6 +76,7 @@ precedence_table_index table_index(token_type type) {
             return P_UNARY_NEG_MINUS;
 
         case T_IDENTIFIER:
+        case T_STRING_LITERAL:
         case T_INT_LITERAL:
         case T_DOUBLE_LITERAL:
         case T_BOOLEAN_LITERAL:
@@ -168,7 +169,7 @@ ast_node_t *parse_expression(token_t token)
                     break;
                 }
                 else {
-                    error_exit(SYNT_ERR, next_token.line_num, "Invalid token or operator sequence in expression."); //TODO ERROR
+                    error_exit(SYNT_ERR, next_token.line_num, "Invalid token or operator sequence in expression.");
                 }
         } 
     } 
@@ -187,11 +188,11 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = expr_insert_id_leaf(array[0].token.value.string_value, array[0].token.line_num);
                 stack_push(stack, &new_token);
             }
-            else if (array[0].token.type == T_INT_LITERAL || array[0].token.type == T_DOUBLE_LITERAL || array[0].token.type == T_BOOLEAN_LITERAL) {
+            else if (array[0].token.type == T_STRING_LITERAL || array[0].token.type == T_INT_LITERAL || array[0].token.type == T_DOUBLE_LITERAL || array[0].token.type == T_BOOLEAN_LITERAL) {
                 new_token.value.ast_node_ptr = expr_insert_lit_leaf(array[0].token.value, array[0].token.line_num, array[0].token.type);
                 stack_push(stack, &new_token);
             }
-            else { error_exit (SYNT_ERR, array[0].token.line_num, "Invalid operand: expected identifier or literal."); } //TODO ERROR
+            else { error_exit (SYNT_ERR, array[0].token.line_num, "Invalid operand: expected identifier or literal."); }
             break;
 
         case 2:
@@ -203,7 +204,7 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = expr_insert_op(array[1].token.type, array[1].token.line_num, NULL, array[0].token.value.ast_node_ptr);
                 stack_push(stack, &new_token);
             }
-            else { error_exit (SYNT_ERR, array[0].token.line_num, "Invalid unary expression or mismatched parentheses."); } //TODO ERROR
+            else { error_exit (SYNT_ERR, array[0].token.line_num, "Invalid unary expression or mismatched parentheses."); }
             break;
 
         case 3:
@@ -215,11 +216,11 @@ void grammar_check(TStack *stack, TStack_Element *array, int array_counter) {
                 new_token.value.ast_node_ptr = array[1].token.value.ast_node_ptr;
                 stack_push(stack, &new_token);
             }
-            else { error_exit (SYNT_ERR, array[0].token.line_num, "Invalid binary expression or mismatched parentheses."); } //TODO ERROR
+            else { error_exit (SYNT_ERR, array[0].token.line_num, "Invalid binary expression or mismatched parentheses."); }
             break;
 
         default:
-            error_exit(SYNT_ERR, array[0].token.line_num, "Invalid expression reduction rule."); //TODO ERROR
+            error_exit(SYNT_ERR, array[0].token.line_num, "Invalid expression reduction rule.");
             break;
     }
 }
