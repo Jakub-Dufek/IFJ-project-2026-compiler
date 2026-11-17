@@ -4,6 +4,7 @@
  *
  * @brief Code generator library file
  * @author Šimon Greger (xgreges00)
+ * @author Samuel Vít Lehotský (xlehots00)
  * @date 25.10.2026
  *
  * @details This file contains definitions of functions used in IFJcode_generator.c
@@ -164,28 +165,103 @@ void generate_literal(ast_node_t *node, context_t *context);
  */
 void process_node(ast_node_t *node, context_t *context);
 
+
+/**
+ * @brief Implementation of built-in print(value: Any): Unit function, (instruction WRITE)
+ *
+ * @param node Pointer to the argument AST node
+ */
 void generate_print(ast_node_t *node);
 
+
+/**
+ * @brief Implementation of built-in readLine(): String function, reading one line from standard input, (instruction READ)
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ */
 void generate_readLine(char *target_var);
 
+
+/**
+ * @brief Implementation of built-in readInt(): Int function, reading an integer from standard input
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ */
 void generate_readInt(char *target_var);
 
+
+/**
+ * @brief Implementation of built-in readDouble(): Double function, reading a double from standard input
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ */
 void generate_readDouble(char *target_var); 
 
+
+/**
+ * @brief Implementation of built-in readBoolean(): Boolean function, reading a boolean from standard input
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ */
 void generate_Boolean(char *target_var);
 
+
+/**
+ * @brief Implementation of built-in toStr(value: Any): String function, returns string representation of a value
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ * @param node Pointer to the argument AST node
+ */
 void generate_toStr(char *target_var, ast_node_t *node);
 
+
+/**
+ * @brief Implementation of built-in toInt(value: Double): Int function, returns integer representation of a double, created by removing decimal part
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ * @param node Pointer to the argument AST node
+ */
 void generate_toInt(char *target_var, ast_node_t *node);
 
+
+/**
+ * @brief Implementation of built-in strLength(value: String): Int function, returns number of characters in a string
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ * @param node Pointer to the argument AST node
+ */
 void generate_strLength(char *target_var, ast_node_t *node);
 
+
+/**
+ * @brief Generates a call to the built-in subStr(value: String, start: Int, end: Int): String function, returns substring of value string
+ *
+ * @param node Pointer to a node
+ */
 void generate_subStr(ast_node_t *node);
 
-void generate_builtin_subStr();
 
+/**
+ * @brief Implementation of built-in subStr(value: String, start: Int, end: Int): String function in IFJcode26
+ */
+void generate_builtin_subStr(void);
+
+
+/**
+ * @brief Implementation of built-in ord(value: String, index: Int): Int function, returns ASCII code of a character, at a given index 
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ * @param node Pointer to a node
+ */
 void generate_ord(char *target_var, ast_node_t *node);
 
+
+/**
+ * @brief Implementation of built-in chr(code: Int): String function, for a value in interval 0 to 127, returns one character string with corresponding ASCII code
+ *
+ * @param target_var Pointer to a string, containing destination variable name
+ * @param node Pointer to the argument AST node
+ */
 void generate_chr(char *target_var, ast_node_t *node);
 
 /**

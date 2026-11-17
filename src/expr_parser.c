@@ -2,7 +2,7 @@
 * @file expr_parser.c
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
-* @brief TODO
+* @brief Expression parsing
 * @author Samuel Vit Lehotsky (xlehots00)
 * @date 3. 10. 2026
 */
