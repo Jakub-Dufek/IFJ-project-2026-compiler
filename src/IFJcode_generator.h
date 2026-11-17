@@ -145,26 +145,24 @@ void generate_operation(ast_node_t *node, context_t *context);
 /**
  * TODO
  */
-void generate_identifier(ast_node_t *node, char *print_before, context_t *context);
+void generate_identifier(ast_node_t *node, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for any type of literal
  *
  * @param node Pointer to a node that holds the literal
- * @param print_before String with the information that should be printed before the literal. If empty, is NULL
  * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
-void generate_literal(ast_node_t *node, char *print_before, context_t *context);
+void generate_literal(ast_node_t *node, context_t *context);
 
 
 /**
  * @brief Crossroad that detects the type of the node and calls functions for IFJcode26 generation
  *
  * @param node Pointer to a node
- * @param message_before String with the information that should be printed before anything else. If empty, is NULL
  * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
-void process_node(ast_node_t *node, char *message_before, context_t *context);
+void process_node(ast_node_t *node, context_t *context);
 
 void generate_print(ast_node_t *node);
 
