@@ -48,8 +48,8 @@ token_type find_operand_type (ast_node_t *node) {
             type = T_KEY_STRING;
             break;
 
-        case T_KEY_BOOLEAN:
-            type = T_KEY_BOOLEAN;
+        case T_BOOLEAN_LITERAL:
+            type = T_BOOLEAN_LITERAL;
             break;
         
         default:
@@ -72,13 +72,13 @@ token_type find_operand_type (ast_node_t *node) {
             return find_operand_type(node->data->op_node.right);
         }
         else if (node->data->op_node.op_type == EP_UNARY_NEG) {
-            return T_KEY_BOOLEAN;
+            return T_BOOLEAN_LITERAL;
         }
 
         if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
             node->data->op_node.op_type == T_GT || node->data->op_node.op_type == T_GTE ||
             node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE) {
-            return T_KEY_BOOLEAN;
+            return T_BOOLEAN_LITERAL;
         }
 
         token_type type_left = find_operand_type(node->data->op_node.left);
@@ -106,7 +106,7 @@ void generate_if(ast_node_t *node, context_t *context) {
     ast_if_node_t if_node = node->data->if_node;
 
     // Process the condition
-    process_node(if_node.condition, NULL, context);
+    process_node(if_node.condition, context);
     // Push true for JUMP to compare to
     printf("PUSHS bool@true\n");
     if (if_node.else_body != NULL) {
@@ -117,12 +117,12 @@ void generate_if(ast_node_t *node, context_t *context) {
     }
 
     // Process 'then' block
-    process_node(if_node.then_body, NULL, context);
+    process_node(if_node.then_body, context);
 
     if (if_node.else_body != NULL) {
         printf("JUMP $fi%u\n", label_num);
         printf("LABEL $else%u\n", label_num);
-        process_node(if_node.else_body, NULL, context);
+        process_node(if_node.else_body, context);
     }
 
     // End of this if
@@ -136,11 +136,11 @@ void generate_while(ast_node_t *node, context_t *context) {
     printf("LABEL $while%u\n", label_num);
 
     // Process the condition
-    process_node(while_node.condition, NULL, context);
+    process_node(while_node.condition, context);
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS $elihw%u\n", label_num);
 
-    process_node(while_node.body, NULL, context);
+    process_node(while_node.body, context);
     printf("JUMP $while%u\n", label_num);
 
     printf("LABEL $elihw%u\n", label_num);
@@ -149,7 +149,7 @@ void generate_while(ast_node_t *node, context_t *context) {
 void generate_block(ast_node_t *node, context_t *context, bool result_needed) {
     ast_node_t *block_node = node->data->block_node.first;
     while (block_node != NULL) {
-        process_node(block_node, "PUSHS ", context);
+        process_node(block_node, context);
         // Throw away any expressions that are not needed, but only if they are not the last instruction in the block 
         // and its result is needed by the caller
         if (is_expression(block_node, context) == true && (block_node->next != NULL || result_needed == false)) {
@@ -167,13 +167,13 @@ void generate_declaration(ast_node_t *node, char *frame, context_t *context) {
         return; 
     }
     else {
-        process_node(dec_node.expr_or_call, "PUSHS ", context);
+        process_node(dec_node.expr_or_call, context);
         printf("POPS %s@var_%u\n", frame, dec_node.symbol_data.unique_id);
     }
 }
 
 void generate_assignment(ast_node_t *node, context_t *context) {
-    process_node(node->data->assign_node.expr_or_call, "PUSHS ", context);
+    process_node(node->data->assign_node.expr_or_call, context);
     printf("POPS LF@var_%u\n", node->data->assign_node.symbol_data.unique_id);
 }
 
@@ -215,7 +215,7 @@ void generate_function(ast_node_t *node, context_t *context) {
     context->return_type = def_node.data_type;
     bool result_needed = false;
     if (def_node.data_type == T_KEY_INT || def_node.data_type == T_KEY_DOUBLE || 
-        def_node.data_type == T_KEY_STRING || def_node.data_type == T_KEY_BOOLEAN) {
+        def_node.data_type == T_KEY_STRING || def_node.data_type == T_BOOLEAN_LITERAL) {
         result_needed = true;
     }
 
@@ -245,7 +245,7 @@ void generate_function(ast_node_t *node, context_t *context) {
             generate_return(def_node.body, context);
         }
         else {
-            process_node(def_node.body, "PUSHS ", context);
+            process_node(def_node.body, context);
             if (result_needed == false && is_expression(def_node.body, context) == true) {
                 printf("POPS LF@discard_top_stack\n");
             }
@@ -275,7 +275,7 @@ void generate_return(ast_node_t *node, context_t *context) {
     ast_node_t *last_instruction = node->data->return_node.expr_or_call;
 
     if (last_instruction != NULL) {
-        process_node(last_instruction, "PUSHS ", context);
+        process_node(last_instruction, context);
     }
 
     if (context->return_type == T_KEY_UNIT && is_expression(last_instruction, context) == true) {
@@ -314,7 +314,7 @@ void generate_call(ast_node_t *node, context_t *context) {
     int arg_count = 0;
 
     for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
-        process_node(arg, "PUSHS ", context);
+        process_node(arg, context);
         arg_count++;
     }
 
@@ -338,18 +338,18 @@ void generate_operation(ast_node_t *node, context_t *context) {
             printf("PUSHS float@0x0p+0\n");
         }
 
-        process_node(node->data->op_node.right, "PUSHS ", context);
+        process_node(node->data->op_node.right, context);
         printf("SUBS\n");
         return;
     } 
     else if (node->data->op_node.op_type == EP_UNARY_NEG) {
-        process_node(node->data->op_node.right, "PUSHS ", context);
+        process_node(node->data->op_node.right, context);
         printf("NOTS\n");
         return;
     }
 
-    process_node(node->data->op_node.left, "PUSHS ", context);
-    process_node(node->data->op_node.right, "PUSHS ", context);
+    process_node(node->data->op_node.left, context);
+    process_node(node->data->op_node.right, context);
 
     //Print the type of the operation
     switch (node->data->op_node.op_type)
@@ -416,19 +416,12 @@ void generate_operation(ast_node_t *node, context_t *context) {
     }
 }
 
-void generate_identifier(ast_node_t *node, char *print_before, context_t *context) {
-    if (print_before != NULL) {
-        printf("%s", print_before);
-    }
-
-    printf("LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
-    //TODO... dokončit funkci
+void generate_identifier(ast_node_t *node, context_t *context) {
+    printf("PUSHS LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
 }
 
-void generate_literal(ast_node_t *node, char *print_before, context_t *context) {
-    if (print_before != NULL) {
-        printf("%s", print_before);
-    }
+void generate_literal(ast_node_t *node, context_t *context) {
+    printf("PUSHS ");
 
     switch (node->data->lit_leaf_node.lit_type)
     {
@@ -464,7 +457,7 @@ void generate_literal(ast_node_t *node, char *print_before, context_t *context) 
     }
 }
 
-void process_node(ast_node_t *node, char *message_before, context_t *context) {
+void process_node(ast_node_t *node, context_t *context) {
     switch (node->stmt_type)
     {
     case AST_BLOCK: {
@@ -485,15 +478,15 @@ void process_node(ast_node_t *node, char *message_before, context_t *context) {
         break;
 
     case EXPR_IDENTIFIER:
-        generate_identifier(node, message_before, context);
+        generate_identifier(node, context);
         break;
 
     case EXPR_LITERAL:
-        generate_literal(node, message_before, context);
+        generate_literal(node, context);
         break;
 
     case EXPR_INT2FLOAT:
-        process_node(node->data->imp_conversion.operand, "PUSHS ", context);
+        process_node(node->data->imp_conversion.operand, context);
         printf("INT2FLOATS\n");
         break;
 
@@ -792,7 +785,7 @@ void generate_IFJcode26(ast_node_t *root) {
     context_t context = {0};
     context.root = root;
     while(node != NULL) {
-        process_node(node, NULL, &context);
+        process_node(node, &context);
         node = node->next;
     }
 
