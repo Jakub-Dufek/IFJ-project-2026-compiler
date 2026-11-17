@@ -578,7 +578,7 @@ void generate_subStr(ast_node_t *node) {
     }
 
     printf("CALL $builtin_subStr_begin\n");
-    printf("PUSH TF@return\n");
+    printf("PUSHS TF@return\n");
 }
 
 void generate_builtin_subStr() {
