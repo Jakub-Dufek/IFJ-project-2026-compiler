@@ -2,16 +2,18 @@
 * @file symtable.c
 * @internal Part of IFJ-project-2026-compiler
 *
-* @brief symbol table with structure implementation
+* @brief symbol table structure implementation
 * @author Ondřej Kycl (xkyclon00) 
 * @date 04.10.2026
 * 
-* @details This file contains a symbol table implemented with height self-balancing binary tree data structure
+* @details This file contains a symbol table implemented with height self-balancing binary tree data structure,
+*stack structure storing individual symbol tables, also function parameter type list structure
 */
 
 //TODO : 
 //       .clang-format,
-
+//      dát id_type do structures.h?
+//      error_exit("PARSER: chybova hlaska")
 #include "symtable.h"
 
 
@@ -56,20 +58,20 @@ symtable_bvs_node_t *symtable_right_rotate(symtable_bvs_node_t *y){
 }
 
 symtable_bvs_node_t *symtable_find_symbol(symtable_bvs_node_t *root_ptr, char *k){
-    if (root_ptr == NULL){
-        return NULL;
+    if (root_ptr == NULL){// recursive condition
+        return NULL; 
     }
     else {
         if (strcmp(root_ptr->key, k) != 0){
             if (strcmp(root_ptr->key, k) > 0){
-                return symtable_find_symbol(root_ptr->l_ptr, k);
+                return symtable_find_symbol(root_ptr->l_ptr, k); //go left
             }
             else {
-                return symtable_find_symbol(root_ptr->r_ptr, k);
+                return symtable_find_symbol(root_ptr->r_ptr, k); //go right
             }
         }
         else {
-            return root_ptr;
+            return root_ptr;//symbol found
         }          
     } 
 }
@@ -79,6 +81,7 @@ symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
     if (new_node == NULL){
         error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a symtable node"); 
     }
+    //pass information to new node
     new_node->key = key;
     new_node->symbol_data = symb;
     new_node->l_ptr = NULL;
@@ -93,21 +96,23 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, s
         return symtable_create_node(key, symb);
     }
     else {
-        if (strcmp(root_ptr->key, key) > 0){
+        if (strcmp(root_ptr->key, key) > 0){ //go left
             root_ptr->l_ptr = symtable_insert(root_ptr->l_ptr, key, symb);
         }
-        else{
+        else{ //fo right
             if (strcmp(root_ptr->key, key) < 0){
                 root_ptr->r_ptr = symtable_insert(root_ptr->r_ptr, key, symb);
             }
-            else{
-                error_exit(SEM_REDEF_ERR, 0, "SYMTABLE: Redefinition of a symbol"); // <-- shouldn't even happen
+            else{// Symbol alredy there
+                error_exit(SEM_REDEF_ERR, 0, "SYMTABLE: Redefinition of a symbol");
             }
         }
 
         root_ptr->height = bvs_max(bvs_height(root_ptr->l_ptr), bvs_height(root_ptr->r_ptr)) + 1;
         root_ptr->weight = bvs_height(root_ptr->r_ptr) - bvs_height(root_ptr->l_ptr);
         
+        // Rotations to balance the tree if necessary after insertion
+
         if (root_ptr->weight == -2){
             if (strcmp(root_ptr->l_ptr->key, key) > 0){
                 root_ptr = symtable_right_rotate(root_ptr);
@@ -131,7 +136,7 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, s
     }
 }
 
-void symtable_destructor(symtable_bvs_node_t *root_ptr){
+void symtable_destructor(symtable_bvs_node_t *root_ptr){ //Postorder
     if(root_ptr == NULL){
         return;
     }
@@ -206,10 +211,11 @@ param_type_list_t *param_type_list_initialize(void) {
 
 void param_type_list_insert(param_type_list_t *l, data_type type){
     if (l != NULL){
-        param_type_t *new_param_type = arena_alloc(sizeof(param_type_t));
+        param_type_t *new_param_type = arena_alloc(sizeof(param_type_t)); //new instance in list
         if (new_param_type == NULL){
             error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a parameter type");
         }
+        
         new_param_type->type = type;
         new_param_type->next_ptr = NULL;
 
@@ -217,7 +223,7 @@ void param_type_list_insert(param_type_list_t *l, data_type type){
             l->first = new_param_type;
             l->last = new_param_type;
         }
-        else {
+        else { // save nodes in unreversed order
             l->last->next_ptr = new_param_type;
             l->last = new_param_type;
         }

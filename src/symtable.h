@@ -25,7 +25,6 @@
 
 // SYMTABLE STRUCTURES & ENUMS
 
-
 /**
  * @brief More convenient rename for symbol table data types.
  * 
@@ -44,9 +43,7 @@ typedef enum {
 } id_type;
 
 
-
 // LINKED LIST STRUCTURES (Function Parameters)
-
 
 /**
  * @brief Element of linked list - data_type.
@@ -65,9 +62,7 @@ typedef struct param_type_list {
 } param_type_list_t;
 
 
-
 // SYMBOL INFORMATION STRUCTURES
-
 
 /**
  * @brief Information about a function.
@@ -102,9 +97,7 @@ typedef struct symtable_bvs_node_t {
 } symtable_bvs_node_t;   
 
 
-
 // STACK STRUCTURES
-
 
 /**
  * @brief A symtable instance on the stack.
@@ -123,7 +116,7 @@ typedef struct {
 
 
 
-// SYMTABLE FUNCTIONS
+// SYMTABLE STRUCTURE FUNCTIONS
 
 
 /**
@@ -204,21 +197,25 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr);
 
 /**
  * @brief Initialization of the symbol table stack.
+ * @param stack Pointer to the stack to search in.
  */
 void symtable_stack_initialize(symtable_stack_t *stack);
 
 /**
  * @brief Puts new symbol table instance on top of the stack.
+ * @param stack Pointer to the stack to search in.
  */
 void symtable_stack_push(symtable_stack_t *stack);
 
 /**
  * @brief Deletes the symbol table instance from top of the stack.
+ * @param stack Pointer to the stack to search in.
  */
 void symtable_stack_pop(symtable_stack_t *stack);
 
 /**
  * @brief Checks if the symbol table stack is empty
+ * @param stack Pointer to the stack to search in.
  * @return true if the stack is empty, false otherwise
  */
 bool symtable_stack_is_empty(symtable_stack_t *stack);
@@ -246,7 +243,10 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key);
 param_type_list_t *param_type_list_initialize(void);
 
 /**
- * @brief Inserts and allocates new parameter's data type as the last element.
+ * @brief Appends a new parameter data type to the end of the list (unreversed list).
+ * 
+ * @param l    Pointer to the parameter type list structure.
+ * @param type The data type to be inserted.
  */
 void param_type_list_insert(param_type_list_t *l, data_type type);
 

@@ -10,17 +10,15 @@
  */
 
 //TODO: 
-//      Popsat implicitní konverzi jako AI generated?
-//      valgrind?
 //       .clang-format,
 
 #include "semantic_anal.h"
 
 static data_type curr_func_ret_type; // current function return type helper variable
-static symtable_stack_t *active_sem_stack = NULL;
-static unsigned unique_symbol_counter = 1;
+static symtable_stack_t *active_sem_stack = NULL; // used for memory handling during error exit
+static unsigned unique_symbol_counter = 1; // represents unique id across all symtables
 
-// BUILT-IN FUNCTIONS INSERTION
+// BUILT-IN FUNCTIONS INSERTION INTO GLOBAL SYMTABLE
 
 void builtin_functions_insertion(symtable_stack_t *stack){
     print_insertion(stack);
@@ -200,7 +198,11 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
         if (symtable_find_symbol(stack->top->symtable, ast_node->data->definition_node.id_val) != NULL){
             error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Redefinition of a function is not allowed!");
         }
-        
+        if (strcmp(ast_node->data->definition_node.id_val, "_") == 0) {
+            error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: '_' cannot be used as a function name");
+        }
+
+        // Many checks for main 
         if (ast_node->data->definition_node.is_main == true){
             if (main_found == true){
                 error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Multiple @main functions are not allowed!");
@@ -215,10 +217,11 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             }
         }
 
+        //Prepare new function symbol for insertion into symtable
         symbol_data_t new_symbol = {0};
         new_symbol.data_type = ast_node->data->definition_node.data_type;
         new_symbol.id_type = ID_FUNC;
-        param_type_list_t *param_type_list = param_type_list_initialize(); // <-- Later destroy this ! 
+        param_type_list_t *param_type_list = param_type_list_initialize(); // This is allocated in arena
         unsigned param_counter = 0;
         ast_node_t *parameter = ast_node->data->definition_node.first_param;
         while (parameter != NULL){
@@ -232,7 +235,7 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
         new_symbol.func_info.is_main = ast_node->data->definition_node.is_main;
         stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->definition_node.id_val, new_symbol);
 
-        ast_node = ast_node->next;
+        ast_node = ast_node->next; //next function
     }
     if (main_found == false){
         error_exit(SEM_UNDEF_ERR, 0, "SEMANTIC ANALYSIS: Missing @main function!");
@@ -246,7 +249,6 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
        which returns true, if the last node (move with node->next) is return node, 
        return false for other occurences. This must function recursively."
 */
-
 static bool ends_with_return(ast_node_t *node) {
     if (node == NULL) {
         return false;
@@ -276,10 +278,10 @@ static bool ends_with_return(ast_node_t *node) {
 }
 
 
-// functions called in sem_anal based on stmt_type (AST_DEFINITON, DECLARATION, WHILE, ...)
+// FUNCTIONS CALLED IN sem_anal() BASED ON stmt_type (AST_DEFINITON, DECLARATION, WHILE, ...)
 
 static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *stack) {
-    symtable_stack_push(stack);
+    symtable_stack_push(stack); //Local parameters must be visible during body check
 
     ast_node_t *parameter = ast_node->data->definition_node.first_param;
     while (parameter != NULL){
@@ -289,9 +291,11 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
         new_symbol.data_type = parameter->data->param_node.data_type;
         new_symbol.id_type = ID_VAL;
         
-
         if (symtable_find_symbol(stack->top->symtable, parameter->data->param_node.id_val) != NULL){
             error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Duplicate parameter names!");
+        }
+        if (strcmp(parameter->data->param_node.id_val, "_") == 0) {
+            error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: '_' cannot be used as a parameter name");
         }
         stack->top->symtable = symtable_insert(stack->top->symtable, parameter->data->param_node.id_val, new_symbol);
         parameter->data->param_node.symbol_data = new_symbol;
@@ -299,19 +303,19 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
         parameter = parameter->next;
     }
 
-    curr_func_ret_type = ast_node->data->definition_node.data_type; 
-    data_type body_type = sem_anal(ast_node->data->definition_node.body, stack); //<-- Body entry
+    curr_func_ret_type = ast_node->data->definition_node.data_type; //Current function type must be known during body check
+    data_type body_type = sem_anal(ast_node->data->definition_node.body, stack); //     <-- Body entry
 
-    // We get the last command of the function
+    // getting the last node of the function to later see whether it is 'AST_IF' and types control can be performed
     ast_node_t *last_node = ast_node->data->definition_node.body;
-    if (last_node != NULL && last_node->stmt_type == AST_BLOCK) {
+    if (last_node != NULL && last_node->stmt_type == AST_BLOCK /*not a single line function*/) {
         last_node = last_node->data->block_node.first;
-        while (last_node != NULL && last_node->next != NULL) {
+        while (last_node->next != NULL) { 
             last_node = last_node->next;
         }
     }
 
-    if (curr_func_ret_type == T_KEY_UNIT){ // Exxplicit UNIT
+    if (curr_func_ret_type == T_KEY_UNIT){ // Explicit UNIT doesn't require following check
         // OK 
     }
     else {
@@ -322,7 +326,7 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
                 && ends_with_return(last_node->data->if_node.else_body)) {
                 // OK 
             }
-            else if (curr_func_ret_type == T_NO_TYPE) {
+            else if (curr_func_ret_type == T_NO_TYPE) { //Types must be deduced as UNIT
                 //OK
             }
             else {
@@ -330,8 +334,8 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
             }
         }
     }
-    // One line body
-    if (ast_node->data->definition_node.body->stmt_type != AST_BLOCK){
+    // One line body functions
+    if (ast_node->data->definition_node.body->stmt_type != AST_BLOCK){ // Can't be a block 
         if (curr_func_ret_type == body_type || curr_func_ret_type == T_KEY_UNIT 
             || curr_func_ret_type == T_NO_TYPE) {
             //OK
@@ -353,7 +357,7 @@ static data_type sem_check_definition(ast_node_t *ast_node, symtable_stack_t *st
         // update in symtable
         symtable_bvs_node_t *func_sym = symtable_find_symbol(stack->top->symtable, ast_node->data->definition_node.id_val);
         if (func_sym == NULL) {
-            error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Cannot find a funcion id"); // shouldn'd happen
+            error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Cannot find a funcion id"); // shouldn't happen
         }
         func_sym->symbol_data.data_type = body_type; // deduction
     }
@@ -389,7 +393,8 @@ static data_type sem_check_return(ast_node_t *ast_node, symtable_stack_t *stack)
 }
 
 static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
-    symtable_bvs_node_t *func_symbol = symtable_stack_search(stack, ast_node->data->call_node.id_val);
+    symtable_bvs_node_t *func_symbol = symtable_stack_search(stack, ast_node->data->call_node.id_val); // Search in stack for funtion symbol(overshadowing)
+
     if (func_symbol == NULL || func_symbol->symbol_data.id_type != ID_FUNC){
         error_exit(SEM_UNDEF_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Attempted to call undefined function");
     }
@@ -402,16 +407,16 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
     param_type_t *expected_param = func_symbol->symbol_data.func_info.param_types->first;  
     unsigned func_param_counter = 0;
 
-    while(curr_arg != NULL && expected_param != NULL){
+    while(curr_arg != NULL && expected_param != NULL){ //Check types and count of all parameters
 
         ast_node_t *temp_next = curr_arg->next;
-        curr_arg->next = NULL;
+        curr_arg->next = NULL; // So that argument check doesn't go to the next node in sem_anal
         data_type curr_arg_type = sem_anal(curr_arg, stack);
         curr_arg->next = temp_next;
 
         if (expected_param->type != T_ANY_TYPE && curr_arg_type != expected_param->type){
             if (expected_param->type == T_KEY_DOUBLE && curr_arg_type == T_KEY_INT) {
-                curr_arg = ast_convert_int2float(curr_arg);
+                curr_arg = ast_convert_int2float(curr_arg); // There can be implicit conversion to double in func arguments
             } else {
                 error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Argument types do not match!");
             }
@@ -420,7 +425,7 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
         expected_param = expected_param->next_ptr;
         func_param_counter++;
     }
-    if (func_param_counter != func_symbol->symbol_data.func_info.param_num){
+    if (func_param_counter != func_symbol->symbol_data.func_info.param_num){ //Check if number of parameters matches
         error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Number of parameters doesn't match!");
     }
     return func_symbol->symbol_data.data_type;
@@ -434,23 +439,25 @@ static data_type sem_check_block(ast_node_t *ast_node, symtable_stack_t *stack) 
 }
 
 static data_type sem_check_while(ast_node_t *ast_node, symtable_stack_t *stack) {
-    data_type cond_type = sem_anal(ast_node->data->while_node.condition, stack);
+    data_type cond_type = sem_anal(ast_node->data->while_node.condition, stack); //Check condition in 'while'
     if (cond_type != T_KEY_BOOLEAN){
         error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: not returning boolean as a result of 'while' condition!");
     }
-    sem_anal(ast_node->data->while_node.body, stack);
+
+    sem_anal(ast_node->data->while_node.body, stack); //Perform check in 'while' body
+
     return T_KEY_UNIT;
 }
 
 static data_type sem_check_if(ast_node_t *ast_node, symtable_stack_t *stack) {
-    data_type cond_type = sem_anal(ast_node->data->if_node.condition, stack);
+    data_type cond_type = sem_anal(ast_node->data->if_node.condition, stack); //Check condition in 'if'
     if (cond_type != T_KEY_BOOLEAN){
         error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: not returning Boolean as a result of 'if' condition!");
     }
     
     sem_anal(ast_node->data->if_node.then_body, stack);
     
-    if (ast_node->data->if_node.else_body != NULL){
+    if (ast_node->data->if_node.else_body != NULL){ //else not mandatory
         sem_anal(ast_node->data->if_node.else_body, stack);
     }
     
@@ -458,28 +465,22 @@ static data_type sem_check_if(ast_node_t *ast_node, symtable_stack_t *stack) {
 }
 
 static data_type sem_check_declaration(ast_node_t *ast_node, symtable_stack_t *stack) {
-    data_type expr_type = sem_anal(ast_node->data->declaration_node.expr_or_call, stack);
+    data_type expr_type = sem_anal(ast_node->data->declaration_node.expr_or_call, stack); // right side is mandatory in declaration
     data_type var_type = ast_node->data->declaration_node.data_type;
 
     if (strcmp(ast_node->data->declaration_node.id_val, "_") == 0){
-        return T_KEY_UNIT;  //No symtable_insertion
+        error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: '_' is not a valid identifier");
     }  
 
     // Static type deduction
     if (var_type == T_NO_TYPE){
-        if (expr_type == T_UNDEFINED){ // Just to be sure
-            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Static type deduction not possible for this expression or call");
-        }
-        if (expr_type == T_KEY_UNIT){
-            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Static type deduction doesn't allow Unit type!");
-        }
         var_type = expr_type;
         ast_node->data->declaration_node.data_type = var_type;
     }
 
     // Node compatibility check in assignment
     if (var_type == expr_type){
-        //Everything good
+        //OK
     }
     else if (var_type == T_KEY_DOUBLE && expr_type == T_KEY_INT){
         ast_node->data->declaration_node.expr_or_call = ast_convert_int2float(ast_node->data->declaration_node.expr_or_call);
@@ -498,17 +499,17 @@ static data_type sem_check_declaration(ast_node_t *ast_node, symtable_stack_t *s
         error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Redefinition of a variable!");
     }
     stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->declaration_node.id_val, new_symbol);
-    ast_node->data->declaration_node.symbol_data = new_symbol;
+    ast_node->data->declaration_node.symbol_data = new_symbol; // Update in AST
 
     return T_KEY_UNIT;
 }
 
 static data_type sem_check_assign(ast_node_t *ast_node, symtable_stack_t *stack) {
-    symtable_bvs_node_t *symbol = symtable_stack_search(stack, ast_node->data->assign_node.id_val);
+    symtable_bvs_node_t *symbol = symtable_stack_search(stack, ast_node->data->assign_node.id_val); //search stack
     if (symbol == NULL){
         error_exit(SEM_UNDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Non existing variable!");
     }
-    if (symbol->symbol_data.id_type == ID_VAL || symbol->symbol_data.id_type == ID_FUNC){
+    if (symbol->symbol_data.id_type != ID_VAR){ // found symbol cannot be unchangeable or a function
         error_exit(SEM_VAR_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Attempted to assign value to a non VAR symbol!");
     }
     // Compare data type against assigned expression or call
@@ -522,8 +523,7 @@ static data_type sem_check_assign(ast_node_t *ast_node, symtable_stack_t *stack)
     else{
         error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Incompatible types assignment");
     }
-
-    ast_node->data->assign_node.symbol_data = symbol->symbol_data;
+    ast_node->data->assign_node.symbol_data = symbol->symbol_data; //update AST
 
     return T_KEY_UNIT;
 }
@@ -548,13 +548,12 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         ast_node->data->op_node.right = ast_convert_int2float(ast_node->data->op_node.right);
         right_type = T_KEY_DOUBLE;
     }
-
+    // Unary operators
     if (op == EP_UNARY_MINUS || op == EP_UNARY_NEG) {
-        
-        data_type operand_type = (ast_node->data->op_node.left != NULL) ? left_type : right_type;
+        data_type operand_type = (ast_node->data->op_node.left != NULL) ? left_type : right_type;   //either left type or right type
         
         if (op == EP_UNARY_MINUS) {
-            if (operand_type == T_KEY_INT || operand_type == T_KEY_DOUBLE) {
+            if (operand_type == T_KEY_INT || operand_type == T_KEY_DOUBLE) { //Unary minus works for numeric types
                 return operand_type;
             }
             error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid operand for unary minus");
@@ -566,9 +565,9 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
             return T_KEY_BOOLEAN;
         }
     }
-
+    // Check before binary operations but this shouldn't even happen
     if (left_type == T_NO_TYPE || right_type == T_NO_TYPE) {
-        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Missing operand for binary operation");
+        error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Missing operand for binary operation");
     }
 
     // Arithmetics and concatenation
@@ -586,8 +585,10 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         if (left_type != right_type){
             error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Invalid data types comparison in 'if' condition");
         }
-        if (left_type == T_KEY_BOOLEAN && (op == T_LT || op == T_LTE || op == T_GT || op == T_GTE)){
-            error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Booleans can only be compared with '==' and '!='");
+        if (op == T_LT || op == T_LTE || op == T_GT || op == T_GTE) {
+            if (left_type != T_KEY_INT && left_type != T_KEY_DOUBLE && left_type != T_KEY_STRING) {
+                error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: <, <=, >, >= can only compare numbers or strings");
+            }
         }
         return T_KEY_BOOLEAN;
     }
@@ -600,11 +601,12 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         return T_KEY_BOOLEAN;
     }
 
-    error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown operator in expression");
+    error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown operator in expression"); // to be sure, shouldn't happen
+
     return T_NO_TYPE; 
 }
 
-static data_type sem_check_literal(ast_node_t *ast_node, symtable_stack_t *stack) {
+static data_type sem_check_literal(ast_node_t *ast_node, symtable_stack_t *stack) { // literal inside of expression check
     int lit_type = ast_node->data->lit_leaf_node.lit_type;
     if (lit_type == T_DOUBLE_LITERAL){
         return T_KEY_DOUBLE;
@@ -624,25 +626,28 @@ static data_type sem_check_literal(ast_node_t *ast_node, symtable_stack_t *stack
     else {
         error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Unknown literal type");
     }
+
     return T_NO_TYPE;
 }
 
-static data_type sem_check_identifier(ast_node_t *ast_node, symtable_stack_t *stack) {
+static data_type sem_check_identifier(ast_node_t *ast_node, symtable_stack_t *stack) { // identifier inside of expression check
     symtable_bvs_node_t *symtable_node = symtable_stack_search(stack, ast_node->data->id_leaf_node.id_val);
     if(symtable_node == NULL){
         error_exit(SEM_UNDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Using non existing identifier");
     }
-    else{
-        ast_node->data->id_leaf_node.symbol_data = symtable_node->symbol_data;
-        return symtable_node->symbol_data.data_type;
+    if(symtable_node->symbol_data.id_type == ID_FUNC){
+        error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Function cannot be used as a variable in an expression");
     }
+    ast_node->data->id_leaf_node.symbol_data = symtable_node->symbol_data; // update AST
+
+    return symtable_node->symbol_data.data_type;
 }
 
 
 // SECOND GO THROUGH AST
 
 data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
-    data_type last_evaluated_type = T_KEY_UNIT;
+    data_type last_evaluated_type = T_KEY_UNIT; // Tracks the type of the last evaluated node
     
     while (ast_node != NULL) {
         switch (ast_node->stmt_type){
@@ -682,7 +687,7 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             default:
                 break;
         }   
-        ast_node = ast_node->next; // move to the next AST node
+        ast_node = ast_node->next;
     }
     return last_evaluated_type;
 }
@@ -696,7 +701,7 @@ void run_sem_anal(ast_node_t *ast_node) {
     symtable_stack_t symtable_stack;
     symtable_stack_initialize(&symtable_stack);
 
-    active_sem_stack = &symtable_stack;
+    active_sem_stack = &symtable_stack; 
 
     symtable_stack_push(&symtable_stack);
 
@@ -714,8 +719,8 @@ void run_sem_anal(ast_node_t *ast_node) {
 
 void sem_anal_error_exit(){
     if (active_sem_stack != NULL){
-        while(!symtable_stack_is_empty(active_sem_stack)){
-            symtable_stack_pop(active_sem_stack);
+        while(!symtable_stack_is_empty(active_sem_stack)){ 
+            symtable_stack_pop(active_sem_stack); //Clean each symtable
         }
         active_sem_stack = NULL;
     }

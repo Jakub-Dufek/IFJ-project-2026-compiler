@@ -6,9 +6,9 @@
  * @author Ondřej Kycl (xkyclon00)
  * @date 17. 10. 2026
  * 
- * @details This file contains declarations of public functions used for 
+ * @details This file contains declarations of functions used for 
  * semantic analysis, including built-in function initialization, 
- * pre-analysis, and the main semantic check routing.
+ * pre-analysis, and the main semantic check
  */
 
 #ifndef SEMANTIC_ANAL_H
