@@ -500,7 +500,7 @@ void generate_print(ast_node_t *node) {
                     break;
 
                 case T_UNIT_LITERAL:
-                    printf("WRITE string@\\032()\\032\n");  // Mezery navíc kolem závorek?
+                    printf("WRITE string@\\032()\\032\n");
                     break;
 
                 default:
@@ -510,6 +510,12 @@ void generate_print(ast_node_t *node) {
             break;
 
         case EXPR_IDENTIFIER:
+            if (node->data->id_leaf_node.symbol_data.data_type == T_UNIT_LITERAL) {
+                printf("WRITE string@\\032()\\032\n");
+            }
+            else {
+                printf("WRITE LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
+            }
             break;
 
         default:
@@ -562,6 +568,27 @@ void generate_toStr(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
+        unsigned id = node->data->id_leaf_node.symbol_data.unique_id;
+        switch (node->data->id_leaf_node.symbol_data.data_type) {
+            case T_STRING_LITERAL:
+                printf("MOVE %s LF@var_%u\n", target_var, id);
+                break;
+
+            case T_INT_LITERAL:
+                printf("INT2STR %s LF@var_%u\n", target_var, id);
+                break;
+
+            case T_DOUBLE_LITERAL:
+                printf("FLOAT2STR %s LF@var_%u\n", target_var, id);
+                break;
+
+            case T_UNIT_LITERAL:
+                printf("MOVE %s string@\\032()\\032\n", target_var);
+                break;
+            
+            default:
+                //TODO ERROR
+        }
         break;
     
     default:
@@ -581,6 +608,9 @@ void generate_toInt(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
+        if (node->data->id_leaf_node.symbol_data.data_type == T_DOUBLE_LITERAL) {
+            printf("FLOAT2INT %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
+        }
         break;
     
     default:
@@ -601,6 +631,9 @@ void generate_strLength(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
+        if (node->data->id_leaf_node.symbol_data.data_type == T_STRING_LITERAL) {
+            printf("STRLEN %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
+        }
         break;
     
     default:
@@ -620,29 +653,29 @@ void generate_subStr(ast_node_t *node) {
     printf("DEFVAR TF@end\n");
 
     if (arg1->stmt_type == EXPR_LITERAL) {
-        printf("MOVE TF@str");
+        printf("MOVE TF@str ");
         print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
     }
     else if (arg1->stmt_type == EXPR_IDENTIFIER) {
-
-    }
+        printf("MOVE TF@str LF@var_%u\n", arg1->data->id_leaf_node.symbol_data.unique_id);
+    }   
 
     if (arg2->stmt_type == EXPR_LITERAL) {
-        printf("MOVE TF@idx %d\n", arg2->data->lit_leaf_node.lit_value.int_value);
+        printf("MOVE TF@idx int@%d\n", arg2->data->lit_leaf_node.lit_value.int_value);
     }
     else if (arg2->stmt_type == EXPR_IDENTIFIER) {
-        
+        printf("MOVE TF@idx LF@var_%u\n", arg2->data->id_leaf_node.symbol_data.unique_id);
     }
 
     if (arg3->stmt_type == EXPR_LITERAL) {
-        printf("MOVE TF@end %d\n", arg3->data->lit_leaf_node.lit_value.int_value);
+        printf("MOVE TF@end int@%d\n", arg3->data->lit_leaf_node.lit_value.int_value);
     }
     else if (arg3->stmt_type == EXPR_IDENTIFIER) {
-        
+        printf("MOVE TF@end LF@var_%u\n", arg3->data->id_leaf_node.symbol_data.unique_id);
     }
 
     printf("CALL $builtin_subStr_begin\n");
-    printf("PUSH TF@return\n");
+    printf("PUSHS TF@$return\n");
 }
 
 void generate_builtin_subStr() {
@@ -694,21 +727,23 @@ void generate_builtin_subStr() {
 void generate_ord(char *target_var, ast_node_t *node) {
     ast_node_t *arg1 = node->data->call_node.first_arg;
     ast_node_t *arg2 = arg1->next;
-    switch (node->stmt_type)
-    {
-    case EXPR_LITERAL:
-        if(arg2->data->lit_leaf_node.lit_value.int_value == T_INT_LITERAL && (*(arg1->data->lit_leaf_node.lit_value.string_value) == T_STRING_LITERAL)) {
-            printf("STRI2INT %s string@%s int@%d\n", target_var, arg1->data->lit_leaf_node.lit_value.string_value, arg2->data->lit_leaf_node.lit_value.int_value);
-        }
-        else {/*TODO ERROR*/}
-        break;
 
-    case EXPR_IDENTIFIER:
-        break;
-    
-    default:
-        //TODO ERROR
-        break;
+    printf("STRI2INT %s  ", target_var);
+
+    if (arg1->stmt_type == EXPR_LITERAL) {
+        printf("string@");
+        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
+        prinf(" ");
+    }
+    else if (arg1->stmt_type == EXPR_IDENTIFIER) {
+        printf("LF@var_%u ", arg1->data->id_leaf_node.symbol_data.unique_id);
+    }
+
+    if (arg2->stmt_type == EXPR_LITERAL) {
+        printf("int@%d\n", arg2->data->lit_leaf_node.lit_value.int_value);
+    }
+    else if (arg2->stmt_type == EXPR_IDENTIFIER) {
+        printf("LF@var_%u\n", arg2->data->id_leaf_node.symbol_data.unique_id);
     }
 }
 
@@ -723,6 +758,9 @@ void generate_chr(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
+        if (node->data->id_leaf_node.symbol_data.data_type == T_INT_LITERAL) {
+            printf("INT2CHAR %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
+        }
         break;
     
     default:
