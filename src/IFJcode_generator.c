@@ -766,7 +766,7 @@ void generate_ord(char *target_var, ast_node_t *node) {
     if (arg1->stmt_type == EXPR_LITERAL) {
         printf("string@");
         print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
-        prinf(" ");
+        printf(" ");
     }
     else if (arg1->stmt_type == EXPR_IDENTIFIER) {
         printf("LF@var_%u ", arg1->data->id_leaf_node.symbol_data.unique_id);
