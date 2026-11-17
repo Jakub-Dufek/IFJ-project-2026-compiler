@@ -339,7 +339,12 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
     unsigned func_param_counter = 0;
 
     while(curr_arg != NULL && expected_param != NULL){
+
+        ast_node_t *temp_next = curr_arg->next;
+        curr_arg->next = NULL;
         data_type curr_arg_type = sem_anal(curr_arg, stack);
+        curr_arg->next = temp_next;
+
         if (expected_param->type != T_ANY_TYPE && curr_arg_type != expected_param->type){
             if (expected_param->type == T_KEY_DOUBLE && curr_arg_type == T_KEY_INT) {
                 curr_arg = ast_convert_int2float(curr_arg);
