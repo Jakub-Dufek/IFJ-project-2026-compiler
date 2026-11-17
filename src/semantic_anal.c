@@ -49,7 +49,7 @@ void print_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_ANY_TYPE);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "print", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "print", symbol);
 }
 void readline_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -62,7 +62,7 @@ void readline_insertion(symtable_stack_t *stack){
     symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "readLine", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "readLine", symbol);
 }
 void readint_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -75,7 +75,7 @@ void readint_insertion(symtable_stack_t *stack){
     symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "readInt", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "readInt", symbol);
 }
 void readdouble_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -88,7 +88,7 @@ void readdouble_insertion(symtable_stack_t *stack){
     symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "readDouble", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "readDouble", symbol);
 }
 void tostr_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -102,7 +102,7 @@ void tostr_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_ANY_TYPE);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "toStr", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "toStr", symbol);
 }
 void toint_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -116,7 +116,7 @@ void toint_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_KEY_DOUBLE);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "toInt", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "toInt", symbol);
 }
 void strlength_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -130,7 +130,7 @@ void strlength_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_KEY_STRING);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "strLength", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "strLength", symbol);
 }
 void substr_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -146,7 +146,7 @@ void substr_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_KEY_INT);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "subStr", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "subStr", symbol);
 }
 void ord_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -161,7 +161,7 @@ void ord_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_KEY_INT);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "ord", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "ord", symbol);
 }
 void chr_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
@@ -175,20 +175,20 @@ void chr_insertion(symtable_stack_t *stack){
     param_type_list_insert(params, T_KEY_INT);
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "chr", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "chr", symbol);
 }
 void readboolean_insertion(symtable_stack_t *stack){
     symbol_data_t symbol = {0};
     param_type_list_t *params = param_type_list_initialize();
 
     symbol.id_type = ID_FUNC;
-    symbol.data_type = T_KEY_BOOLEAN; // Návratový typ je Boolean
+    symbol.data_type = T_KEY_BOOLEAN;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
     symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
-    symtable_insert(stack->top->symtable, "readBoolean", symbol);
+    stack->top->symtable = symtable_insert(stack->top->symtable, "readBoolean", symbol);
 }
 
 
@@ -327,7 +327,7 @@ static data_type sem_check_return(ast_node_t *ast_node, symtable_stack_t *stack)
 static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
     symtable_bvs_node_t *func_symbol = symtable_stack_search(stack, ast_node->data->call_node.id_val);
     if (func_symbol == NULL || func_symbol->symbol_data.id_type != ID_FUNC){
-        error_exit(SEM_VAR_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Attempted to call undefined function");
+        error_exit(SEM_UNDEF_ERR, ast_node->line_num, "SEMANTIC_ANALYSIS: Attempted to call undefined function");
     }
 
     if (func_symbol->symbol_data.data_type == T_NO_TYPE) {
@@ -339,9 +339,18 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
     unsigned func_param_counter = 0;
 
     while(curr_arg != NULL && expected_param != NULL){
+
+        ast_node_t *temp_next = curr_arg->next;
+        curr_arg->next = NULL;
         data_type curr_arg_type = sem_anal(curr_arg, stack);
+        curr_arg->next = temp_next;
+
         if (expected_param->type != T_ANY_TYPE && curr_arg_type != expected_param->type){
-            error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Argument types do not match!");
+            if (expected_param->type == T_KEY_DOUBLE && curr_arg_type == T_KEY_INT) {
+                curr_arg = ast_convert_int2float(curr_arg);
+            } else {
+                error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Argument types do not match!");
+            }
         }
         curr_arg = curr_arg->next;
         expected_param = expected_param->next_ptr;
@@ -374,17 +383,14 @@ static data_type sem_check_if(ast_node_t *ast_node, symtable_stack_t *stack) {
     if (cond_type != T_KEY_BOOLEAN){
         error_exit(SEM_TYPE_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: not returning Boolean as a result of 'if' condition!");
     }
-    data_type then_type = sem_anal(ast_node->data->if_node.then_body, stack);
     
-    data_type else_type = T_KEY_UNIT;
+    sem_anal(ast_node->data->if_node.then_body, stack);
+    
     if (ast_node->data->if_node.else_body != NULL){
-        else_type = sem_anal(ast_node->data->if_node.else_body, stack);
+        sem_anal(ast_node->data->if_node.else_body, stack);
     }
-    if (then_type == else_type) {
-        return then_type;
-    } else {
-        return T_KEY_UNIT;
-    }
+    
+    return T_KEY_UNIT;
 }
 
 static data_type sem_check_declaration(ast_node_t *ast_node, symtable_stack_t *stack) {
@@ -479,7 +485,7 @@ static data_type sem_check_operation(ast_node_t *ast_node, symtable_stack_t *sta
         right_type = T_KEY_DOUBLE;
     }
 
-    if (op == EP_UNARY_MINUS || op == T_NEG) {
+    if (op == EP_UNARY_MINUS || op == EP_UNARY_NEG) {
         
         data_type operand_type = (ast_node->data->op_node.left != NULL) ? left_type : right_type;
         
@@ -577,6 +583,9 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             case AST_DEFINITION:
                 last_evaluated_type = sem_check_definition(ast_node, stack);
                 break;
+            case AST_RETURN:
+                last_evaluated_type = sem_check_return(ast_node, stack);
+                break;
             case AST_CALL:
                 last_evaluated_type = sem_check_call(ast_node, stack);
                 break;
@@ -604,13 +613,10 @@ data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             case EXPR_IDENTIFIER:
                 last_evaluated_type = sem_check_identifier(ast_node, stack);
                 break;
-            case AST_RETURN:
-                last_evaluated_type = sem_check_return(ast_node, stack);
-                break;
             default:
                 break;
         }   
-        ast_node = ast_node->next; //Move to the next function definition
+        ast_node = ast_node->next; // move to the next AST node
     }
     return last_evaluated_type;
 }

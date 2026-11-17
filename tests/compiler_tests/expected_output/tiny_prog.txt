@@ -5,11 +5,11 @@ EXIT int@0
 LABEL $main
 PUSHFRAME
 DEFVAR LF@discard_top_stack
-DEFVAR LF@x
+DEFVAR LF@var_1
 PUSHS int@10
 PUSHS int@55
 ADDS
-POPS LF@x
+POPS LF@var_1
 LABEL $main_end
 PUSHS nil@nil
 POPFRAME
