@@ -10,7 +10,6 @@
 */
 
 //TODO : 
-//       Popsat Stack search jako AI funkci?
 //       .clang-format,
 
 #include "symtable.h"
@@ -181,8 +180,9 @@ bool symtable_stack_is_empty(symtable_stack_t *stack) {
 
 symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
     symtable_instance_t *current = stack->top;
+    symtable_bvs_node_t *found;
     while (current != NULL){
-        symtable_bvs_node_t *found = symtable_find_symbol(current->symtable, key);
+        found = symtable_find_symbol(current->symtable, key);
         if (found != NULL){
             return found;
         }
