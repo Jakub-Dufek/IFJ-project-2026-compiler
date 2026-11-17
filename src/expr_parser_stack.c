@@ -1,8 +1,8 @@
 /**
-* @file expr_parser.c
+* @file expr_parser_stack.c
 * @internal Part of IFJ-project-2026-compiler, Team 274855
 *
-* @brief TODO
+* @brief Fuctions for expression parser stack
 * @author Samuel Vit Lehotsky (xlehots00)
 * @date 18. 10. 2026
 */
