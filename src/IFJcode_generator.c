@@ -310,21 +310,24 @@ token_type function_return_type(char *id_val, context_t *context) {
 }
 
 void generate_call(ast_node_t *node, context_t *context) {
-    ast_call_node_t call_node = node->data->call_node;
-    int arg_count = 0;
+    // Check if the called function is not a built-in function
+    if (generate_builtin_call(node) == false) {
+        ast_call_node_t call_node = node->data->call_node;
+        int arg_count = 0;
 
-    for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
-        process_node(arg, context);
-        arg_count++;
+        for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
+            process_node(arg, context);
+            arg_count++;
+        }
+
+        printf("CREATEFRAME\n");
+        for (int counter = arg_count - 1; counter >= 0; counter--) {
+            printf("DEFVAR TF@arg%i\n", counter);
+            printf("POPS TF@arg%i\n", counter);
+        }
+
+        printf("CALL $%s\n", call_node.id_val);
     }
-
-    printf("CREATEFRAME\n");
-    for (int counter = arg_count - 1; counter >= 0; counter--) {
-        printf("DEFVAR TF@arg%i\n", counter);
-        printf("POPS TF@arg%i\n", counter);
-    }
-
-    printf("CALL $%s\n", call_node.id_val);
 }
 
 void generate_operation(ast_node_t *node, context_t *context) {
@@ -875,11 +878,11 @@ bool generate_builtin_call(ast_node_t *node) {
 
 void generate_IFJcode26(ast_node_t *root) {
     printf(".IFJcode26\n"); // Every code has to start with this notation
+    printf("DEFVAR GF@$builtin_return\n");
     printf("CREATEFRAME\n");
     printf("CALL $%s\n", find_main_function(root)); // Make sure interpret starts processing code at main
-    printf("DEFVAR GF@$builtin_return\n");
-    generate_builtin_subStr();
     printf("EXIT int@0\n");
+    generate_builtin_subStr();
 
     ast_node_t *node = root;
     context_t context = {0};
