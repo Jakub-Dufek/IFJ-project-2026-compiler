@@ -546,7 +546,7 @@ void generate_print(ast_node_t *node) {
             break;
 
         case EXPR_IDENTIFIER:
-            if (node->data->id_leaf_node.symbol_data.data_type == T_UNIT_LITERAL) {
+            if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_UNIT) {
                 printf("WRITE string@()\n");
             }
             else {
@@ -606,19 +606,19 @@ void generate_toStr(char *target_var, ast_node_t *node) {
     case EXPR_IDENTIFIER:
         unsigned id = node->data->id_leaf_node.symbol_data.unique_id;
         switch (node->data->id_leaf_node.symbol_data.data_type) {
-            case T_STRING_LITERAL:
+            case T_KEY_STRING:
                 printf("MOVE %s LF@var_%u\n", target_var, id);
                 break;
 
-            case T_INT_LITERAL:
+            case T_KEY_INT:
                 printf("INT2STR %s LF@var_%u\n", target_var, id);
                 break;
 
-            case T_DOUBLE_LITERAL:
+            case T_KEY_DOUBLE:
                 printf("FLOAT2STR %s LF@var_%u\n", target_var, id);
                 break;
 
-            case T_UNIT_LITERAL:
+            case T_KEY_UNIT:
                 printf("MOVE %s string@()\n", target_var);
                 break;
             
@@ -644,7 +644,7 @@ void generate_toInt(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
-        if (node->data->id_leaf_node.symbol_data.data_type == T_DOUBLE_LITERAL) {
+        if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_DOUBLE) {
             printf("FLOAT2INT %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
         }
         break;
@@ -667,7 +667,7 @@ void generate_strLength(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
-        if (node->data->id_leaf_node.symbol_data.data_type == T_STRING_LITERAL) {
+        if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_STRING) {
             printf("STRLEN %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
         }
         break;
@@ -787,7 +787,7 @@ void generate_chr(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
-        if (node->data->id_leaf_node.symbol_data.data_type == T_INT_LITERAL) {
+        if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_INT) {
             printf("INT2CHAR %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
         }
         break;
