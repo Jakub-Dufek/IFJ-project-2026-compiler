@@ -310,21 +310,24 @@ token_type function_return_type(char *id_val, context_t *context) {
 }
 
 void generate_call(ast_node_t *node, context_t *context) {
-    ast_call_node_t call_node = node->data->call_node;
-    int arg_count = 0;
+    // Check if the called function is not a built-in function
+    if (generate_builtin_call(node) == false) {
+        ast_call_node_t call_node = node->data->call_node;
+        int arg_count = 0;
 
-    for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
-        process_node(arg, context);
-        arg_count++;
+        for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
+            process_node(arg, context);
+            arg_count++;
+        }
+
+        printf("CREATEFRAME\n");
+        for (int counter = arg_count - 1; counter >= 0; counter--) {
+            printf("DEFVAR TF@arg%i\n", counter);
+            printf("POPS TF@arg%i\n", counter);
+        }
+
+        printf("CALL $%s\n", call_node.id_val);
     }
-
-    printf("CREATEFRAME\n");
-    for (int counter = arg_count - 1; counter >= 0; counter--) {
-        printf("DEFVAR TF@arg%i\n", counter);
-        printf("POPS TF@arg%i\n", counter);
-    }
-
-    printf("CALL $%s\n", call_node.id_val);
 }
 
 void generate_operation(ast_node_t *node, context_t *context) {
@@ -547,7 +550,7 @@ void generate_print(ast_node_t *node) {
             break;
 
         case EXPR_IDENTIFIER:
-            if (node->data->id_leaf_node.symbol_data.data_type == T_UNIT_LITERAL) {
+            if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_UNIT) {
                 printf("WRITE string@()\n");
             }
             else {
@@ -607,19 +610,19 @@ void generate_toStr(char *target_var, ast_node_t *node) {
     case EXPR_IDENTIFIER:
         unsigned id = node->data->id_leaf_node.symbol_data.unique_id;
         switch (node->data->id_leaf_node.symbol_data.data_type) {
-            case T_STRING_LITERAL:
+            case T_KEY_STRING:
                 printf("MOVE %s LF@var_%u\n", target_var, id);
                 break;
 
-            case T_INT_LITERAL:
+            case T_KEY_INT:
                 printf("INT2STR %s LF@var_%u\n", target_var, id);
                 break;
 
-            case T_DOUBLE_LITERAL:
+            case T_KEY_DOUBLE:
                 printf("FLOAT2STR %s LF@var_%u\n", target_var, id);
                 break;
 
-            case T_UNIT_LITERAL:
+            case T_KEY_UNIT:
                 printf("MOVE %s string@()\n", target_var);
                 break;
             
@@ -645,7 +648,7 @@ void generate_toInt(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
-        if (node->data->id_leaf_node.symbol_data.data_type == T_DOUBLE_LITERAL) {
+        if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_DOUBLE) {
             printf("FLOAT2INT %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
         }
         break;
@@ -668,7 +671,7 @@ void generate_strLength(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
-        if (node->data->id_leaf_node.symbol_data.data_type == T_STRING_LITERAL) {
+        if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_STRING) {
             printf("STRLEN %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
         }
         break;
@@ -787,7 +790,7 @@ void generate_chr(char *target_var, ast_node_t *node) {
         break;
 
     case EXPR_IDENTIFIER:
-        if (node->data->id_leaf_node.symbol_data.data_type == T_INT_LITERAL) {
+        if (node->data->id_leaf_node.symbol_data.data_type == T_KEY_INT) {
             printf("INT2CHAR %s LF@var_%u\n", target_var, node->data->id_leaf_node.symbol_data.unique_id);
         }
         break;
@@ -878,11 +881,11 @@ bool generate_builtin_call(ast_node_t *node) {
 
 void generate_IFJcode26(ast_node_t *root) {
     printf(".IFJcode26\n"); // Every code has to start with this notation
+    printf("DEFVAR GF@$builtin_return\n");
     printf("CREATEFRAME\n");
     printf("CALL $%s\n", find_main_function(root)); // Make sure interpret starts processing code at main
-    printf("DEFVAR GF@$builtin_return\n");
-    generate_builtin_subStr();
     printf("EXIT int@0\n");
+    generate_builtin_subStr();
 
     ast_node_t *node = root;
     context_t context = {0};
