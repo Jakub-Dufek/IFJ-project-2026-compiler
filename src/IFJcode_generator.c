@@ -16,7 +16,7 @@
 #include <string.h>
 
 
-void print_string_literal(char *string, bool flag) {
+void print_string_literal(char *string) {
     printf("string@");
     for (unsigned idx = 0; string[idx] != '\0'; idx++) {
         if (string[idx] <= 32 || string[idx] == '#' || string[idx] == '\\') {
@@ -26,7 +26,7 @@ void print_string_literal(char *string, bool flag) {
             putchar(string[idx]);
         }
     }
-    if (!flag) {putchar('\n');}
+    putchar('\n');
 }
 
 token_type find_operand_type (ast_node_t *node) {
@@ -426,7 +426,7 @@ void generate_literal(ast_node_t *node, context_t *context) {
     switch (node->data->lit_leaf_node.lit_type)
     {
     case T_STRING_LITERAL:
-        print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+        print_string_literal(node->data->lit_leaf_node.lit_value.string_value);
         //printf("string@%s\n", node->data->lit_leaf_node.lit_value.string_value);
         break;
     
@@ -521,7 +521,7 @@ void generate_print(ast_node_t *node) {
             switch(node->data->lit_leaf_node.lit_type) {
                 case T_STRING_LITERAL:
                     printf("WRITE ");
-                    print_string_literal(node->data->lit_leaf_node.lit_value.string_value, true);
+                    print_string_literal(node->data->lit_leaf_node.lit_value.string_value);
                     break;
 
                 case T_INT_LITERAL:
@@ -530,6 +530,10 @@ void generate_print(ast_node_t *node) {
 
                 case T_DOUBLE_LITERAL:
                     printf("WRITE float@%a\n", node->data->lit_leaf_node.lit_value.double_value);
+                    break;
+
+                case T_BOOLEAN_LITERAL:
+                    printf("WRITE bool@%d\n", node->data->lit_leaf_node.lit_value.int_value);
                     break;
 
                 case T_UNIT_LITERAL:
@@ -579,8 +583,8 @@ void generate_toStr(char *target_var, ast_node_t *node) {
     case EXPR_LITERAL:
         switch (node->data->lit_leaf_node.lit_type) {
             case T_STRING_LITERAL:
-                printf("MOVE %s string@", target_var);
-                print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+                printf("MOVE %s ", target_var);
+                print_string_literal(node->data->lit_leaf_node.lit_value.string_value);
                 break;
 
             case T_INT_LITERAL:
@@ -657,8 +661,8 @@ void generate_strLength(char *target_var, ast_node_t *node) {
     {
     case EXPR_LITERAL:
         if(node->data->lit_leaf_node.lit_type == T_STRING_LITERAL) {
-            printf("STRLEN %s string@", target_var);
-            print_string_literal(node->data->lit_leaf_node.lit_value.string_value, false);
+            printf("STRLEN %s ", target_var);
+            print_string_literal(node->data->lit_leaf_node.lit_value.string_value);
         }
         else {/*TODO ERROR*/}
         break;
@@ -683,7 +687,7 @@ void generate_subStr(ast_node_t *arg1, ast_node_t *arg2, ast_node_t *arg3) {
 
     if (arg1->stmt_type == EXPR_LITERAL) {
         printf("MOVE TF@str ");
-        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
+        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value);
     }
     else if (arg1->stmt_type == EXPR_IDENTIFIER) {
         printf("MOVE TF@str LF@var_%u\n", arg1->data->id_leaf_node.symbol_data.unique_id);
@@ -722,31 +726,31 @@ void generate_builtin_subStr() {
 
     //start<0 start: idx
     printf("LT LF@bool LF@idx int@0\n");
-    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    printf("JUMPIFEQ $subStr_error LF@bool bool@true\n");
     //end<0 end: end
     printf("LT LF@bool LF@end int@0\n");
-    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    printf("JUMPIFEQ $subStr_error LF@bool bool@true\n");
     //start>end
     printf("GT LF@bool LF@idx LF@end\n");
-    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    printf("JUMPIFEQ $subStr_error LF@bool bool@true\n");
     //start>=strLength(value)
     printf("LT LF@bool LF@idx LF@len\n");
     printf("NOT LF@bool LF@bool\n");
-    printf("JUMPIFEQ $error LF@bool bool@true\n");
+    printf("JUMPIFEQ $subStr_error LF@bool bool@true\n");
     //end>strLength(value)
     printf("GT LF@bool LF@end LF@len\n");
-    printf("JUMPIFEQ $error LF@bool bool@true\n");
-    printf("JUMP $loop\n");
+    printf("JUMPIFEQ $subStr_error LF@bool bool@true\n");
+    printf("JUMP $subStr_loop\n");
     
-    printf("LABEL $error\n");
+    printf("LABEL $subStr_error\n");
     printf("EXIT int@40\n");
 
-    printf("LABEL $loop\n");
+    printf("LABEL $subStr_loop\n");
     printf("JUMPIFEQ $subStr_end LF@idx LF@end\n");
     printf("GETCHAR LF@char LF@str LF@idx\n");
     printf("CONCAT LF@$return LF@$return LF@char\n");
     printf("ADD LF@idx LF@idx int@1\n");
-    printf("JUMP $loop\n");
+    printf("JUMP $subStr_loop\n");
     
     printf("LABEL $subStr_end\n");
     printf("POPFRAME\n");
@@ -757,8 +761,7 @@ void generate_ord(char *target_var, ast_node_t *arg1, ast_node_t *arg2) {
     printf("STRI2INT %s  ", target_var);
 
     if (arg1->stmt_type == EXPR_LITERAL) {
-        printf("string@");
-        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value, true);
+        print_string_literal(arg1->data->lit_leaf_node.lit_value.string_value);
         printf(" ");
     }
     else if (arg1->stmt_type == EXPR_IDENTIFIER) {

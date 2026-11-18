@@ -28,7 +28,7 @@ typedef struct Context {
  *
  * @param string String representing the literal for print
  */
-void print_string_literal(char *string, bool flag);
+void print_string_literal(char *string);
 
 /**
  * @brief Discoveres the type of inputed node
