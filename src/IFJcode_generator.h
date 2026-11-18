@@ -27,8 +27,9 @@ typedef struct Context {
  * @brief Prints string literal to stdout in IFJcode26 style
  *
  * @param string String representing the literal for print
+ * @param flag True if end of line should be written on the end, false otherwise
  */
-void print_string_literal(char *string);
+void print_string_literal(char *string, bool flag);
 
 /**
  * @brief Discoveres the type of inputed node
@@ -186,16 +187,18 @@ void generate_readLine(char *target_var);
  * @brief Implementation of built-in readInt(): Int function, reading an integer from standard input
  *
  * @param target_var Pointer to a string, containing destination variable name
+ * @param context Pointer to a structure that is managing label names (relevant for this function)
  */
-void generate_readInt(char *target_var);
+void generate_readInt(char *target_var, context_t *context);
 
 
 /**
  * @brief Implementation of built-in readDouble(): Double function, reading a double from standard input
  *
  * @param target_var Pointer to a string, containing destination variable name
+ * @param context Pointer to a structure that is managing label names (relevant for this function)
  */
-void generate_readDouble(char *target_var); 
+void generate_readDouble(char *target_var, context_t *context); 
 
 
 /**
@@ -283,10 +286,11 @@ char *find_main_function(ast_node_t *root);
  * @brief Identifies a builtin function call and generates its corresponding IFJcode26 instructions
  * 
  * @param node Pointer to the node strucutre containing the call node
+ * @param context Pointer to a structure that is managing label names (relevant for this function)
  * 
  * @return true if the builtin fuction was found and generated
  */
-bool generate_builtin_call(ast_node_t *node);
+bool generate_builtin_call(ast_node_t *node, context_t *context);
 
 /**
  * @brief Entry function for this module
