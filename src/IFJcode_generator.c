@@ -533,7 +533,7 @@ void generate_print(ast_node_t *node) {
                     break;
 
                 case T_UNIT_LITERAL:
-                    printf("WRITE string@\\032()\\032\n");
+                    printf("WRITE string@()\n");
                     break;
 
                 default:
@@ -544,7 +544,7 @@ void generate_print(ast_node_t *node) {
 
         case EXPR_IDENTIFIER:
             if (node->data->id_leaf_node.symbol_data.data_type == T_UNIT_LITERAL) {
-                printf("WRITE string@\\032()\\032\n");
+                printf("WRITE string@()\n");
             }
             else {
                 printf("WRITE LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
@@ -569,7 +569,7 @@ void generate_readDouble(char *target_var) {
     printf("READ %s float\n", target_var);
 }
 
-void generate_Boolean(char *target_var) {
+void generate_readBoolean(char *target_var) {
     printf("READ %s bool\n", target_var);
 }
 
@@ -592,7 +592,7 @@ void generate_toStr(char *target_var, ast_node_t *node) {
                 break;
 
             case T_UNIT_LITERAL:
-                printf("MOVE %s string@\\032()\\032\n", target_var);
+                printf("MOVE %s string@()\n", target_var);
                 break;
             
             default:
@@ -616,7 +616,7 @@ void generate_toStr(char *target_var, ast_node_t *node) {
                 break;
 
             case T_UNIT_LITERAL:
-                printf("MOVE %s string@\\032()\\032\n", target_var);
+                printf("MOVE %s string@()\n", target_var);
                 break;
             
             default:
@@ -675,11 +675,7 @@ void generate_strLength(char *target_var, ast_node_t *node) {
     }
 }
 
-void generate_subStr(ast_node_t *node) {
-    ast_node_t *arg1 = node->data->call_node.first_arg;
-    ast_node_t *arg2 = arg1->next;
-    ast_node_t *arg3 = arg2->next;
-
+void generate_subStr(ast_node_t *arg1, ast_node_t *arg2, ast_node_t *arg3) {
     printf("CREATEFRAME\n");
     printf("DEFVAR TF@str\n");
     printf("DEFVAR TF@idx\n");
@@ -757,10 +753,7 @@ void generate_builtin_subStr() {
     printf("RETURN\n");
 }
 
-void generate_ord(char *target_var, ast_node_t *node) {
-    ast_node_t *arg1 = node->data->call_node.first_arg;
-    ast_node_t *arg2 = arg1->next;
-
+void generate_ord(char *target_var, ast_node_t *arg1, ast_node_t *arg2) {
     printf("STRI2INT %s  ", target_var);
 
     if (arg1->stmt_type == EXPR_LITERAL) {
@@ -813,10 +806,79 @@ char *find_main_function(ast_node_t *root) {
     return NULL;
 }
 
+bool generate_builtin_call(ast_node_t *node) {
+    ast_call_node_t call_node = node->data->call_node;
+    char *function_name = call_node.id_val;
+    ast_node_t *arg1 = call_node.first_arg;
+
+    if (strcmp(function_name, "readLine") == 0) {
+        generate_readLine("GF@$builtin_return");
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    else if (strcmp(function_name, "readInt") == 0) {
+        generate_readInt("GF@$builtin_return");
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    else if (strcmp(function_name, "readDouble") == 0) {
+        generate_readDouble("GF@$builtin_return");
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    else if (strcmp(function_name, "readBoolean") == 0) {
+        generate_readBoolean("GF@$builtin_return");
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+
+    else if (strcmp(function_name, "print") == 0) {
+        generate_print(arg1);
+        return true;
+    }
+    else if (strcmp(function_name, "toStr") == 0) {
+        generate_toStr("GF@$builtin_return", arg1);
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    else if (strcmp(function_name, "toInt") == 0) {
+        generate_toInt("GF@$builtin_return", arg1);
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    else if (strcmp(function_name, "strLength") == 0) {
+        generate_strLength("GF@$builtin_return", arg1);
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    else if (strcmp(function_name, "chr") == 0) {
+        generate_chr("GF@$builtin_return", arg1);
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+    
+    else if (strcmp(function_name, "ord") == 0) {
+        ast_node_t *arg2 = arg1->next;
+        generate_ord("GF@$builtin_return", arg1, arg2);
+        printf("PUSHS GF@$builtin_return\n");
+        return true;
+    }
+
+    else if (strcmp(function_name, "subStr") == 0) {
+        ast_node_t *arg2 = arg1->next;
+        ast_node_t *arg3 = arg2->next;
+        generate_subStr(arg1, arg2, arg3);
+        return true;
+    }
+    return false;
+}
+
 void generate_IFJcode26(ast_node_t *root) {
     printf(".IFJcode26\n"); // Every code has to start with this notation
     printf("CREATEFRAME\n");
     printf("CALL $%s\n", find_main_function(root)); // Make sure interpret starts processing code at main
+    printf("DEFVAR GF@$builtin_return\n");
+    generate_builtin_subStr();
     printf("EXIT int@0\n");
 
     ast_node_t *node = root;
