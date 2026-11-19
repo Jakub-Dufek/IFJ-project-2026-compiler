@@ -128,6 +128,19 @@ ast_node_t *ast_insert_if(ast_node_t *condition, unsigned line_num, ast_node_t *
 }
 
 
+ast_node_t *ast_insert_elsif(ast_node_t *orig_if, unsigned line_num, ast_node_t *elsif_stmt)
+{
+    ast_node_t *current_node = ast_node_init(AST_BLOCK, line_num);
+
+    current_node->data->block_node.first = elsif_stmt;
+    current_node->data->block_node.last = elsif_stmt;
+
+    orig_if->data->if_node.else_body = current_node;
+
+    return orig_if;
+}
+
+
 ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_t *body)
 {
     ast_node_t *current_node = ast_node_init(AST_WHILE, line_num);

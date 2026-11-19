@@ -111,12 +111,12 @@ typedef struct {
 
 /**
  * @struct ast_if_node_t
- * @brief Node for if then stmt
+ * @brief Node for if then stmt, elsif = else_body->next(if)
  */
 typedef struct {
     ast_node_t *condition;  // expr (op or leaf(id/lit))
     ast_node_t *then_body;  // block
-    ast_node_t *else_body;  // block
+    ast_node_t *else_body;  // block, NULL if elseless
 } ast_if_node_t;
 
 /**
@@ -332,6 +332,17 @@ ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_
  * @return AST node representing 'if then else' stmt
  */
 ast_node_t *ast_insert_if(ast_node_t *condition, unsigned line_num, ast_node_t *then_body, ast_node_t *else_body);
+
+/**
+ * @brief Creates and inserts AST for 'else if' stmt into ->next of original 'if' stmt
+ * 
+ * @param orig_if a sub-AST of original 'if' stmt
+ * @param line_num (of elsif stmt)
+ * @param elsif_stmt a sub-AST of 'if' stmt as part of 'else if' branch
+ * 
+ * @return AST node representing entire 'if then else if then [...] else' stmt
+ */
+ast_node_t *ast_insert_elsif(ast_node_t *orig_if, unsigned line_num, ast_node_t *elsif_stmt);
 
 /**
  * @brief Creates AST for return

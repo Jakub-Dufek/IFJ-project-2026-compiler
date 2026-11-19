@@ -134,6 +134,20 @@ static ast_node_t *parse_expr_call_or_assign(token_t id_token)
     }
 }
 
+/**
+ * @brief Parses next 'if' in an 'if else if' stmt, call after recieving 'if', second-degree recursion
+ * 
+ * @param orig_if AST of original 'if' in which's 'else' body an 'else if' to be inserted 
+ * 
+ * @return Block AST consisting of only one stmt (the if) to be used as else block for first if
+ */
+static ast_node_t *parse_elsif(ast_node_t *orig_if)
+{
+    ast_node_t *insertee = parse_if();
+
+    return ast_insert_elsif(orig_if, insertee->line_num, insertee);
+}
+
 
 
 //  DISCRETE PARSERS
@@ -424,21 +438,29 @@ ast_node_t *parse_if()
 
     // body
     ast_node_t *then_body = parse_block();
+    ast_node_t *else_body = NULL;
 
-    // else
+    // [else]
     current_token = get_next_token();
-    if(current_token.type != T_KEY_ELSE) {
-        error_exit(SYNT_ERR, current_token.line_num, "Expected 'else' after 'if then' block");
-    }
+    if(current_token.type == T_KEY_ELSE) {
+        // [if]
+        current_token = get_next_token();
+        if(current_token.type == T_KEY_IF) {
+            ast_node_t *orig_if = ast_insert_if(condition, line_num, then_body, NULL);
+            return parse_elsif(orig_if);
+        }
 
-    // newline
-    current_token = get_next_token();
-    if(current_token.type != T_LF) {
-        error_exit(SYNT_ERR, current_token.line_num, "Expected newline after 'else'");
-    }
+        // newline
+        if(current_token.type != T_LF) {
+            error_exit(SYNT_ERR, current_token.line_num, "Expected newline or 'if' after 'else'");
+        } 
 
-    // block
-    ast_node_t *else_body = parse_block();
+        // block
+        else_body = parse_block();
+    }
+    else {
+        return_buffer_token(current_token);
+    }
 
     return ast_insert_if(condition, line_num, then_body, else_body);
 }
