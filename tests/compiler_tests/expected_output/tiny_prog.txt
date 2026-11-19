@@ -1,7 +1,40 @@
 .IFJcode26
+DEFVAR GF@$builtin_return
 CREATEFRAME
 CALL $main
 EXIT int@0
+
+LABEL $builtin_subStr_begin
+PUSHFRAME
+DEFVAR LF@len
+DEFVAR LF@bool
+DEFVAR LF@char
+DEFVAR LF@$return
+STRLEN LF@len LF@str
+MOVE LF@$return string@
+LT LF@bool LF@idx int@0
+JUMPIFEQ $subStr_error LF@bool bool@true
+LT LF@bool LF@end int@0
+JUMPIFEQ $subStr_error LF@bool bool@true
+GT LF@bool LF@idx LF@end
+JUMPIFEQ $subStr_error LF@bool bool@true
+LT LF@bool LF@idx LF@len
+NOT LF@bool LF@bool
+JUMPIFEQ $subStr_error LF@bool bool@true
+GT LF@bool LF@end LF@len
+JUMPIFEQ $subStr_error LF@bool bool@true
+JUMP $subStr_loop
+LABEL $subStr_error
+EXIT int@40
+LABEL $subStr_loop
+JUMPIFEQ $subStr_end LF@idx LF@end
+GETCHAR LF@char LF@str LF@idx
+CONCAT LF@$return LF@$return LF@char
+ADD LF@idx LF@idx int@1
+JUMP $subStr_loop
+LABEL $subStr_end
+POPFRAME
+RETURN
 LABEL $main
 PUSHFRAME
 DEFVAR LF@discard_top_stack
