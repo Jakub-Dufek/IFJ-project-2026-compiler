@@ -6,6 +6,7 @@
 # Build
 build/
 doc_build/
+compiler
 
 # Test outputs
 tests/test_logs/

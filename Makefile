@@ -25,10 +25,15 @@ OBJS = $(patsubst src/%.c, build/%.o, $(SRCS))
 
 
 #		MAIN COMMANDS
+default: build/compiler
+	mv build/compiler ./compiler
+	rm -rf build/
+
 all: build/compiler
 
 clean:
 	rm -rf build/
+	rm -rf compiler
 	rm -rf tests/test_logs/
 
 help:
