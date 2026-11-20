@@ -5,7 +5,7 @@
  * @brief Code generator library file
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 25.10.2026
+ * @date 20.11.2026
  *
  * @details This file contains definitions of functions used in IFJcode_generator.c
  */

@@ -5,7 +5,7 @@
  * @brief FSM for scanner
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 27.09.2026
+ * @date 18.11.2026
  *
  * @details This file contains finite state machine representing the functions of a scanner
  */

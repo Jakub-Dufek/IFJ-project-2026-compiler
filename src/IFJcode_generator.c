@@ -5,9 +5,9 @@
  * @brief FSM for code generator
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 25.10.2026
+ * @date 20.11.2026
  *
- * @details This file contains finite state machine representing the functions of a IFJcode26 generator
+ * @details This module generates IFJcode26 instructions from an abstract syntax tree
  */
 
 #include "IFJcode_generator.h"

@@ -5,9 +5,9 @@
  * @brief Library file containing structures
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 27.09.2026
+ * @date 8.11.2026
  *
- * @details This file contains definitions of structures
+ * @details This library contains definitions of the token structure and its parameters
  */
 
 #ifndef STRUCTURES_H
