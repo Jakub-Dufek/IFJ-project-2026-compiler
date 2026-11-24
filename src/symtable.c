@@ -146,6 +146,11 @@ void symtable_destructor(symtable_bvs_node_t *root_ptr){ //Postorder
     if (root_ptr->r_ptr != NULL){
         symtable_destructor(root_ptr->r_ptr);
     }
+
+    if (root_ptr->symbol_data.id_type == ID_FUNC && root_ptr->symbol_data.func_info.param_types != NULL ){
+        param_type_list_destructor(root_ptr->symbol_data.func_info.param_types);
+        root_ptr->symbol_data.func_info.param_types = NULL;
+    }
     free(root_ptr);
 }
 
@@ -195,14 +200,14 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key){
     }
     return NULL;
 }
-
+// save nodes in unreversed order //new instance in list
 
 // LINKED LIST
 
 param_type_list_t *param_type_list_initialize(void) {
-    param_type_list_t *l = arena_alloc(sizeof(param_type_list_t));
+    param_type_list_t *l = (param_type_list_t*)malloc(sizeof(param_type_list_t));
     if (l == NULL) {
-        error_exit(INTERNAL_ERR, 0, "Internal allocation fault");
+        error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault");
     }
     l->first = NULL;
     l->last = NULL;
@@ -211,7 +216,7 @@ param_type_list_t *param_type_list_initialize(void) {
 
 void param_type_list_insert(param_type_list_t *l, data_type type){
     if (l != NULL){
-        param_type_t *new_param_type = arena_alloc(sizeof(param_type_t)); //new instance in list
+        param_type_t *new_param_type = (param_type_t*)malloc(sizeof(param_type_t)); 
         if (new_param_type == NULL){
             error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a parameter type");
         }
@@ -223,9 +228,24 @@ void param_type_list_insert(param_type_list_t *l, data_type type){
             l->first = new_param_type;
             l->last = new_param_type;
         }
-        else { // save nodes in unreversed order
+        else { 
             l->last->next_ptr = new_param_type;
             l->last = new_param_type;
         }
     }
+}
+
+void param_type_list_destructor(param_type_list_t *l) {
+    if (l == NULL) {
+        return;
+    }
+
+    param_type_t *current = l->first;
+    while (current != NULL) {
+        param_type_t *next = current->next_ptr;
+        free(current);
+        current = next;
+    }
+
+    free(l);
 }

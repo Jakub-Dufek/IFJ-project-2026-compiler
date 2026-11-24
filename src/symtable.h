@@ -68,7 +68,6 @@ typedef struct param_type_list {
  * @brief Information about a function.
  */
 typedef struct {
-    unsigned param_num;
     param_type_list_t *param_types;
     bool is_defined;
     bool is_main;
@@ -250,6 +249,11 @@ param_type_list_t *param_type_list_initialize(void);
  */
 void param_type_list_insert(param_type_list_t *l, data_type type);
 
-
+/**
+ * @brief Frees the parameter list and its nodes
+ * 
+ * @param l    Pointer to the parameter type list structure.
+ */
+void param_type_list_destructor(param_type_list_t *l);
 
 #endif

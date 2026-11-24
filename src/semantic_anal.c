@@ -42,7 +42,6 @@ void print_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_UNIT;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 1;
     param_type_list_insert(params, T_ANY_TYPE);
     symbol.func_info.param_types = params;
 
@@ -56,7 +55,6 @@ void readline_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_STRING;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
     stack->top->symtable = symtable_insert(stack->top->symtable, "readLine", symbol);
@@ -69,7 +67,6 @@ void readint_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_INT;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
     stack->top->symtable = symtable_insert(stack->top->symtable, "readInt", symbol);
@@ -82,7 +79,6 @@ void readdouble_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_DOUBLE;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
     stack->top->symtable = symtable_insert(stack->top->symtable, "readDouble", symbol);
@@ -95,7 +91,6 @@ void tostr_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_STRING;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 1;
     param_type_list_insert(params, T_ANY_TYPE);
     symbol.func_info.param_types = params;
 
@@ -109,7 +104,6 @@ void toint_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_INT;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 1;
     param_type_list_insert(params, T_KEY_DOUBLE);
     symbol.func_info.param_types = params;
 
@@ -123,7 +117,6 @@ void strlength_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_INT;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 1;
     param_type_list_insert(params, T_KEY_STRING);
     symbol.func_info.param_types = params;
 
@@ -137,7 +130,6 @@ void substr_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_STRING;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 3;
     param_type_list_insert(params, T_KEY_STRING);
     param_type_list_insert(params, T_KEY_INT);
     param_type_list_insert(params, T_KEY_INT);
@@ -153,7 +145,6 @@ void ord_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_INT;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 2;
     param_type_list_insert(params, T_KEY_STRING);
     param_type_list_insert(params, T_KEY_INT);
     symbol.func_info.param_types = params;
@@ -168,7 +159,6 @@ void chr_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_STRING;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 1;
     param_type_list_insert(params, T_KEY_INT);
     symbol.func_info.param_types = params;
 
@@ -182,7 +172,6 @@ void readboolean_insertion(symtable_stack_t *stack){
     symbol.data_type = T_KEY_BOOLEAN;
     symbol.func_info.is_defined = true; 
     symbol.func_info.is_main = false;
-    symbol.func_info.param_num = 0;
     symbol.func_info.param_types = params;
 
     stack->top->symtable = symtable_insert(stack->top->symtable, "readBoolean", symbol);
@@ -202,7 +191,7 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
             error_exit(SEM_OTHER_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: '_' cannot be used as a function name");
         }
 
-        // Many checks for main 
+        // Checks for @main 
         if (ast_node->data->definition_node.is_main == true){
             if (main_found == true){
                 error_exit(SEM_REDEF_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Multiple @main functions are not allowed!");
@@ -221,17 +210,14 @@ void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack){
         symbol_data_t new_symbol = {0};
         new_symbol.data_type = ast_node->data->definition_node.data_type;
         new_symbol.id_type = ID_FUNC;
-        param_type_list_t *param_type_list = param_type_list_initialize(); // This is allocated in arena
-        unsigned param_counter = 0;
+        param_type_list_t *param_type_list = param_type_list_initialize(); // expected parameter types list
         ast_node_t *parameter = ast_node->data->definition_node.first_param;
         while (parameter != NULL){
             param_type_list_insert(param_type_list, parameter->data->param_node.data_type);
-            param_counter++;
             parameter = parameter->next;
         }
         new_symbol.func_info.is_defined = true;
         new_symbol.func_info.param_types = param_type_list;
-        new_symbol.func_info.param_num = param_counter;
         new_symbol.func_info.is_main = ast_node->data->definition_node.is_main;
         stack->top->symtable = symtable_insert(stack->top->symtable, ast_node->data->definition_node.id_val, new_symbol);
 
@@ -405,7 +391,6 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
 
     ast_node_t *curr_arg = ast_node->data->call_node.first_arg;
     param_type_t *expected_param = func_symbol->symbol_data.func_info.param_types->first;  
-    unsigned func_param_counter = 0;
 
     while(curr_arg != NULL && expected_param != NULL){ //Check types and count of all parameters
 
@@ -423,9 +408,8 @@ static data_type sem_check_call(ast_node_t *ast_node, symtable_stack_t *stack) {
         }
         curr_arg = curr_arg->next;
         expected_param = expected_param->next_ptr;
-        func_param_counter++;
     }
-    if (func_param_counter != func_symbol->symbol_data.func_info.param_num){ //Check if number of parameters matches
+    if (curr_arg != NULL || expected_param != NULL){ //Check if number of parameters matches
         error_exit(SEM_ARG_ERR, ast_node->line_num, "SEMANTIC ANALYSIS: Number of parameters doesn't match!");
     }
     return func_symbol->symbol_data.data_type;
