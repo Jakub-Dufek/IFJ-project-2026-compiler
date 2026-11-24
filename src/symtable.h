@@ -68,7 +68,7 @@ typedef struct param_type_list {
  * @brief Information about a function.
  */
 typedef struct {
-    param_type_list_t *param_types;
+    param_type_list_t param_types;
     bool is_defined;
     bool is_main;
 } func_info_t;
@@ -239,7 +239,7 @@ symtable_bvs_node_t *symtable_stack_search(symtable_stack_t *stack, char *key);
 /**
  * @brief Initialization of the parameter list.
  */
-param_type_list_t *param_type_list_initialize(void);
+void param_type_list_initialize(param_type_list_t *l);
 
 /**
  * @brief Appends a new parameter data type to the end of the list (unreversed list).
