@@ -10,10 +10,6 @@
 *stack structure storing individual symbol tables, also function parameter type list structure
 */
 
-//TODO : 
-//       .clang-format,
-//      dát id_type do structures.h?
-//      error_exit("PARSER: chybova hlaska")
 #include "symtable.h"
 
 
@@ -79,7 +75,7 @@ symtable_bvs_node_t *symtable_find_symbol(symtable_bvs_node_t *root_ptr, char *k
 symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb){
     symtable_bvs_node_t *new_node = (symtable_bvs_node_t *) malloc(sizeof(symtable_bvs_node_t));
     if (new_node == NULL){
-        error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a symtable node"); 
+        error_exit(INTERNAL_ERR, 0, "Internal allocation fault of a symtable node"); 
     }
     //pass information to new node
     new_node->key = key;
@@ -104,7 +100,7 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *root_ptr, char *key, s
                 root_ptr->r_ptr = symtable_insert(root_ptr->r_ptr, key, symb);
             }
             else{// Symbol alredy there
-                error_exit(SEM_REDEF_ERR, 0, "SYMTABLE: Redefinition of a symbol");
+                error_exit(SEM_REDEF_ERR, 0, "Redefinition of a symbol");
             }
         }
 
@@ -163,7 +159,7 @@ void symtable_stack_initialize(symtable_stack_t *stack){
 void symtable_stack_push(symtable_stack_t *stack){
     symtable_instance_t *new_instance = malloc(sizeof(symtable_instance_t));
     if (new_instance == NULL){
-        error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a symtable instance");
+        error_exit(INTERNAL_ERR, 0, "Internal allocation fault of a symtable instance");
     }
     new_instance->symtable = symtable_initialize();
     new_instance->next = stack->top;
@@ -214,7 +210,7 @@ void param_type_list_insert(param_type_list_t *l, data_type type){
     if (l != NULL){
         param_type_t *new_param_type = (param_type_t*)malloc(sizeof(param_type_t)); //new node in list
         if (new_param_type == NULL){
-            error_exit(INTERNAL_ERR, 0, "SYMTABLE: Internal allocation fault of a parameter type");
+            error_exit(INTERNAL_ERR, 0, "Internal allocation fault of a parameter type");
         }
         
         new_param_type->type = type;

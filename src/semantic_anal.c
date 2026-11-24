@@ -9,8 +9,6 @@
  * @details this file contains implementation of the semantic analyzer of the compiler
  */
 
-//TODO: 
-//       .clang-format,
 
 #include "semantic_anal.h"
 
