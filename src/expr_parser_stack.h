@@ -3,6 +3,8 @@
  * @internal Part of IFJ-project-2026-compiler, Team 274855
  *
  * @brief Header file for expression parser stack
+ * @note Implementation of (stack_push, stack_pop, top and empty) 
+ *       is based on the 3rd lecture of the IAL course (Abstraktní datové typy II.), FIT BUT
  * @author Samuel Vít Lehotský (xlehots00)
  * @date 18. 10. 2026
  */

@@ -442,10 +442,17 @@ token_t first_digit(int character, token_t token, scanner_case current_case)
     bool d_suffix = false;
     bool zero = (current_case == CASE_INT_LITERAL && character == '0');
     int last_character = 0;
+    int next_character = 0;
     do {
         if(character == '_') {
-            last_character = character;
-            continue;
+            if(isdigit(last_character) && isdigit((next_character = getchar()))) {
+                last_character = character;
+                ungetc(next_character, stdin);
+                continue;
+            }
+            else {
+                error_exit(LEX_ERR, current_line_num, "Underscore can only be used between two digits");
+            }
         }
 
         switch(current_case) {
