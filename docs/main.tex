@@ -2,6 +2,8 @@
 \usepackage{babel}
 \usepackage{graphicx} % Required for inserting images
 \usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage[paper=portrait,pagesize]{typearea}
 
 \graphicspath{{images/}}
 
@@ -46,10 +48,11 @@ Dokumentácia k prekladaču jazyka IFJ26}
     \newpage
 
     \input{body}\newpage
+    \KOMAoptions{paper=landscape,pagesize}
     \input{blockdiagram}\newpage
     \input{lexdiagram}\newpage
+    \KOMAoptions{paper=portrait,pagesize}
     \input{modules}\newpage
-    \input{extensions.tex}\newpage
     \input{sources}\newpage
     
 \end{document}

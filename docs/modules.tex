@@ -1,1 +1,65 @@
 \section{Moduly}
+
+\vspace{1.5em}
+{ \large \raggedright
+\begin{itemize}
+    \item \verb|scanner.c / scanner.h|
+    \begin{itemize}
+        \item Modul, reprezentující lexikální analyzátor implementovaný pomocí konečného automatu. Modul se používá zavoláním jeho vstupní funkce \verb|get_token()|, která přečte jeden lexém ze vstupu, vytvoří z něj token a tento token vrátí.
+    \end{itemize}
+    \item \verb|parser.c /parser.h|
+    \item \verb|ast.c / ast.h|
+    \item \verb|expr_parser.c / expr_parser.h| 
+    \begin{itemize}
+        \item Modul, ktorý využíva syntaktická analýza na spracovávanie výrazov. Základom modulu je precedenčná tabuľka, na základe ktorej sa volí operácia spracovania a to podľa tokenu na vrchu zásobníka a nasledujúceho tokenu.
+    \end{itemize}
+    \item \verb|expr_parser_stack.c / expr_parser_stack.h|
+    \begin{itemize}
+        \item Pomocný modul k modulu expression parser, obsahujúci funkcie implementujúce zásobník, využívaný na uchovávanie tokenov a (ne)terminálov práve spracovávaného výrazu.
+        \item Implementácia základných operácií (\verb|stack_push|, \verb|stack_pop|, \verb|top|, \verb|empty|) zásobníka (\verb|tstack|) vychádzá z algoritmov uvedených v 3. prednáške predmetu IAL [1, slajdy 14-16]
+    \end{itemize}
+    \item \verb|memory.c / memory.h|
+    \item \verb|semantic_anal.c / semantic_anal.h|
+    \begin{itemize}
+        \item Tento modul provádí sémantickou analýzu, tedy kontroluje a obohacuje výstup syntaktické analýzy za využití tabulky symbolů.
+    \end{itemize}
+    \newpage
+    \item \verb|symtable.c / symtable.h|
+    \begin{itemize}
+        \item Tento modul obsahuje implementaci tabulky symbolů pomocí AVL stromu, seznamu typů parametrů, a zásobníku tabulek symbolů. 
+        \item Implementácia štruktúry zásobníka (\verb|symtable_stack_t|) a jeho základných operácií (\verb|symtable_stack_initialize|, \verb|symtable_stack_push|, \verb|symtable_stack_pop|, \verb|symtable_stack_is_empty|) vychádzá z algoritmov uvedených v 3. prednáške predmetu IAL [1, slajdy 14-16]
+        \item Implementácia funkcií výškovo vyváženého stromu (\verb|bvs_max|, \verb|bvs_height|) vychádzá z algoritmov uvedených v 4. prednáške predmetu IAL [2, slajd 27]
+        \item Implementácia funkcií výškovo vyváženého stromu (\verb|symtable_find_symbol|, \verb|symtable_create_node|, \verb|symtable_insert|, \verb|symtable_right_rotate|, \verb|symtable_left_rotate|) vychádzá z algoritmov uvedených v 5. prednáške predmetu IAL [3, slajdy 18, 22, 23, 51]
+    \end{itemize}
+    \item \verb|IFJcode_generator.c / IFJcode_generator.h|
+    \begin{itemize}
+        \item Modul, který rekurzivně zpracovává obsah abstraktního syntaktického stromu, na jehož základě na standardní výstup vypisuje jeho interpretaci pomocí jazyka IFJcode26.
+    \end{itemize}
+    \item \verb|error.c / error.h|
+    \item \verb|structers.h|
+    \begin{itemize}
+        \item Knihovna obsahující definici struktury \verb|token_t| a hodnot specifické pro token. Struktura \verb|token_t| slouží jako reprezentace jednoho tokenu, který vyrábí scanner a využívá parser.
+    \end{itemize}
+\end{itemize}
+
+%Generated from code in expr_parser.c by Google Gemini 4 Neon
+%Promt: Prepíš mi túto tabuľku do LaTeXu (bez komentárov)
+\newpage
+\noindent\textbf{Precedenčná tabuľka:}\\
+\vspace{0.75em}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ & \texttt{+-} & \texttt{*/} & \texttt{\&\&} & \texttt{||} & \texttt{<><=>=} & \texttt{==!=} & \texttt{(} & \texttt{)} & \texttt{-i!i} & \texttt{i} & \texttt{\$} \\ \hline
+\texttt{+-}     & $>$ & $<$ & $>$ & $>$ & $>$ & $>$ & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{*/}     & $>$ & $>$ & $>$ & $>$ & $>$ & $>$ & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{\&\&}   & $<$ & $<$ & $>$ & $>$ & $<$ & $<$ & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{||}     & $<$ & $<$ & $<$ & $>$ & $<$ & $<$ & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{<><=>=} & $<$ & $<$ & $>$ & $>$ &     & $>$ & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{==!=}   & $<$ & $<$ & $>$ & $>$ & $<$ &     & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{(}      & $<$ & $<$ & $<$ & $<$ & $<$ & $<$ & $<$ & $=$ & $<$ & $<$ &     \\ \hline
+\texttt{)}      & $>$ & $>$ & $>$ & $>$ & $>$ & $>$ &     & $>$ &     &     & $>$ \\ \hline
+\texttt{-i!i}   & $>$ & $>$ & $>$ & $>$ & $>$ & $>$ & $<$ & $>$ & $<$ & $<$ & $>$ \\ \hline
+\texttt{i}      & $>$ & $>$ & $>$ & $>$ & $>$ & $>$ &     & $>$ &     &     & $>$ \\ \hline
+\texttt{\$}     & $<$ & $<$ & $<$ & $<$ & $<$ & $<$ & $<$ &     & $<$ & $<$ &     \\ \hline
+\end{tabular}
+}
