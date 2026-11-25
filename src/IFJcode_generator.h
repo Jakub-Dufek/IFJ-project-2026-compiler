@@ -129,12 +129,29 @@ bool is_expression (ast_node_t *node, context_t *context);
 token_type function_return_type(char *id_val, context_t *context);
 
 /**
+ * @brief Compares inputed name with builtin functions names
+ * 
+ * @param function_name String that is going to be compared to the builtin functions names
+ * 
+ * @return True if it matches a builtin function name, false otherwise
+ */
+bool is_builtin_function (char *function_name);
+
+/**
  * @brief Generates IFJcode26 for the function call
  * 
  * @param node Pointer to the node strucutre containing the call node
  * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
 void generate_call(ast_node_t *node, context_t *context);
+
+/**
+ * @brief Generates IFJcode26 for two operands
+ * 
+ * @param node Pointer to a operation node strucutre containing pointers to the operands
+ * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
+ */
+void generate_operands(expr_op_node_t op_node, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for an aritmetical operation
@@ -145,7 +162,10 @@ void generate_call(ast_node_t *node, context_t *context);
 void generate_operation(ast_node_t *node, context_t *context);
 
 /**
- * TODO
+ * @brief Generates IFJcode26 for an identifier
+ *
+ * @param node Pointer to a node that stores the identifier
+ * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
 void generate_identifier(ast_node_t *node, context_t *context);
 

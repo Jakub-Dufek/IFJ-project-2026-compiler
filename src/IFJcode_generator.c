@@ -236,6 +236,10 @@ void generate_function(ast_node_t *node, context_t *context) {
 
     // Define all local variables at the start of the function
     printf("DEFVAR LF@discard_top_stack\n");
+    // Define variables for concatenation
+    printf("DEFVAR LF@left_concat\n");
+    printf("DEFVAR LF@right_concat\n");
+    printf("DEFVAR LF@result_concat\n");
     generate_definitions_in_function(def_node.body);
 
     // Handle body
@@ -293,7 +297,8 @@ bool is_expression (ast_node_t *node, context_t *context) {
     }
     else if (node->stmt_type == EXPR_OPERATION || node->stmt_type == EXPR_LITERAL || 
         node->stmt_type == EXPR_IDENTIFIER || node->stmt_type == EXPR_INT2FLOAT || 
-        node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) {
+        node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED || 
+        node->stmt_type == AST_CALL && is_builtin_function(node->data->call_node.id_val) == true) {
         return true;
     }
     
@@ -307,6 +312,19 @@ token_type function_return_type(char *id_val, context_t *context) {
         }
     }
     return T_UNDEFINED;
+}
+
+bool is_builtin_function (char *function_name) {
+    if(!(strcmp("print", function_name) && strcmp("readLine", function_name) &&
+    strcmp("readInt", function_name) && strcmp("readDouble", function_name) &&
+    strcmp("toStr", function_name) && strcmp("toInt", function_name) &&
+    strcmp("strLength", function_name) && strcmp("subStr", function_name) &&
+    strcmp("ord", function_name) && strcmp("chr", function_name) && 
+    strcmp("readBoolean", function_name))) {
+        return true;
+    }
+
+    return false;
 }
 
 void generate_call(ast_node_t *node, context_t *context) {
@@ -330,9 +348,53 @@ void generate_call(ast_node_t *node, context_t *context) {
     }
 }
 
+void generate_operands(expr_op_node_t op_node, context_t *context) {
+    // Process left subnode
+    process_node(op_node.left, context);
+
+    int current_label_idx;
+    if (op_node.op_type == T_AND || op_node.op_type == T_OR) {
+        current_label_idx = context->label_idx++;
+        if (op_node.op_type == T_AND) {
+            printf("PUSHS bool@false\n");
+        }
+        else if (op_node.op_type == T_OR) {
+            printf("PUSHS bool@true\n");
+        }
+        printf("JUMPIFEQS $bool_jumped_%u\n", current_label_idx);
+    }
+
+    // Process rigt subnode
+    process_node(op_node.right, context);
+
+    if (op_node.op_type == T_AND || op_node.op_type == T_OR) {
+        if (op_node.op_type == T_AND) {
+            printf("PUSHS bool@true\n");
+            printf("ANDS\n");
+        }
+        else if (op_node.op_type == T_OR) {
+            printf("PUSHS bool@false\n");
+            printf("ORS\n");
+        }
+
+        printf("JUMP $bool_end_%u\n", current_label_idx);
+        printf("LABEL $bool_jumped_%u\n", current_label_idx);
+
+        if (op_node.op_type == T_AND) {
+            printf("PUSHS bool@false\n");
+        }
+        else if (op_node.op_type == T_OR) {
+            printf("PUSHS bool@true\n");
+        }
+
+        printf("LABEL $bool_end_%u\n", current_label_idx);
+    }
+}
+
 void generate_operation(ast_node_t *node, context_t *context) {
+    expr_op_node_t op_node = node->data->op_node;
     // Special handling for unary minus, because all other operations are binary
-    if (node->data->op_node.op_type == EP_UNARY_MINUS) {
+    if (op_node.op_type == EP_UNARY_MINUS) {
         // Push a zero on the stack
         if (find_operand_type(node) == T_KEY_INT) {
             printf("PUSHS int@0\n");
@@ -341,35 +403,31 @@ void generate_operation(ast_node_t *node, context_t *context) {
             printf("PUSHS float@0x0p+0\n");
         }
 
-        process_node(node->data->op_node.right, context);
+        process_node(op_node.right, context);
         printf("SUBS\n");
         return;
     } 
-    else if (node->data->op_node.op_type == EP_UNARY_NEG) {
-        process_node(node->data->op_node.right, context);
+    else if (op_node.op_type == EP_UNARY_NEG) {
+        process_node(op_node.right, context);
         printf("NOTS\n");
         return;
     }
 
-    process_node(node->data->op_node.left, context);
-    process_node(node->data->op_node.right, context);
+    generate_operands(op_node, context);
 
     //Print the type of the operation
-    switch (node->data->op_node.op_type)
+    switch (op_node.op_type)
     {
     case T_PLUS:
-        if (find_operand_type(node->data->op_node.left) == T_KEY_STRING &&
-            find_operand_type(node->data->op_node.right) == T_KEY_STRING) {
-            printf("DEFVAR LF@left_%u", ++context->label_idx);
-            printf("DEFVAR LF@right_%u", context->label_idx);
-            printf("POPS LF@right_%u", context->label_idx);
-            printf("POPS LF@left_%u", context->label_idx);
-            printf("DEFVAR LF@result_%u", context->label_idx);
-            printf("CONCAT LF@result_%u LF@left_%u LF@right_%u", context->label_idx, context->label_idx, context->label_idx);
-            printf("PUSHS LF@result_%u", context->label_idx++);
+        // Concatenation
+        if (find_operand_type(op_node.left) == T_KEY_STRING &&
+            find_operand_type(op_node.right) == T_KEY_STRING) {
+            printf("POPS LF@right_concat\n", context->label_idx);
+            printf("POPS LF@left_concat\n", context->label_idx);
+            printf("CONCAT LF@result_concat LF@left_concat LF@right_concat\n", context->label_idx, context->label_idx, context->label_idx);
+            printf("PUSHS LF@result_concat\n", context->label_idx++);
         }
         else { printf("ADDS\n"); }
-        // #TODO dodělat konkatenaci, můžu použít find_operand_type()
         break;
 
     case T_MINUS:
@@ -378,16 +436,13 @@ void generate_operation(ast_node_t *node, context_t *context) {
 
     case T_DIV:
         //Need to discover if I should use integer type or double type division
-        token_type div_type_left = find_operand_type(node->data->op_node.left);
-        token_type div_type_right = find_operand_type(node->data->op_node.right);
+        token_type div_type_left = find_operand_type(op_node.left);
+        token_type div_type_right = find_operand_type(op_node.right);
         if (div_type_left == T_KEY_INT && div_type_right == T_KEY_INT) {
             printf("IDIVS\n");
         }
         else if (div_type_left == T_KEY_DOUBLE || div_type_right == T_KEY_DOUBLE) {
             printf("DIVS\n");
-        }
-        else {
-            // #TODO chyba, nejde dělit nic jiného než INT nebo DOUBLE
         }
         break;
 
@@ -424,7 +479,6 @@ void generate_operation(ast_node_t *node, context_t *context) {
         break;
     
     default:
-        // #TODO chyba, neznama operace
         break;
     }
 }
@@ -465,7 +519,6 @@ void generate_literal(ast_node_t *node, context_t *context) {
         break;
 
     default:
-        // #TODO error, nerozpoznaný typ literálu
         break;
     }
 }
@@ -479,7 +532,7 @@ void process_node(ast_node_t *node, context_t *context) {
     }
 
     case AST_DECLARATION:
-        generate_declaration(node, "LF", context);   // TODO mozna neni vzdy LF
+        generate_declaration(node, "LF", context);
         break;
 
     case AST_DEFINITION:
@@ -523,7 +576,6 @@ void process_node(ast_node_t *node, context_t *context) {
         generate_while(node, context);
         break;
     default:
-        // #TODO error, nerozpoznaný typ uzlu
         break;
     }
 }
@@ -585,14 +637,14 @@ void generate_readLine(char *target_var) {
 
 void generate_readInt(char *target_var, context_t *context) {
     printf("READ %s int\n", target_var);
-    printf("JUMPIFNEQ $readInt_%u %s nil@nil\n", ++context->label_idx, target_var);
+    printf("JUMPIFNEQ $readInt_%u %s nil@nil\n", context->label_idx, target_var);
     printf("MOVE %s int@0\n", target_var);
     printf("LABEL $readInt_%u\n", context->label_idx++);
 }
 
 void generate_readDouble(char *target_var, context_t *context) {
     printf("READ %s float\n", target_var);
-    printf("JUMPIFNEQ $readDouble_%u %s nil@nil\n", ++context->label_idx, target_var);
+    printf("JUMPIFNEQ $readDouble_%u %s nil@nil\n", context->label_idx, target_var);
     printf("MOVE %s float@0x0p+0\n", target_var);
     printf("LABEL $readDouble_%u\n", context->label_idx++);
 }
@@ -622,6 +674,15 @@ void generate_toStr(char *target_var, ast_node_t *node) {
             case T_UNIT_LITERAL:
                 printf("MOVE %s string@()\n", target_var);
                 break;
+
+            case T_BOOLEAN_LITERAL:
+                if (node->data->lit_leaf_node.lit_value.int_value == 1) {
+                    printf("MOVE %s string@true\n", target_var);
+                }
+                else {
+                    printf("MOVE %s string@false\n", target_var);
+                }
+                break;
             
             default:
                 //TODO ERROR
@@ -645,6 +706,15 @@ void generate_toStr(char *target_var, ast_node_t *node) {
 
             case T_KEY_UNIT:
                 printf("MOVE %s string@()\n", target_var);
+                break;
+
+            case T_KEY_BOOLEAN:
+                printf("JUMPIFEQ $bool_true_%u LF@var_%u bool@true\n", id, id);
+                printf("MOVE %s string@false\n", target_var);
+                printf("JUMP $bool_end_%u\n", id);
+                printf("LABEL $bool_true_%u\n", id);
+                printf("MOVE %s string@true\n", target_var);
+                printf("LABEL $bool_end_%u\n", id);
                 break;
             
             default:

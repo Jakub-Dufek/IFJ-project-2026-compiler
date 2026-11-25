@@ -394,7 +394,9 @@ token_t first_alpha (int character, token_t token) {
     }
 
     token.size = scratch_get_len();
-    token.value.string_value = scratch_save_to_arena();
+    if (token.type != T_BOOLEAN_LITERAL) {
+        token.value.string_value = scratch_save_to_arena();
+    }
 
     return token;
 }
