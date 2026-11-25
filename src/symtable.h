@@ -3,10 +3,10 @@
  * @internal Part of IFJ-project-2026-compiler, Team 274855
  *
  * @brief Symbol table structure and operations
- * @author Ondřej Kycl (xkyclon00) 
+ * @author Ondřej Kycl (xkyclon00)
  * @date 04. 10. 2026
- * 
- * @details This file contains declarations and descriptions of structures 
+ *
+ * @details This file contains declarations and descriptions of structures
  * and functions used in symtable.c for managing variables, values, and functions.
  */
 
@@ -15,11 +15,11 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <string.h> 
+#include <string.h>
 
-#include "structures.h"
-#include "memory.h"
 #include "../src/error.h"
+#include "memory.h"
+#include "structures.h"
 
 
 
@@ -27,7 +27,7 @@
 
 /**
  * @brief More convenient rename for symbol table data types.
- * 
+ *
  * @details Description of data types with enum from "structures.h":
  * token_type is renamed to data_type to match situation better.
  */
@@ -78,7 +78,7 @@ typedef struct {
  */
 typedef struct {
     unsigned unique_id;
-    data_type data_type; 
+    data_type data_type;
     id_type id_type;
     func_info_t func_info;
 } symbol_data_t;
@@ -87,13 +87,13 @@ typedef struct {
  * @brief A node of a binary tree.
  */
 typedef struct symtable_bvs_node_t {
-    char *key;                               // identifier value used for binary search
+    char *key; // identifier value used for binary search
     symbol_data_t symbol_data;
     struct symtable_bvs_node_t *l_ptr;
     struct symtable_bvs_node_t *r_ptr;
     int weight;
     unsigned height;
-} symtable_bvs_node_t;   
+} symtable_bvs_node_t;
 
 
 // STACK STRUCTURES
@@ -120,7 +120,7 @@ typedef struct {
 
 /**
  * @brief Initialization of the symbol table.
- * 
+ *
  * @return symtable_bvs_node_t* Pointer to the initialized root.
  */
 symtable_bvs_node_t *symtable_initialize();
@@ -137,24 +137,24 @@ int bvs_height(symtable_bvs_node_t *ptr);
 
 /**
  * @brief symtable_insert helper function - performs AVL tree rotation to the left.
- * 
+ *
  * @details Uses bvs_max and bvs_height.
  */
 symtable_bvs_node_t *symtable_left_rotate(symtable_bvs_node_t *y);
 
 /**
  * @brief symtable_insert helper function - performs AVL tree rotation to the right.
- * 
+ *
  * @details Uses bvs_max and bvs_height.
  */
 symtable_bvs_node_t *symtable_right_rotate(symtable_bvs_node_t *y);
 
 /**
  * @brief Returns the position of the found symbol node.
- * 
+ *
  * @details Returns the position of the found symbol node, or NULL if not found.
  * Implementation is recursive.
- * 
+ *
  * @param rootPtr Root of the binary tree to search in.
  * @param k Key (identifier) to search for.
  * @return symtable_bvs_node_t* Pointer to the found node or NULL.
@@ -163,18 +163,18 @@ symtable_bvs_node_t *symtable_find_symbol(symtable_bvs_node_t *rootPtr, char *k)
 
 /**
  * @brief symtable_insert helper function - allocates a new node.
- * 
- * @details Allocates a new node, allocates key string and inserts received 
+ *
+ * @details Allocates a new node, allocates key string and inserts received
  * symbol information into the node.
  */
 symtable_bvs_node_t *symtable_create_node(char *key, symbol_data_t symb);
 
 /**
  * @brief Inserts new node as a leaf node of a binary tree.
- * 
- * @details Performs height balancing through rotations if necessary, 
+ *
+ * @details Performs height balancing through rotations if necessary,
  * uses error() if insertion is not possible. Implementation is recursive.
- * 
+ *
  * @param rootPtr Current root of the tree/subtree.
  * @param key Key (identifier) of the new symbol.
  * @param symb Symbol data to insert.
@@ -184,7 +184,7 @@ symtable_bvs_node_t *symtable_insert(symtable_bvs_node_t *rootPtr, char *key, sy
 
 /**
  * @brief Frees the symbol table and all its nodes.
- * 
+ *
  * @param root_ptr Root of the binary tree to destroy.
  */
 void symtable_destructor(symtable_bvs_node_t *root_ptr);
@@ -221,10 +221,10 @@ bool symtable_stack_is_empty(symtable_stack_t *stack);
 
 /**
  * @brief Function searches for a symbol in all instances on the stack.
- * 
- * @details Traverses the stack from top to bottom and returns the location 
+ *
+ * @details Traverses the stack from top to bottom and returns the location
  * of the first matching symbol found.
- * 
+ *
  * @param stack Pointer to the stack to search in.
  * @param key Key (identifier) to search for.
  * @return symtable_bvs_node_t* Pointer to the found node or NULL.
@@ -243,7 +243,7 @@ void param_type_list_initialize(param_type_list_t *l);
 
 /**
  * @brief Appends a new parameter data type to the end of the list (unreversed list).
- * 
+ *
  * @param l    Pointer to the parameter type list structure.
  * @param type The data type to be inserted.
  */
@@ -251,7 +251,7 @@ void param_type_list_insert(param_type_list_t *l, data_type type);
 
 /**
  * @brief Frees the parameter list and its nodes
- * 
+ *
  * @param l    Pointer to the parameter type list structure.
  */
 void param_type_list_destructor(param_type_list_t *l);
