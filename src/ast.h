@@ -14,8 +14,8 @@
 
 #include <stdbool.h>
 
-#include "symtable.h"
 #include "structures.h"
+#include "symtable.h"
 
 typedef struct ast_node ast_node_t;
 typedef struct ast_block_node ast_block_node_t;
@@ -28,29 +28,29 @@ typedef struct ast_block_node ast_block_node_t;
  * @brief Enum for statement types of nodes
  */
 typedef enum ast_stmt_type {
-  // discrete nodes 
+    // discrete nodes
     AST_BLOCK,
-    AST_PARAM,          /// function parameter
+    AST_PARAM, /// function parameter
 
-  // local nodes
-    AST_DECLARATION,    /// for variables
+    // local nodes
+    AST_DECLARATION, /// for variables
     AST_ASSIGN,
     AST_EXPR,
-    AST_CALL,           /// function call
+    AST_CALL, /// function call
     AST_IF,
     AST_WHILE,
     AST_RETURN,
 
-  // global nodes
-    AST_DEFINITION,     /// for function
+    // global nodes
+    AST_DEFINITION, /// for function
 
-  // expr nodes
+    // expr nodes
     EXPR_OPERATION,
     EXPR_IDENTIFIER,
     EXPR_LITERAL,
 
-  // semantic nodes
-    EXPR_INT2FLOAT      /// semantic conversion marker
+    // semantic nodes
+    EXPR_INT2FLOAT /// semantic conversion marker
 } ast_stmt_type_t;
 
 
@@ -62,8 +62,8 @@ typedef enum ast_stmt_type {
  * @brief Node representing block, lines inside block are chained with first->next->next->...->next(last)
  */
 struct ast_block_node {
-    ast_node_t *first;  /// NULL if empty block
-    ast_node_t *last;   /// for insersion speed purposes ( O(1) instead of O(n) )
+    ast_node_t *first; /// NULL if empty block
+    ast_node_t *last;  /// for insersion speed purposes ( O(1) instead of O(n) )
 };
 
 /**
@@ -71,7 +71,7 @@ struct ast_block_node {
  * @brief Parameter node
  */
 typedef struct {
-    char *id_val;   /// var name
+    char *id_val; /// var name
     token_type data_type;
     symbol_data_t symbol_data;
 } ast_param_node_t;
@@ -83,10 +83,10 @@ typedef struct {
  * @brief Node for variable declaration
  */
 typedef struct {
-    char *id_val;   /// var name
+    char *id_val; /// var name
     bool is_mutable;
     token_type data_type;
-    ast_node_t *expr_or_call;   // expr (op or leaf(id/lit)) or fn call
+    ast_node_t *expr_or_call; // expr (op or leaf(id/lit)) or fn call
     symbol_data_t symbol_data;
 } ast_declaration_node_t;
 
@@ -95,7 +95,7 @@ typedef struct {
  * @brief Node for variable assigning
  */
 typedef struct {
-    char *id_val;   /// var name
+    char *id_val;             /// var name
     ast_node_t *expr_or_call; // expr (op or leaf(id/lit)) or fn call
     symbol_data_t symbol_data;
 } ast_assign_node_t;
@@ -105,8 +105,8 @@ typedef struct {
  * @brief Node for function calling, first_arg->next is next arg, if NULL no arg
  */
 typedef struct {
-    char *id_val;           /// fn name
-    ast_node_t *first_arg;  // leaf(id/lit)
+    char *id_val;          /// fn name
+    ast_node_t *first_arg; // leaf(id/lit)
 } ast_call_node_t;
 
 /**
@@ -114,9 +114,9 @@ typedef struct {
  * @brief Node for if then stmt, elsif = else_body->next(if)
  */
 typedef struct {
-    ast_node_t *condition;  // expr (op or leaf(id/lit))
-    ast_node_t *then_body;  // block
-    ast_node_t *else_body;  // block, NULL if elseless
+    ast_node_t *condition; // expr (op or leaf(id/lit))
+    ast_node_t *then_body; // block
+    ast_node_t *else_body; // block, NULL if elseless
 } ast_if_node_t;
 
 /**
@@ -124,8 +124,8 @@ typedef struct {
  * @brief Node for while do cycle
  */
 typedef struct {
-    ast_node_t *condition;  // expr (op or leaf(id/lit))
-    ast_node_t *body;       // block
+    ast_node_t *condition; // expr (op or leaf(id/lit))
+    ast_node_t *body;      // block
 } ast_while_node_t;
 
 /**
@@ -133,7 +133,7 @@ typedef struct {
  * @brief Node for return
  */
 typedef struct {
-    ast_node_t *expr_or_call;   /// NULL if standalone
+    ast_node_t *expr_or_call; /// NULL if standalone
 } ast_return_node_t;
 
 
@@ -145,8 +145,8 @@ typedef struct {
 typedef struct {
     char *id_val;
     token_type data_type;
-    ast_node_t *first_param;    // param node
-    ast_node_t *body;           /// expr (op or leaf(id/lit)), call or block
+    ast_node_t *first_param; // param node
+    ast_node_t *body;        /// expr (op or leaf(id/lit)), call or block
     bool is_main;
 } ast_definition_node_t;
 
@@ -187,7 +187,7 @@ typedef struct {
  * @brief Node for implicit conversion
  */
 typedef struct {
-    ast_node_t *operand;    /// pointer to converted operand
+    ast_node_t *operand; /// pointer to converted operand
 } expr_imp_conversion_t;
 
 
@@ -215,7 +215,7 @@ typedef union {
     expr_op_node_t op_node;
     expr_id_leaf_node_t id_leaf_node;
     expr_lit_leaf_node_t lit_leaf_node;
-    
+
     expr_imp_conversion_t imp_conversion;
 } ast_node_data_t;
 
@@ -236,9 +236,9 @@ struct ast_node {
 
 /**
  * @brief Creates subnode in ast for implicit conversion
- * 
- * @param inner_node 
- * 
+ *
+ * @param inner_node
+ *
  * @return New subnode which contains the new conversion and the operand for conversion
  */
 ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
@@ -249,23 +249,23 @@ ast_node_t *ast_convert_int2float(ast_node_t *inner_node);
 
 /**
  * @brief Creates AST for new block
- * 
+ *
  * @param first ptr to first stmt
  * @param line_num
  * @param last ptr to last stmt (for insertion purposes)
- * 
+ *
  * @return AST node representing block
  */
 ast_node_t *ast_insert_block(ast_node_t *first, unsigned line_num, ast_node_t *last);
 
 /**
  * @brief Creates AST for function parameter
- * 
+ *
  * @param value name of id
  * @param line_num
  * @param data_type
  * @param next param right after
- * 
+ *
  * @return AST node representing param list
  */
 ast_node_t *ast_insert_param(char *value, unsigned line_num, token_type data_type, ast_node_t *next);
@@ -276,80 +276,80 @@ ast_node_t *ast_insert_param(char *value, unsigned line_num, token_type data_typ
 
 /**
  * @brief Creates AST for var/val declaration
- * 
+ *
  * @param value name of id
  * @param line_num
  * @param is_mutable var => true, val => false
  * @param data_type if T_NO_TYPE  => to be deduced
  * @param expr_or_call a sub-AST of expression or function call
- * 
+ *
  * @return AST node representing var/val declaration
  */
-ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_mutable,
-                                            token_type data_type, ast_node_t *expr_or_call);
+ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_mutable, token_type data_type,
+                                       ast_node_t *expr_or_call);
 
 /**
  * @brief Creates AST for variable assigning
- * 
+ *
  * @param value name of id
  * @param line_num
  * @param expr_or_call a sub-AST of expression or function call
- * 
+ *
  * @return AST node represenging assigning of variable
  */
 ast_node_t *ast_insert_assign(char *value, unsigned line_num, ast_node_t *expr_or_call);
 
 /**
  * @brief Creates AST for function call AS A STANDALONE STATEMENT (line of code)
- * 
+ *
  * @param value name of if
  * @param line_num
  * @param first_arg ->next is second arg etc, NULL if no arg
- * 
+ *
  * @return AST node representing function call AS A STANDALONE STATEMENT (line of code)
  */
 ast_node_t *ast_insert_call(char *value, unsigned line_num, ast_node_t *first_arg);
 
 /**
  * @brief Creates AST for 'while do' cycle
- * 
+ *
  * @param condition a sub-AST of condition
  * @param line_num
  * @param body a sub-AST of body
- * 
+ *
  * @return AST node representing 'while do' cycle
  */
 ast_node_t *ast_insert_while(ast_node_t *condition, unsigned line_num, ast_node_t *body);
 
 /**
  * @brief Creates AST for 'if then else' stmt
- * 
+ *
  * @param condition a sub-AST of condition
  * @param line_num
  * @param then_body a sub-AST of body that executes if condition true
  * @param else_body a sub-AST of body that executes if condition false
- * 
+ *
  * @return AST node representing 'if then else' stmt
  */
 ast_node_t *ast_insert_if(ast_node_t *condition, unsigned line_num, ast_node_t *then_body, ast_node_t *else_body);
 
 /**
  * @brief Creates and inserts AST for 'else if' stmt into ->next of original 'if' stmt
- * 
+ *
  * @param orig_if a sub-AST of original 'if' stmt
  * @param line_num (of elsif stmt)
  * @param elsif_stmt a sub-AST of 'if' stmt as part of 'else if' branch
- * 
+ *
  * @return AST node representing entire 'if then else if then [...] else' stmt
  */
 ast_node_t *ast_insert_elsif(ast_node_t *orig_if, unsigned line_num, ast_node_t *elsif_stmt);
 
 /**
  * @brief Creates AST for return
- * 
+ *
  * @param expr_or_call a sub-AST of either expr or call
  * @param line_num
- * 
+ *
  * @return AST node representing return
  */
 ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num);
@@ -360,18 +360,18 @@ ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num);
 
 /**
  * @brief Creates AST for function definition
- * 
+ *
  * @param value name of id
  * @param line_num
  * @param data_type if T_NO_TYPE  => to be deduced
  * @param first_param ->next is second param etc, NULL if no param
  * @param body a sub-AST of body
  * @param is_main
- * 
+ *
  * @return AST node representing function definition
  */
-ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type data_type,
-                                        ast_node_t *first_param, ast_node_t *body, bool is_main);
+ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type data_type, ast_node_t *first_param,
+                                     ast_node_t *body, bool is_main);
 
 
 
@@ -379,12 +379,12 @@ ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type 
 
 /**
  * @brief Creates node for given operation in expr AST
- * 
+ *
  * @param opr enum statement type for which operation to insert
  * @param line_num
  * @param left node of left child in AST
  * @param right node of right child in AST
- * 
+ *
  * @return Allocated node for set operation
  */
 ast_node_t *expr_insert_op(token_type opr, unsigned line_num, ast_node_t *left, ast_node_t *right);
@@ -392,10 +392,10 @@ ast_node_t *expr_insert_op(token_type opr, unsigned line_num, ast_node_t *left, 
 
 /**
  * @brief Creates leaf node with identifier
- * 
+ *
  * @param value identifier key
  * @param line_num
- * 
+ *
  * @return Allocated node for given identifier
  */
 ast_node_t *expr_insert_id_leaf(char *value, unsigned line_num);
@@ -403,11 +403,11 @@ ast_node_t *expr_insert_id_leaf(char *value, unsigned line_num);
 
 /**
  * @brief Creates leaf node with given literal
- * 
+ *
  * @param lit_value value of literal
  * @param line_num
  * @param lit_type type of literal (T_INT_LITERAL, T_UNIT_LITERAL, ...)
- * 
+ *
  * @return Allocated node for given literal
  */
 ast_node_t *expr_insert_lit_leaf(token_value_t lit_value, unsigned line_num, token_type lit_type);

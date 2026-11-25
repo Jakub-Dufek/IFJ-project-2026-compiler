@@ -8,9 +8,9 @@
  * @date 3. 10. 2026
  */
 
-#include <stdlib.h>
-#include <stddef.h>
 #include <stdalign.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ast.h"
@@ -22,7 +22,7 @@
 
 /**
  * @brief Allocates data for one ast_node_t and it's "data" component
- * 
+ *
  * @param stmt_type type of node
  * @param line_num
  *
@@ -41,7 +41,8 @@ static ast_node_t *ast_node_init(ast_stmt_type_t stmt_type, unsigned line_num)
 }
 
 
-ast_node_t *ast_convert_int2float(ast_node_t *inner_node) {
+ast_node_t *ast_convert_int2float(ast_node_t *inner_node)
+{
     ast_node_t *conv_node = ast_node_init(EXPR_INT2FLOAT, inner_node->line_num);
 
     conv_node->data->imp_conversion.operand = inner_node;
@@ -79,8 +80,8 @@ ast_node_t *ast_insert_param(char *value, unsigned line_num, token_type data_typ
 
 //  LOCAL INSERT FUNCTIONS
 
-ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_mutable,
-                                            token_type data_type, ast_node_t *expr_or_call)
+ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_mutable, token_type data_type,
+                                       ast_node_t *expr_or_call)
 {
     ast_node_t *current_node = ast_node_init(AST_DECLARATION, line_num);
 
@@ -88,7 +89,7 @@ ast_node_t *ast_insert_var_declaration(char *value, unsigned line_num, bool is_m
     current_node->data->declaration_node.is_mutable = is_mutable;
     current_node->data->declaration_node.data_type = data_type;
     current_node->data->declaration_node.expr_or_call = expr_or_call;
-    
+
     return current_node;
 }
 
@@ -112,7 +113,6 @@ ast_node_t *ast_insert_call(char *value, unsigned line_num, ast_node_t *first_ar
     current_node->data->call_node.first_arg = first_arg;
 
     return current_node;
-
 }
 
 
@@ -165,8 +165,8 @@ ast_node_t *ast_insert_return(ast_node_t *expr_or_call, unsigned line_num)
 
 //  GLOBAL INSERT FUNCTIONS
 
-ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type data_type,
-                                        ast_node_t *first_param, ast_node_t *body, bool is_main)
+ast_node_t *ast_insert_fn_definition(char *value, unsigned line_num, token_type data_type, ast_node_t *first_param,
+                                     ast_node_t *body, bool is_main)
 {
     ast_node_t *current_node = ast_node_init(AST_DEFINITION, line_num);
 

@@ -29,46 +29,46 @@ void parse_prologue();
  * @brief Parses declaration of variables
  *
  * @param current_token var/val token
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_var_declaration(token_t current_token);
 
 /**
  * @brief Parses variable assign
- * 
+ *
  * @param current_token identifier token
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_assign(token_t current_token);
 
 /**
- * @brief Parses function call - both standalone or 
- * 
+ * @brief Parses function call - both standalone or
+ *
  * @param current_token identifier token
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_call(token_t current_token);
 
 /**
  * @brief Parses 'if then else' stmt, call after recieving if
- * 
+ *
  * @return pointer to top od syntax sub-tree
  */
 ast_node_t *parse_if();
 
 /**
  * @brief Parses 'while do' cycle, call after recieving while
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_while();
 
 /**
  * @brief Parses return, call after recieving return
- * 
+ *
  * @return pointer to top of return sub-tree
  */
 ast_node_t *parse_return();
@@ -79,14 +79,14 @@ ast_node_t *parse_return();
 
 /**
  * @brief Parses @main and calls main fn parsing function
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_main_fn_definition();
 
 /**
  * @brief Parses definition of function
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_fn_definition();
@@ -99,7 +99,7 @@ ast_node_t *parse_fn_definition();
  * @brief Calls individual parsing functions for each case of next_token within block
  *
  * @param current_token
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_next_local(token_t current_token);
@@ -109,7 +109,7 @@ ast_node_t *parse_next_local(token_t current_token);
  * @brief Calls individual parsing functions for each case of next_token within block
  *
  * @param current_token
- * 
+ *
  * @return pointer to top of syntax sub-tree
  */
 ast_node_t *parse_next_global(token_t current_token);
@@ -120,7 +120,7 @@ ast_node_t *parse_next_global(token_t current_token);
 
 /**
  * @brief Parses entire programme and builds AST for further analysis and compiling
- * 
+ *
  * @return pointer to top of entire AST
  */
 ast_node_t *build_ast();
