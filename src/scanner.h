@@ -5,7 +5,7 @@
  * @brief Scanner library file containing structures
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 25.10.2026
+ * @date 25.11.2026
  *
  * @details This file contains macros, structures and definitions of functions used in scanner.c
  */
@@ -18,6 +18,11 @@
 #include "structures.h"
 #include <stdbool.h>
 
+/**
+ * @brief Represents the states of the scanner FSM
+ *
+ * Each value corresponds to a state used during lexical analysis
+ */
 typedef enum {
     CASE_START,
 

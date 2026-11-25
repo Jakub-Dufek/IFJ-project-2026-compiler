@@ -5,7 +5,7 @@
  * @brief Code generator library file
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 25.10.2026
+ * @date 25.11.2026
  *
  * @details This file contains definitions of functions used in IFJcode_generator.c
  */
@@ -15,11 +15,15 @@
 
 #include "ast.h"
 
+/**
+ * @struct context_t
+ * @brief Structure holding information used by many functions in this module
+ */
 typedef struct Context {
-    char *function_name;
-    token_type return_type;
-    ast_node_t *root;
-    unsigned label_idx;
+    char *function_name;    /**<Name of the function we are currently generating code for */
+    token_type return_type; /**<Return type of the function we are currently generating code for */
+    ast_node_t *root;       /**<Pointer to the root of the ast */
+    unsigned label_idx;     /**<Index of labels to ensure non-repeating labels */
 } context_t;
 
 
@@ -129,12 +133,29 @@ bool is_expression (ast_node_t *node, context_t *context);
 token_type function_return_type(char *id_val, context_t *context);
 
 /**
+ * @brief Compares inputed name with builtin functions names
+ * 
+ * @param function_name String that is going to be compared to the builtin functions names
+ * 
+ * @return True if it matches a builtin function name, false otherwise
+ */
+bool is_builtin_function (char *function_name);
+
+/**
  * @brief Generates IFJcode26 for the function call
  * 
  * @param node Pointer to the node strucutre containing the call node
  * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
 void generate_call(ast_node_t *node, context_t *context);
+
+/**
+ * @brief Generates IFJcode26 for two operands
+ * 
+ * @param node Pointer to a operation node strucutre containing pointers to the operands
+ * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
+ */
+void generate_operands(expr_op_node_t op_node, context_t *context);
 
 /**
  * @brief Generates IFJcode26 for an aritmetical operation
@@ -145,17 +166,18 @@ void generate_call(ast_node_t *node, context_t *context);
 void generate_operation(ast_node_t *node, context_t *context);
 
 /**
- * TODO
+ * @brief Generates IFJcode26 for an identifier
+ *
+ * @param node Pointer to a node that stores the identifier
  */
-void generate_identifier(ast_node_t *node, context_t *context);
+void generate_identifier(ast_node_t *node);
 
 /**
  * @brief Generates IFJcode26 for any type of literal
  *
  * @param node Pointer to a node that holds the literal
- * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
-void generate_literal(ast_node_t *node, context_t *context);
+void generate_literal(ast_node_t *node);
 
 
 /**
@@ -214,8 +236,9 @@ void generate_readBoolean(char *target_var);
  *
  * @param target_var Pointer to a string, containing destination variable name
  * @param node Pointer to the argument AST node
+ * @param context Pointer to a structure that is managing label names (relevant for this function)
  */
-void generate_toStr(char *target_var, ast_node_t *node);
+void generate_toStr(char *target_var, ast_node_t *node, context_t *context);
 
 
 /**

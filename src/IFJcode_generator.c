@@ -5,9 +5,9 @@
  * @brief FSM for code generator
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 25.10.2026
+ * @date 25.11.2026
  *
- * @details This file contains finite state machine representing the functions of a IFJcode26 generator
+ * @details This module generates IFJcode26 instructions from an abstract syntax tree
  */
 
 #include "IFJcode_generator.h"
@@ -32,6 +32,7 @@ void print_string_literal(char *string, bool flag) {
 }
 
 token_type find_operand_type (ast_node_t *node) {
+    // Set base type if no other type is found
     token_type type = T_UNDEFINED;
     switch (node->stmt_type)
     {
@@ -54,6 +55,10 @@ token_type find_operand_type (ast_node_t *node) {
             type = T_KEY_BOOLEAN;
             break;
         
+        case T_UNIT_LITERAL:
+            type = T_KEY_UNIT;
+            break;
+        
         default:
             type = T_UNDEFINED;
             break;
@@ -71,28 +76,30 @@ token_type find_operand_type (ast_node_t *node) {
     case EXPR_OPERATION: {
         // Handle unary operations seperatelly
         if (node->data->op_node.op_type == EP_UNARY_MINUS) {
-            return find_operand_type(node->data->op_node.right);
+            type = find_operand_type(node->data->op_node.right);
         }
         else if (node->data->op_node.op_type == EP_UNARY_NEG) {
-            return T_KEY_BOOLEAN;
+            type = T_KEY_BOOLEAN;
         }
-
-        if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
+        else if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
             node->data->op_node.op_type == T_GT || node->data->op_node.op_type == T_GTE ||
-            node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE) {
-            return T_KEY_BOOLEAN;
+            node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE ||
+            node->data->op_node.op_type == T_AND || node->data->op_node.op_type == T_OR) {
+            type = T_KEY_BOOLEAN;
         }
-
-        token_type type_left = find_operand_type(node->data->op_node.left);
-        token_type type_right = find_operand_type(node->data->op_node.right);
-        if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
-            type = T_KEY_INT;
-        }
-        else if (type_left == T_KEY_DOUBLE || type_right == T_KEY_DOUBLE) {
-            type = T_KEY_DOUBLE;
-        }
-        else if (type_left == T_KEY_STRING && type_right == T_KEY_STRING) {
-            type = T_KEY_STRING;
+        else {
+            // If no operation type was found yet, check the operands and determine the operation type off of them
+            token_type type_left = find_operand_type(node->data->op_node.left);
+            token_type type_right = find_operand_type(node->data->op_node.right);
+            if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
+                type = T_KEY_INT;
+            }
+            else if (type_left == T_KEY_DOUBLE || type_right == T_KEY_DOUBLE) {
+                type = T_KEY_DOUBLE;
+            }
+            else if (type_left == T_KEY_STRING && type_right == T_KEY_STRING) {
+                type = T_KEY_STRING;
+            }
         }
         break;
     }
@@ -109,7 +116,7 @@ void generate_if(ast_node_t *node, context_t *context) {
 
     // Process the condition
     process_node(if_node.condition, context);
-    // Push true for JUMP to compare to
+    // Compare the result of the condition with true
     printf("PUSHS bool@true\n");
     if (if_node.else_body != NULL) {
         printf("JUMPIFNEQS $else%u\n", label_num);
@@ -121,13 +128,14 @@ void generate_if(ast_node_t *node, context_t *context) {
     // Process 'then' block
     process_node(if_node.then_body, context);
 
+    // Check if there is an 'else' body
     if (if_node.else_body != NULL) {
         printf("JUMP $fi%u\n", label_num);
         printf("LABEL $else%u\n", label_num);
         process_node(if_node.else_body, context);
     }
 
-    // End of this if
+    // End of current if
     printf("LABEL $fi%u\n", label_num);
 }
 
@@ -135,16 +143,20 @@ void generate_while(ast_node_t *node, context_t *context) {
     unsigned label_num = context->label_idx++;
     ast_while_node_t while_node = node->data->while_node;
 
+    // Start of the 'while' cycle
     printf("LABEL $while%u\n", label_num);
 
-    // Process the condition
+    // Process the condition, then compare it with true
     process_node(while_node.condition, context);
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS $elihw%u\n", label_num);
 
+    // Process the body of this cycle
     process_node(while_node.body, context);
+    // Jump to the start
     printf("JUMP $while%u\n", label_num);
 
+    // End of cycle
     printf("LABEL $elihw%u\n", label_num);
 }
 
@@ -175,8 +187,9 @@ void generate_declaration(ast_node_t *node, char *frame, context_t *context) {
 }
 
 void generate_assignment(ast_node_t *node, context_t *context) {
-    process_node(node->data->assign_node.expr_or_call, context);
-    printf("POPS LF@var_%u\n", node->data->assign_node.symbol_data.unique_id);
+    ast_assign_node_t assign_node = node->data->assign_node;
+    process_node(assign_node.expr_or_call, context);
+    printf("POPS LF@var_%u\n", assign_node.symbol_data.unique_id);
 }
 
 void generate_definitions_in_function(ast_node_t *node) {
@@ -184,11 +197,10 @@ void generate_definitions_in_function(ast_node_t *node) {
         return;
     }
 
+    // Goes through all definitions in one function and generates IFJcode26 for them
     switch (node->stmt_type) {
         case AST_BLOCK:
-            for (ast_node_t *stmt = node->data->block_node.first;
-                 stmt != NULL;
-                 stmt = stmt->next) {
+            for (ast_node_t *stmt = node->data->block_node.first; stmt != NULL; stmt = stmt->next) {
                 generate_definitions_in_function(stmt);
             }
             break;
@@ -213,6 +225,7 @@ void generate_definitions_in_function(ast_node_t *node) {
 
 void generate_function(ast_node_t *node, context_t *context) {
     ast_definition_node_t def_node = node->data->definition_node;
+    // Setup context for function bodu
     context->function_name = def_node.id_val;
     context->return_type = def_node.data_type;
     bool result_needed = false;
@@ -221,7 +234,7 @@ void generate_function(ast_node_t *node, context_t *context) {
         result_needed = true;
     }
 
-    // Create label and frame
+    // Create function's label and frame
     printf("LABEL $%s\n", def_node.id_val);
     printf("PUSHFRAME\n");
 
@@ -234,9 +247,13 @@ void generate_function(ast_node_t *node, context_t *context) {
         param_count++;
     }
 
-    // Define all local variables at the start of the function
+    // Define all local variables at the start of the function to prevent multiple definitions
     printf("DEFVAR LF@discard_top_stack\n");
     generate_definitions_in_function(def_node.body);
+    // Define local variables for concatenation
+    printf("DEFVAR LF@left_concat\n");
+    printf("DEFVAR LF@right_concat\n");
+    printf("DEFVAR LF@result_concat\n");
 
     // Handle body
     if (def_node.body->stmt_type == AST_BLOCK) {
@@ -248,6 +265,8 @@ void generate_function(ast_node_t *node, context_t *context) {
         }
         else {
             process_node(def_node.body, context);
+            // In case this function does not need a return value, but the body produces some return value 
+            // and pushes it on the stack, dispose of it
             if (result_needed == false && is_expression(def_node.body, context) == true) {
                 printf("POPS LF@discard_top_stack\n");
             }
@@ -255,15 +274,15 @@ void generate_function(ast_node_t *node, context_t *context) {
     }
 
 
-    /* Generated by ChatGPT
-       Prompt: Jak můžu elegantně vyřešit "return" v rámci zanořených podmínek uvnitř funkce?
-    */
+    // Generated by ChatGPT
+    // Prompt: Jak můžu elegantně vyřešit "return" v rámci zanořených podmínek uvnitř funkce?
     printf("LABEL $%s_end\n", def_node.id_val);
 
     if (def_node.data_type == T_KEY_UNIT) {
         printf("PUSHS nil@nil\n");
     }
 
+    // Tear down frame
     printf("POPFRAME\n");
     printf("RETURN\n");
 
@@ -280,6 +299,8 @@ void generate_return(ast_node_t *node, context_t *context) {
         process_node(last_instruction, context);
     }
 
+    // In case this function does not need a return value, but the last instruction produces
+    // some return value and pushes it on the stack, dispose of it
     if (context->return_type == T_KEY_UNIT && is_expression(last_instruction, context) == true) {
         printf("POPS LF@discard_top_stack\n");
     }
@@ -293,7 +314,8 @@ bool is_expression (ast_node_t *node, context_t *context) {
     }
     else if (node->stmt_type == EXPR_OPERATION || node->stmt_type == EXPR_LITERAL || 
         node->stmt_type == EXPR_IDENTIFIER || node->stmt_type == EXPR_INT2FLOAT || 
-        node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) {
+        node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED || 
+        node->stmt_type == AST_CALL && is_builtin_function(node->data->call_node.id_val) == true) {
         return true;
     }
     
@@ -306,7 +328,21 @@ token_type function_return_type(char *id_val, context_t *context) {
             return node->data->definition_node.data_type;
         }
     }
+    // In case the function was not found, return undefined
     return T_UNDEFINED;
+}
+
+bool is_builtin_function (char *function_name) {
+    if(!(strcmp("print", function_name) && strcmp("readLine", function_name) &&
+    strcmp("readInt", function_name) && strcmp("readDouble", function_name) &&
+    strcmp("toStr", function_name) && strcmp("toInt", function_name) &&
+    strcmp("strLength", function_name) && strcmp("subStr", function_name) &&
+    strcmp("ord", function_name) && strcmp("chr", function_name) && 
+    strcmp("readBoolean", function_name))) {
+        return true;
+    }
+
+    return false;
 }
 
 void generate_call(ast_node_t *node, context_t *context) {
@@ -315,24 +351,74 @@ void generate_call(ast_node_t *node, context_t *context) {
         ast_call_node_t call_node = node->data->call_node;
         int arg_count = 0;
 
+        // Process all arguments and put their value on the stack
         for (ast_node_t *arg = call_node.first_arg; arg != NULL; arg = arg->next) {
             process_node(arg, context);
             arg_count++;
         }
 
         printf("CREATEFRAME\n");
+        // Prepare all arguments to be recieved by the called function
         for (int counter = arg_count - 1; counter >= 0; counter--) {
             printf("DEFVAR TF@arg%i\n", counter);
             printf("POPS TF@arg%i\n", counter);
         }
 
+        // Call the desired function
         printf("CALL $%s\n", call_node.id_val);
     }
 }
 
+void generate_operands(expr_op_node_t op_node, context_t *context) {
+    // Process left subnode
+    process_node(op_node.left, context);
+
+    int current_label_idx;
+    // Generate IFJcode26 for && and || operations, so that they work as
+    // short-circuit evaluation
+    if (op_node.op_type == T_AND || op_node.op_type == T_OR) {
+        current_label_idx = context->label_idx++;
+        if (op_node.op_type == T_AND) {
+            printf("PUSHS bool@false\n");
+        }
+        else if (op_node.op_type == T_OR) {
+            printf("PUSHS bool@true\n");
+        }
+        printf("JUMPIFEQS $bool_jumped_%u\n", current_label_idx);
+    }
+
+    // Process rigt subnode
+    process_node(op_node.right, context);
+
+    // Finish the IFJcode26 for && and || operations
+    if (op_node.op_type == T_AND || op_node.op_type == T_OR) {
+        if (op_node.op_type == T_AND) {
+            printf("PUSHS bool@true\n");
+            printf("ANDS\n");
+        }
+        else if (op_node.op_type == T_OR) {
+            printf("PUSHS bool@false\n");
+            printf("ORS\n");
+        }
+
+        printf("JUMP $bool_end_%u\n", current_label_idx);
+        printf("LABEL $bool_jumped_%u\n", current_label_idx);
+
+        if (op_node.op_type == T_AND) {
+            printf("PUSHS bool@false\n");
+        }
+        else if (op_node.op_type == T_OR) {
+            printf("PUSHS bool@true\n");
+        }
+
+        printf("LABEL $bool_end_%u\n", current_label_idx);
+    }
+}
+
 void generate_operation(ast_node_t *node, context_t *context) {
-    // Special handling for unary minus, because all other operations are binary
-    if (node->data->op_node.op_type == EP_UNARY_MINUS) {
+    expr_op_node_t op_node = node->data->op_node;
+    // Special handling for unary minus and unary negation, because all other operations are binary
+    if (op_node.op_type == EP_UNARY_MINUS) {
         // Push a zero on the stack
         if (find_operand_type(node) == T_KEY_INT) {
             printf("PUSHS int@0\n");
@@ -341,35 +427,32 @@ void generate_operation(ast_node_t *node, context_t *context) {
             printf("PUSHS float@0x0p+0\n");
         }
 
-        process_node(node->data->op_node.right, context);
+        process_node(op_node.right, context);
+        // Subtract the result of the operand from zero to make it negative
         printf("SUBS\n");
         return;
     } 
-    else if (node->data->op_node.op_type == EP_UNARY_NEG) {
-        process_node(node->data->op_node.right, context);
+    else if (op_node.op_type == EP_UNARY_NEG) {
+        process_node(op_node.right, context);
         printf("NOTS\n");
         return;
     }
 
-    process_node(node->data->op_node.left, context);
-    process_node(node->data->op_node.right, context);
+    generate_operands(op_node, context);
 
     //Print the type of the operation
-    switch (node->data->op_node.op_type)
+    switch (op_node.op_type)
     {
     case T_PLUS:
-        if (find_operand_type(node->data->op_node.left) == T_KEY_STRING &&
-            find_operand_type(node->data->op_node.right) == T_KEY_STRING) {
-            printf("DEFVAR LF@left_%u", ++context->label_idx);
-            printf("DEFVAR LF@right_%u", context->label_idx);
-            printf("POPS LF@right_%u", context->label_idx);
-            printf("POPS LF@left_%u", context->label_idx);
-            printf("DEFVAR LF@result_%u", context->label_idx);
-            printf("CONCAT LF@result_%u LF@left_%u LF@right_%u", context->label_idx, context->label_idx, context->label_idx);
-            printf("PUSHS LF@result_%u", context->label_idx++);
+        // Concatenation
+        if (find_operand_type(op_node.left) == T_KEY_STRING &&
+            find_operand_type(op_node.right) == T_KEY_STRING) {
+            printf("POPS LF@right_concat\n");
+            printf("POPS LF@left_concat\n");
+            printf("CONCAT LF@result_concat LF@left_concat LF@right_concat\n");
+            printf("PUSHS LF@result_concat\n");
         }
         else { printf("ADDS\n"); }
-        // #TODO dodělat konkatenaci, můžu použít find_operand_type()
         break;
 
     case T_MINUS:
@@ -378,16 +461,13 @@ void generate_operation(ast_node_t *node, context_t *context) {
 
     case T_DIV:
         //Need to discover if I should use integer type or double type division
-        token_type div_type_left = find_operand_type(node->data->op_node.left);
-        token_type div_type_right = find_operand_type(node->data->op_node.right);
+        token_type div_type_left = find_operand_type(op_node.left);
+        token_type div_type_right = find_operand_type(op_node.right);
         if (div_type_left == T_KEY_INT && div_type_right == T_KEY_INT) {
             printf("IDIVS\n");
         }
         else if (div_type_left == T_KEY_DOUBLE || div_type_right == T_KEY_DOUBLE) {
             printf("DIVS\n");
-        }
-        else {
-            // #TODO chyba, nejde dělit nic jiného než INT nebo DOUBLE
         }
         break;
 
@@ -424,23 +504,21 @@ void generate_operation(ast_node_t *node, context_t *context) {
         break;
     
     default:
-        // #TODO chyba, neznama operace
         break;
     }
 }
 
-void generate_identifier(ast_node_t *node, context_t *context) {
+void generate_identifier(ast_node_t *node) {
     printf("PUSHS LF@var_%u\n", node->data->id_leaf_node.symbol_data.unique_id);
 }
 
-void generate_literal(ast_node_t *node, context_t *context) {
+void generate_literal(ast_node_t *node) {
     printf("PUSHS ");
 
     switch (node->data->lit_leaf_node.lit_type)
     {
     case T_STRING_LITERAL:
         print_string_literal(node->data->lit_leaf_node.lit_value.string_value, true);
-        //printf("string@%s\n", node->data->lit_leaf_node.lit_value.string_value);
         break;
     
     case T_INT_LITERAL:
@@ -465,7 +543,6 @@ void generate_literal(ast_node_t *node, context_t *context) {
         break;
 
     default:
-        // #TODO error, nerozpoznaný typ literálu
         break;
     }
 }
@@ -477,13 +554,12 @@ void process_node(ast_node_t *node, context_t *context) {
         generate_block(node, context, false);
         break;
     }
-
     case AST_DECLARATION:
-        generate_declaration(node, "LF", context);   // TODO mozna neni vzdy LF
+        generate_declaration(node, "LF", context);
         break;
 
     case AST_DEFINITION:
-       generate_function(node, context);
+        generate_function(node, context);
         break;
 
     case EXPR_OPERATION:
@@ -491,11 +567,11 @@ void process_node(ast_node_t *node, context_t *context) {
         break;
 
     case EXPR_IDENTIFIER:
-        generate_identifier(node, context);
+        generate_identifier(node);
         break;
 
     case EXPR_LITERAL:
-        generate_literal(node, context);
+        generate_literal(node);
         break;
 
     case EXPR_INT2FLOAT:
@@ -523,7 +599,6 @@ void process_node(ast_node_t *node, context_t *context) {
         generate_while(node, context);
         break;
     default:
-        // #TODO error, nerozpoznaný typ uzlu
         break;
     }
 }
@@ -585,14 +660,14 @@ void generate_readLine(char *target_var) {
 
 void generate_readInt(char *target_var, context_t *context) {
     printf("READ %s int\n", target_var);
-    printf("JUMPIFNEQ $readInt_%u %s nil@nil\n", ++context->label_idx, target_var);
+    printf("JUMPIFNEQ $readInt_%u %s nil@nil\n", context->label_idx, target_var);
     printf("MOVE %s int@0\n", target_var);
     printf("LABEL $readInt_%u\n", context->label_idx++);
 }
 
 void generate_readDouble(char *target_var, context_t *context) {
     printf("READ %s float\n", target_var);
-    printf("JUMPIFNEQ $readDouble_%u %s nil@nil\n", ++context->label_idx, target_var);
+    printf("JUMPIFNEQ $readDouble_%u %s nil@nil\n", context->label_idx, target_var);
     printf("MOVE %s float@0x0p+0\n", target_var);
     printf("LABEL $readDouble_%u\n", context->label_idx++);
 }
@@ -601,7 +676,7 @@ void generate_readBoolean(char *target_var) {
     printf("READ %s bool\n", target_var);
 }
 
-void generate_toStr(char *target_var, ast_node_t *node) {
+void generate_toStr(char *target_var, ast_node_t *node, context_t *context) {
     switch (node->stmt_type)
     {
     case EXPR_LITERAL:
@@ -621,6 +696,15 @@ void generate_toStr(char *target_var, ast_node_t *node) {
 
             case T_UNIT_LITERAL:
                 printf("MOVE %s string@()\n", target_var);
+                break;
+
+            case T_BOOLEAN_LITERAL:
+                if (node->data->lit_leaf_node.lit_value.int_value == 1) {
+                    printf("MOVE %s string@true\n", target_var);
+                }
+                else {
+                    printf("MOVE %s string@false\n", target_var);
+                }
                 break;
             
             default:
@@ -645,6 +729,15 @@ void generate_toStr(char *target_var, ast_node_t *node) {
 
             case T_KEY_UNIT:
                 printf("MOVE %s string@()\n", target_var);
+                break;
+
+            case T_KEY_BOOLEAN:
+                printf("JUMPIFEQ $bool_true_%u LF@var_%u bool@true\n", context->label_idx, id);
+                printf("MOVE %s string@false\n", target_var);
+                printf("JUMP $bool_end_%u\n", context->label_idx);
+                printf("LABEL $bool_true_%u\n", context->label_idx);
+                printf("MOVE %s string@true\n", target_var);
+                printf("LABEL $bool_end_%u\n", context->label_idx++);
                 break;
             
             default:
@@ -828,8 +921,7 @@ char *find_main_function(ast_node_t *root) {
             return node->data->definition_node.id_val;
         }
     }
-
-    // TODO chyba, nebyl nalezen main??
+    // Return NULL in case main function was not found
     return NULL;
 }
 
@@ -865,7 +957,7 @@ bool generate_builtin_call(ast_node_t *node, context_t *context) {
         return true;
     }
     else if (strcmp(function_name, "toStr") == 0) {
-        generate_toStr("GF@$builtin_return", arg1);
+        generate_toStr("GF@$builtin_return", arg1, context);
         printf("PUSHS GF@$builtin_return\n");
         return true;
     }
@@ -904,6 +996,7 @@ bool generate_builtin_call(ast_node_t *node, context_t *context) {
 void generate_IFJcode26(ast_node_t *root) {
     printf(".IFJcode26\n"); // Every code has to start with this notation
     printf("DEFVAR GF@$builtin_return\n");
+    // Make sure every code starts with the main function
     printf("CREATEFRAME\n");
     printf("CALL $%s\n", find_main_function(root)); // Make sure interpret starts processing code at main
     printf("EXIT int@0\n");
@@ -912,6 +1005,7 @@ void generate_IFJcode26(ast_node_t *root) {
     ast_node_t *node = root;
     context_t context = {0};
     context.root = root;
+    // Process the whole ast
     while(node != NULL) {
         process_node(node, &context);
         node = node->next;
