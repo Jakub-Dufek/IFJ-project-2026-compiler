@@ -67,85 +67,92 @@ token_t new_token(unsigned line_num)
 // functions
 token_t handle_comment(int character, token_t token, scanner_case current_case)
 {
-    switch (current_case) {
-    case CASE_LINE_COMMENT:
-        // throw away contents of line comment
-        while ((character = getchar()) != '\n' && character != EOF) {
-        }
-        // handle end of line
-        if (character == '\n') {
-            if (line_start == false) { // if line is not empty, create token for end of line
-                token.type = T_LF;
-            } else {
-                indent_depth = NO_VALUE;
-                tab_on_line_start = false;
+    switch(current_case) {
+        case CASE_LINE_COMMENT:
+            // throw away contents of line comment
+            while((character = getchar()) != '\n' && character != EOF) {
             }
-            current_line_num++;
-        } else if (character == EOF) {
-            token.type = T_EOF;
-        }
-        break;
-    case CASE_BLOCK_COMMENT: {
-        unsigned block_depth = 1; // for handling nested comments
-        bool multiline_block = false;
-        while (block_depth > 0 && (character = getchar()) != EOF) {
-            switch (character) {
-            // Watch out for nested comments
-            case '/':
-                if ((character = getchar()) == '*') {
-                    block_depth++;
-                } else if (character == '\n') {
-                    token.line_num++;
-                    current_line_num++;
-                    multiline_block = true;
-                    tab_on_line_start = false;
-                } else if (character != EOF) {
-                    ungetc(character, stdin);
+            // handle end of line
+            if(character == '\n') {
+                if(line_start == false) { // if line is not empty, create token for end of line
+                    token.type = T_LF;
                 }
-                break;
-            case '*':
-                if ((character = getchar()) == '/') {
-                    block_depth--;
-                } else if (character == '\n') {
-                    token.line_num++;
-                    current_line_num++;
-                    multiline_block = true;
+                else {
+                    indent_depth = NO_VALUE;
                     tab_on_line_start = false;
-                } else if (character != EOF) {
-                    ungetc(character, stdin);
                 }
-                break;
-            case '\n':
-                tab_on_line_start = false;
-                token.line_num++;
                 current_line_num++;
-                multiline_block = true;
-                break;
-            default:
-                break;
             }
-        }
+            else if(character == EOF) {
+                token.type = T_EOF;
+            }
+            break;
+        case CASE_BLOCK_COMMENT: {
+            unsigned block_depth = 1; // for handling nested comments
+            bool multiline_block = false;
+            while(block_depth > 0 && (character = getchar()) != EOF) {
+                switch(character) {
+                    // Watch out for nested comments
+                    case '/':
+                        if((character = getchar()) == '*') {
+                            block_depth++;
+                        }
+                        else if(character == '\n') {
+                            token.line_num++;
+                            current_line_num++;
+                            multiline_block = true;
+                            tab_on_line_start = false;
+                        }
+                        else if(character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '*':
+                        if((character = getchar()) == '/') {
+                            block_depth--;
+                        }
+                        else if(character == '\n') {
+                            token.line_num++;
+                            current_line_num++;
+                            multiline_block = true;
+                            tab_on_line_start = false;
+                        }
+                        else if(character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case '\n':
+                        tab_on_line_start = false;
+                        token.line_num++;
+                        current_line_num++;
+                        multiline_block = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
 
-        // If there was EOF before the multiline comment ended, print error
-        if (block_depth > 0 && character == EOF) {
-            error_exit(LEX_ERR, token.line_num, "File ended inside of a block comment.");
-        } else if (multiline_block == true) {
-            // Check if the rest of the line is empty for multiline comment
-            while ((character = getchar()) != '\n' && character != EOF) {
-                if (!isspace(character)) {
-                    error_exit(SYNT_ERR, token.line_num, "Unexpected character after multiline block comment.");
+            // If there was EOF before the multiline comment ended, print error
+            if(block_depth > 0 && character == EOF) {
+                error_exit(LEX_ERR, token.line_num, "File ended inside of a block comment.");
+            }
+            else if(multiline_block == true) {
+                // Check if the rest of the line is empty for multiline comment
+                while((character = getchar()) != '\n' && character != EOF) {
+                    if(!isspace(character)) {
+                        error_exit(SYNT_ERR, token.line_num, "Unexpected character after multiline block comment.");
+                    }
                 }
+                if(character != EOF) {
+                    current_line_num++;
+                }
+                token.type = T_LF;
             }
-            if (character != EOF) {
-                current_line_num++;
-            }
-            token.type = T_LF;
+            indent_depth = NO_VALUE;
+            break;
         }
-        indent_depth = NO_VALUE;
-        break;
-    }
-    default:
-        break;
+        default:
+            break;
     }
 
     return token;
@@ -154,71 +161,77 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
 void handle_quotation(int character, bool multiline)
 {
     // no condition inside of while because there are if statements inside of this cycle that exit the cycle
-    while (true) {
-        switch (character) {
-        case '\n':
-            if (multiline == false) { // In case of one-line quotation, there can't be a symbol for end of the line
-                error_exit(LEX_ERR, current_line_num, "One-line string does not end on the same line.");
-            } else {
-                scratch_append((char)character);
-            }
-            break;
-        case '\\':
-            // Handle escape sequences inside of one-line quotation
-            if (multiline == false) {
-                switch (character = getchar()) {
-                case 'n':
-                    scratch_append('\n');
-                    break;
-                case 't':
-                    scratch_append('\t');
-                    break;
-                case 'r':
-                    scratch_append('\r');
-                    break;
-                case '\\':
-                    scratch_append('\\');
-                    break;
-                case '"':
-                    scratch_append('"');
-                    break;
-                default:
-                    error_exit(LEX_ERR, current_line_num, "Unsupported escape sequence used inside of a string literal.");
-                    break;
+    while(true) {
+        switch(character) {
+            case '\n':
+                if(multiline == false) { // In case of one-line quotation, there can't be a symbol for end of the line
+                    error_exit(LEX_ERR, current_line_num, "One-line string does not end on the same line.");
                 }
-            } else {
-                scratch_append((char)character);
-            }
-            break;
-        case '"':
-            // Handle end of while cycle conditions
-            if (multiline == true && (character = getchar()) == '"') {
-                if ((character = getchar()) == '"') {
-                    return; // end multiline quotation
-                } else {
-                    // Write quotation marks into the text of quotation
+                else {
+                    scratch_append((char)character);
+                    current_line_num++;
+                }
+                break;
+            case '\\':
+                // Handle escape sequences inside of one-line quotation
+                if(multiline == false) {
+                    switch(character = getchar()) {
+                        case 'n':
+                            scratch_append('\n');
+                            break;
+                        case 't':
+                            scratch_append('\t');
+                            break;
+                        case 'r':
+                            scratch_append('\r');
+                            break;
+                        case '\\':
+                            scratch_append('\\');
+                            break;
+                        case '"':
+                            scratch_append('"');
+                            break;
+                        default:
+                            error_exit(LEX_ERR, current_line_num, "Unsupported escape sequence used inside of a string literal.");
+                            break;
+                    }
+                }
+                else {
+                    scratch_append((char)character);
+                }
+                break;
+            case '"':
+                // Handle end of while cycle conditions
+                if(multiline == true && (character = getchar()) == '"') {
+                    if((character = getchar()) == '"') {
+                        return; // end multiline quotation
+                    }
+                    else {
+                        // Write quotation marks into the text of quotation
+                        scratch_append('"');
+                        scratch_append('"');
+                        if(character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                    }
+                }
+                else if(multiline == true) { // write everything read into scratchpad if quotations is not ending
                     scratch_append('"');
-                    scratch_append('"');
-                    if (character != EOF) {
+                    if(character != EOF) {
                         ungetc(character, stdin);
                     }
                 }
-            } else if (multiline == true) { // write everything read into scratchpad if quotations is not ending
-                scratch_append('"');
-                if (character != EOF) {
-                    ungetc(character, stdin);
+                else if(multiline == false) { // end one-line quotation
+                    return;
                 }
-            } else if (multiline == false) { // end one-line quotation
-                return;
-            }
-            break;
-        case EOF:
-            // EOF can't appear inside of a quotation
-            error_exit(LEX_ERR, current_line_num, "File ended inside of a string literal");
-            break;
-        default:
-            scratch_append((char)character);
-            break;
+                break;
+            case EOF:
+                // EOF can't appear inside of a quotation
+                error_exit(LEX_ERR, current_line_num, "File ended inside of a string literal");
+                break;
+            default:
+                scratch_append((char)character);
+                break;
         }
         character = getchar(); // get next character
     }
@@ -228,42 +241,43 @@ void handle_quotation(int character, bool multiline)
 
 token_t handle_white_spaces(int *character, token_t token)
 {
-    while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
+    while(token.type == T_UNDEFINED && isspace(*character = getchar())) {
         // Count the number of spaces on the start of the line
-        if (line_start == true && *character == ' ') {
+        if(line_start == true && *character == ' ') {
             indent_depth++;
         }
 
-        switch (*character) {
-        case '\t':
-            if (line_start == true) {
-                tab_on_line_start = true;
-            }
-            break;
-        case '\n':
-            if (line_start == false && depth_of_brackets == 0) {
-                token.type = T_LF;
-            }
-            // Do not send T_LF token if one of these conditions happen
-            else if (line_start == false && depth_of_brackets > 0) {
-                line_start = true;
-            } else if (line_start == true && tab_on_line_start == true) { // If the line is empty, using tab is not a misstake
-                tab_on_line_start = false;
-            }
-            current_line_num++;
-            // Make sure I don't overwrite T_LF line number
-            if (token.type == T_UNDEFINED) {
-                token.line_num = current_line_num;
-            }
-            // Reset indent
-            indent_depth = 0;
-            break;
-        default:
-            break;
+        switch(*character) {
+            case '\t':
+                if(line_start == true) {
+                    tab_on_line_start = true;
+                }
+                break;
+            case '\n':
+                if(line_start == false && depth_of_brackets == 0) {
+                    token.type = T_LF;
+                }
+                // Do not send T_LF token if one of these conditions happen
+                else if(line_start == false && depth_of_brackets > 0) {
+                    line_start = true;
+                }
+                else if(line_start == true && tab_on_line_start == true) { // If the line is empty, using tab is not a misstake
+                    tab_on_line_start = false;
+                }
+                current_line_num++;
+                // Make sure I don't overwrite T_LF line number
+                if(token.type == T_UNDEFINED) {
+                    token.line_num = current_line_num;
+                }
+                // Reset indent
+                indent_depth = 0;
+                break;
+            default:
+                break;
         }
     }
 
-    if (*character == EOF) {
+    if(*character == EOF) {
         token.type = T_EOF;
     }
     return token;
@@ -271,22 +285,27 @@ token_t handle_white_spaces(int *character, token_t token)
 
 void handle_indent(token_t *token)
 {
-    if (line_start == true && token->type != T_LF) { // When I find first lexeme,...
-        if (tab_on_line_start == true) {             //...I check if tab was pressed somewhere before it...
+    // No point of returning error if the token on that line is EOF
+    if(token->type == T_EOF) {
+        tab_on_line_start = false;
+    }
+
+    if(line_start == true && token->type != T_LF) { // When I find first lexeme,...
+        if(tab_on_line_start == true) {             //...I check if tab was pressed somewhere before it...
             error_exit(LEX_ERR, token->line_num, "Tabulator found on the start of a non-empty line.");
         }
 
         line_start = false;
         // ...and if I am not inside of round brackets...
-        if (depth_of_brackets == 0) {
-            if (token->type != T_R_ROUND_BRACKET) {
+        if(depth_of_brackets == 0) {
+            if(token->type != T_R_ROUND_BRACKET) {
                 next_token = *token;
                 *token = new_token(0);
                 bool same_indent = false;
                 //...and then I compare its indentation value with all values I have stored.
-                for (unsigned idx = 0; idx <= last_indent_idx; idx++) {
+                for(unsigned idx = 0; idx <= last_indent_idx; idx++) {
                     // If I find the indentation value in the list, but it is not the furthest,...
-                    if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
+                    if(indent_values[idx] == indent_depth && indent_values[last_indent_idx] != indent_depth) {
                         token->type = T_LESS_INDENT; //...I send token representing less indentation,...
                         token->line_num = current_line_num;
                         indent_values[last_indent_idx] = NO_VALUE; //...remove the furthest indentation,...
@@ -294,7 +313,7 @@ void handle_indent(token_t *token)
                         line_start = true; //...and set line_start to true in case there is even less indentation
                     }
                     // If there is no change in indent, note it and delete next_token (no need for it)
-                    else if (indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
+                    else if(indent_values[idx] == indent_depth && indent_values[last_indent_idx] == indent_depth) {
                         same_indent = true;
                         *token = next_token;
                         next_token = new_token(NO_VALUE);
@@ -302,15 +321,17 @@ void handle_indent(token_t *token)
                     }
                 }
                 // In case current indent is not in the list of previous indents...
-                if (token->type != T_LESS_INDENT && same_indent == false) {
+                if(token->type != T_LESS_INDENT && same_indent == false) {
                     // ...and the indent is lesser than the last indent, exit with error...
-                    if (indent_depth < indent_values[last_indent_idx]) {
+                    if(indent_depth < indent_values[last_indent_idx]) {
                         error_exit(SYNT_ERR, token->line_num, "Invalid indentation level.");
                         // ...otherwise, note new indent value.
-                    } else {
-                        if (last_indent_idx + 1 == MAX_INDENT_LENGTH) {
+                    }
+                    else {
+                        if(last_indent_idx + 1 == MAX_INDENT_LENGTH) {
                             error_exit(INTERNAL_ERR, token->line_num, "Too many indentation levels, buffer overflow.");
-                        } else {
+                        }
+                        else {
                             last_indent_idx++;
                             indent_values[last_indent_idx] = indent_depth;
                             token->type = T_MORE_INDENT;
@@ -319,16 +340,18 @@ void handle_indent(token_t *token)
                     }
                 }
             }
-        } else if (depth_of_brackets > 0 && token->type != T_R_ROUND_BRACKET &&
-                   indent_depth <= indent_values[last_indent_idx]) { // Check indent for inside of brackets
+        }
+        else if(depth_of_brackets > 0 && token->type != T_R_ROUND_BRACKET &&
+                indent_depth <= indent_values[last_indent_idx]) { // Check indent for inside of brackets
             error_exit(LEX_ERR, token->line_num, "Lesser or equal indentation level inside of brackets than before them.");
         }
-    } else if (token->type == T_LF) { // If the current line ends,...
-        indent_depth = 0;             //...reset indent depth for another line...
-        line_start = true;            //...and reset start of line variable
+    }
+    else if(token->type == T_LF) { // If the current line ends,...
+        indent_depth = 0;          //...reset indent depth for another line...
+        line_start = true;         //...and reset start of line variable
     }
 
-    if (token->type == T_L_ROUND_BRACKET) {
+    if(token->type == T_L_ROUND_BRACKET) {
         depth_of_brackets++;
     }
     return;
@@ -343,23 +366,25 @@ int compare(const void *string, const void *keyword_string)
 token_t first_alpha(int character, token_t token)
 {
     // Check for interpolated s
-    if (character == 's') {
+    if(character == 's') {
         int next_character = getchar();
-        if (next_character == '"') {
+        if(next_character == '"') {
             interpolated_s = true;
-            if ((next_character = getchar()) == '"') {
-                if ((next_character = getchar()) == '"') {
+            if((next_character = getchar()) == '"') {
+                if((next_character = getchar()) == '"') {
                     multiline_interpolation = true;
-                } else {
+                }
+                else {
                     multiline_interpolation = false;
-                    if (next_character != EOF) {
+                    if(next_character != EOF) {
                         ungetc(next_character, stdin);
                     }
                     ungetc('"', stdin);
                 }
-            } else {
+            }
+            else {
                 multiline_interpolation = false;
-                if (next_character != EOF) {
+                if(next_character != EOF) {
                     ungetc(next_character, stdin);
                 }
             }
@@ -367,7 +392,8 @@ token_t first_alpha(int character, token_t token)
             interpolated_s = false;
             multiline_interpolation = false;
             return token;
-        } else if (next_character != EOF) {
+        }
+        else if(next_character != EOF) {
             ungetc(next_character, stdin);
         }
     }
@@ -376,30 +402,32 @@ token_t first_alpha(int character, token_t token)
         // note the lexeme's value
         scratch_append((char)character);
 
-    } while (((character = getchar()) != EOF) && (isalnum(character) || character == '_'));
+    } while(((character = getchar()) != EOF) && (isalnum(character) || character == '_'));
 
     // Return last read character, that was not used
-    if (character != EOF) {
+    if(character != EOF) {
         ungetc(character, stdin);
     }
 
-    if (scratch_get_len() == 1 && scratch_get_string()[0] == '_') {
+    if(scratch_get_len() == 1 && scratch_get_string()[0] == '_') {
         error_exit(LEX_ERR, current_line_num, "Invalid identifier.");
     }
 
     keyword *the_keyword =
         bsearch(scratch_get_string(), keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
-    if (the_keyword == NULL) {
+    if(the_keyword == NULL) {
         token.type = T_IDENTIFIER;
-    } else if (the_keyword->type == T_KEY_TRUE || the_keyword->type == T_KEY_FALSE) {
+    }
+    else if(the_keyword->type == T_KEY_TRUE || the_keyword->type == T_KEY_FALSE) {
         token.type = T_BOOLEAN_LITERAL;
         token.value.int_value = (the_keyword->type == T_KEY_TRUE) ? 1 : 0;
-    } else {
+    }
+    else {
         token.type = the_keyword->type;
     }
 
     token.size = scratch_get_len();
-    if (token.type != T_BOOLEAN_LITERAL) {
+    if(token.type != T_BOOLEAN_LITERAL) {
         token.value.string_value = scratch_save_to_arena();
     }
 
@@ -415,101 +443,112 @@ token_t first_digit(int character, token_t token, scanner_case current_case)
     bool zero = (current_case == CASE_INT_LITERAL && character == '0');
     int last_character = 0;
     do {
-        if (character == '_') {
+        if(character == '_') {
             last_character = character;
             continue;
         }
 
-        switch (current_case) {
-        case CASE_INT_LITERAL:
-            if (character == '.') {
-                current_case = CASE_DOUBLE_LITERAL;
-            } else if (character == 'e' || character == 'E') {
-                current_case = CASE_EXPONENT;
-            } else if (isdigit(character)) {
-                if (zero && last_character != 0) {
-                    error_exit(LEX_ERR, current_line_num, "Non-zero number can not start with a zero.");
+        switch(current_case) {
+            case CASE_INT_LITERAL:
+                if(character == '.') {
+                    current_case = CASE_DOUBLE_LITERAL;
                 }
-            } else {
-                valid = false;
-            }
-            break;
-
-        case CASE_DOUBLE_LITERAL:
-            if (character == 'e' || character == 'E') {
-                if (num_cnt_d == 0) {
-                    error_exit(LEX_ERR, current_line_num, "Missing digits before exponent.");
+                else if(character == 'e' || character == 'E') {
+                    current_case = CASE_EXPONENT;
                 }
-                current_case = CASE_EXPONENT;
-            } else if (character == 'd' || character == 'D') {
-                if (num_cnt_d == 0) {
-                    error_exit(LEX_ERR, current_line_num, "Missing digits before 'd' suffix.");
+                else if(isdigit(character)) {
+                    if(zero && last_character != 0) {
+                        error_exit(LEX_ERR, current_line_num, "Non-zero number can not start with a zero.");
+                    }
                 }
-                d_suffix = true;
-                valid = false;
-            } else if (isdigit(character)) {
-                num_cnt_d++;
-            } else {
-                valid = false;
-            }
-            break;
-
-        case CASE_EXPONENT:
-            if (character == '-' || character == '+') {
-                if (last_character != 'e' && last_character != 'E') {
+                else {
                     valid = false;
                 }
-            } else if (character == 'd' || character == 'D') {
-                if (num_cnt_e == 0) {
-                    error_exit(LEX_ERR, current_line_num, "Missing exponent digits before 'd' suffix.");
-                }
-                d_suffix = true;
-                valid = false;
-            } else if (isdigit(character)) {
-                num_cnt_e++;
-            } else {
-                valid = false;
-            }
-            break;
+                break;
 
-        default:
-            valid = false;
-            break;
+            case CASE_DOUBLE_LITERAL:
+                if(character == 'e' || character == 'E') {
+                    if(num_cnt_d == 0) {
+                        error_exit(LEX_ERR, current_line_num, "Missing digits before exponent.");
+                    }
+                    current_case = CASE_EXPONENT;
+                }
+                else if(character == 'd' || character == 'D') {
+                    if(num_cnt_d == 0) {
+                        error_exit(LEX_ERR, current_line_num, "Missing digits before 'd' suffix.");
+                    }
+                    d_suffix = true;
+                    valid = false;
+                }
+                else if(isdigit(character)) {
+                    num_cnt_d++;
+                }
+                else {
+                    valid = false;
+                }
+                break;
+
+            case CASE_EXPONENT:
+                if(character == '-' || character == '+') {
+                    if(last_character != 'e' && last_character != 'E') {
+                        valid = false;
+                    }
+                }
+                else if(character == 'd' || character == 'D') {
+                    if(num_cnt_e == 0) {
+                        error_exit(LEX_ERR, current_line_num, "Missing exponent digits before 'd' suffix.");
+                    }
+                    d_suffix = true;
+                    valid = false;
+                }
+                else if(isdigit(character)) {
+                    num_cnt_e++;
+                }
+                else {
+                    valid = false;
+                }
+                break;
+
+            default:
+                valid = false;
+                break;
         }
 
-        if (valid) {
+        if(valid) {
             // note the lexeme's value
             scratch_append((char)character);
             last_character = character;
-        } else {
+        }
+        else {
             break;
         }
 
-    } while (((character = getchar()) != EOF) &&
-             (isdigit(character) || character == 'e' || character == 'E' || character == '-' || character == '+' ||
-              character == '.' || character == '_' || character == 'd' || character == 'D'));
+    } while(((character = getchar()) != EOF) &&
+            (isdigit(character) || character == 'e' || character == 'E' || character == '-' || character == '+' ||
+             character == '.' || character == '_' || character == 'd' || character == 'D'));
 
-    if ((current_case == CASE_EXPONENT && num_cnt_e == 0) || (current_case == CASE_DOUBLE_LITERAL && num_cnt_d == 0)) {
+    if((current_case == CASE_EXPONENT && num_cnt_e == 0) || (current_case == CASE_DOUBLE_LITERAL && num_cnt_d == 0)) {
         error_exit(LEX_ERR, current_line_num, "Missing value after decimal point/exponent.");
     }
 
-    if (d_suffix) {
+    if(d_suffix) {
         character = getchar();
     }
 
-    if (character != EOF && (isalnum(character) || character == '_' || character == '.')) {
+    if(character != EOF && (isalnum(character) || character == '_' || character == '.')) {
         error_exit(LEX_ERR, current_line_num, "Invalid character immediately following numeric literal.");
     }
 
     // Return last read character, that was not used
-    if (character != EOF) {
+    if(character != EOF) {
         ungetc(character, stdin);
     }
 
-    if (current_case == CASE_INT_LITERAL) {
+    if(current_case == CASE_INT_LITERAL) {
         token.type = T_INT_LITERAL;
         token.value.int_value = (int)strtol(scratch_get_string(), NULL, 10);
-    } else if (current_case == CASE_DOUBLE_LITERAL || current_case == CASE_EXPONENT) {
+    }
+    else if(current_case == CASE_DOUBLE_LITERAL || current_case == CASE_EXPONENT) {
         token.type = T_DOUBLE_LITERAL;
         token.value.double_value = strtod(scratch_get_string(), NULL);
     }
@@ -525,188 +564,199 @@ token_t first_special(int character, token_t token, scanner_case current_case)
         // note the lexeme's value
         scratch_append((char)character);
 
-        switch (current_case) {
-        case CASE_START:
-            switch (character) {
-            case '+':
-                token.type = T_PLUS;
-                break;
-            case '-':
-                token.type = T_MINUS;
-                break;
-            case '*':
-                token.type = T_MULT;
-                break;
-            case '/':
-                current_case = CASE_SLASH;
-                break;
-            case '(':
-                token.type = T_L_ROUND_BRACKET;
-                break;
-            case ')':
-                if (depth_of_brackets == 0) {
-                    error_exit(SYNT_ERR, token.line_num, "Unmatched closing brackets.");
-                }
-                depth_of_brackets--;
-                token.type = T_R_ROUND_BRACKET;
-                break;
-            case '<':
-                if ((character = getchar()) == '=') {
-                    token.type = T_LTE;
-                } else {
-                    token.type = T_LT;
-                    if (character != EOF) {
-                        ungetc(character, stdin);
-                    }
-                }
-                break;
-            case '>':
-                if ((character = getchar()) == '=') {
-                    token.type = T_GTE;
-                } else {
-                    token.type = T_GT;
-                    if (character != EOF) {
-                        ungetc(character, stdin);
-                    }
-                }
-                break;
-            case '=':
-                if ((character = getchar()) == '=') {
-                    token.type = T_EQ;
-                } else {
-                    token.type = T_ASSIGN;
-                    if (character != EOF) {
-                        ungetc(character, stdin);
-                    }
-                }
-                break;
-            case '!':
-                if ((character = getchar()) == '=') {
-                    token.type = T_NEQ;
-                } else {
-                    token.type = T_NEG;
-                    ungetc(character, stdin);
-                }
-                break;
-            case ',':
-                token.type = T_COMMA;
-                break;
-            case ':':
-                token.type = T_COLON;
-                break;
-            case ';':
-                token.type = T_SEMICOLON;
-                break;
-            case '.':
-                token.type = T_DOT;
-                break;
-            case '@':
-                current_case = CASE_AT;
-                break;
-            case '"':
-                current_case = CASE_QUOTATION_MARKS;
-                break;
-            case '&':
-                if ((character = getchar()) == '&') {
-                    token.type = T_AND;
-                } else {
-                    error_exit(LEX_ERR, token.line_num, "Symbol '&' is not supported. If you want AND operand, use '&&'.\n");
-                }
-                break;
-            case '|':
-                if ((character = getchar()) == '|') {
-                    token.type = T_OR;
-                } else {
-                    error_exit(LEX_ERR, token.line_num, "Symbol '|' is not supported. If you want OR operand, use '||'.\n");
-                }
-                break;
-            default:
-                error_exit(LEX_ERR, token.line_num, "Unknown character.\n");
-                break;
-            }
-            break;
-
-        case CASE_SLASH:
-            switch (character) {
-            case '/':
-                scratch_clear();
-                current_case = CASE_LINE_COMMENT;
-                token = handle_comment(character, token, current_case);
-                return token;
-                break;
-            case '*':
-                scratch_clear();
-                current_case = CASE_BLOCK_COMMENT;
-                token = handle_comment(character, token, current_case);
-                return token;
-                break;
-            default:
-                token.type = T_DIV;
-                if (character != EOF) {
-                    ungetc(character, stdin);
-                }
-                break;
-            }
-            break;
-
-        case CASE_AT:
-            // Only @main is correct construction for a token starting with '@'
-            if (character == 'm') {
-                if ((character = getchar()) == 'a') {
-                    if ((character = getchar()) == 'i') {
-                        if ((character = getchar()) == 'n') {
-                            // If statement created by ChatGPT version 5.2.
-                            // Prompt: "Co má po @main správně pokračovat?"
-                            if (isalnum((character = getchar())) || character == '_') {
-                                error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
-                            } else if (character != EOF) {
+        switch(current_case) {
+            case CASE_START:
+                switch(character) {
+                    case '+':
+                        token.type = T_PLUS;
+                        break;
+                    case '-':
+                        token.type = T_MINUS;
+                        break;
+                    case '*':
+                        token.type = T_MULT;
+                        break;
+                    case '/':
+                        current_case = CASE_SLASH;
+                        break;
+                    case '(':
+                        token.type = T_L_ROUND_BRACKET;
+                        break;
+                    case ')':
+                        if(depth_of_brackets == 0) {
+                            error_exit(SYNT_ERR, token.line_num, "Unmatched closing brackets.");
+                        }
+                        depth_of_brackets--;
+                        token.type = T_R_ROUND_BRACKET;
+                        break;
+                    case '<':
+                        if((character = getchar()) == '=') {
+                            token.type = T_LTE;
+                        }
+                        else {
+                            token.type = T_LT;
+                            if(character != EOF) {
                                 ungetc(character, stdin);
                             }
-                            token.type = T_AT_MAIN;
+                        }
+                        break;
+                    case '>':
+                        if((character = getchar()) == '=') {
+                            token.type = T_GTE;
+                        }
+                        else {
+                            token.type = T_GT;
+                            if(character != EOF) {
+                                ungetc(character, stdin);
+                            }
+                        }
+                        break;
+                    case '=':
+                        if((character = getchar()) == '=') {
+                            token.type = T_EQ;
+                        }
+                        else {
+                            token.type = T_ASSIGN;
+                            if(character != EOF) {
+                                ungetc(character, stdin);
+                            }
+                        }
+                        break;
+                    case '!':
+                        if((character = getchar()) == '=') {
+                            token.type = T_NEQ;
+                        }
+                        else {
+                            token.type = T_NEG;
+                            ungetc(character, stdin);
+                        }
+                        break;
+                    case ',':
+                        token.type = T_COMMA;
+                        break;
+                    case ':':
+                        token.type = T_COLON;
+                        break;
+                    case ';':
+                        token.type = T_SEMICOLON;
+                        break;
+                    case '.':
+                        token.type = T_DOT;
+                        break;
+                    case '@':
+                        current_case = CASE_AT;
+                        break;
+                    case '"':
+                        current_case = CASE_QUOTATION_MARKS;
+                        break;
+                    case '&':
+                        if((character = getchar()) == '&') {
+                            token.type = T_AND;
+                        }
+                        else {
+                            error_exit(LEX_ERR, token.line_num,
+                                       "Symbol '&' is not supported. If you want AND operand, use '&&'.\n");
+                        }
+                        break;
+                    case '|':
+                        if((character = getchar()) == '|') {
+                            token.type = T_OR;
+                        }
+                        else {
+                            error_exit(LEX_ERR, token.line_num,
+                                       "Symbol '|' is not supported. If you want OR operand, use '||'.\n");
+                        }
+                        break;
+                    default:
+                        error_exit(LEX_ERR, token.line_num, "Unknown character.\n");
+                        break;
+                }
+                break;
+
+            case CASE_SLASH:
+                switch(character) {
+                    case '/':
+                        scratch_clear();
+                        current_case = CASE_LINE_COMMENT;
+                        token = handle_comment(character, token, current_case);
+                        return token;
+                        break;
+                    case '*':
+                        scratch_clear();
+                        current_case = CASE_BLOCK_COMMENT;
+                        token = handle_comment(character, token, current_case);
+                        return token;
+                        break;
+                    default:
+                        token.type = T_DIV;
+                        if(character != EOF) {
+                            ungetc(character, stdin);
+                        }
+                        break;
+                }
+                break;
+
+            case CASE_AT:
+                // Only @main is correct construction for a token starting with '@'
+                if(character == 'm') {
+                    if((character = getchar()) == 'a') {
+                        if((character = getchar()) == 'i') {
+                            if((character = getchar()) == 'n') {
+                                // If statement created by ChatGPT version 5.2.
+                                // Prompt: "Co má po @main správně pokračovat?"
+                                if(isalnum((character = getchar())) || character == '_') {
+                                    error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
+                                }
+                                else if(character != EOF) {
+                                    ungetc(character, stdin);
+                                }
+                                token.type = T_AT_MAIN;
+                            }
                         }
                     }
                 }
-            }
-            if (token.type != T_AT_MAIN) {
-                error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
-            }
-            break;
+                if(token.type != T_AT_MAIN) {
+                    error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
+                }
+                break;
 
-        case CASE_QUOTATION_MARKS:
-            // Remove quotation marks from the literal's value
-            scratch_clear();
+            case CASE_QUOTATION_MARKS:
+                // Remove quotation marks from the literal's value
+                scratch_clear();
 
-            if (character == '"') {
-                if ((character = getchar()) == '"') {
-                    // Handles multiline quotation
-                    handle_quotation(character = getchar(), true);
-                } else { // Token contains empty string literal
-                    scratch_clear();
-                    if (character != EOF) {
-                        ungetc(character, stdin);
+                if(character == '"') {
+                    if((character = getchar()) == '"') {
+                        // Handles multiline quotation
+                        handle_quotation(character = getchar(), true);
+                    }
+                    else { // Token contains empty string literal
+                        scratch_clear();
+                        if(character != EOF) {
+                            ungetc(character, stdin);
+                        }
                     }
                 }
-            } else {
-                // Handles one-line quotation
-                handle_quotation(character, false);
-            }
-            token.type = T_STRING_LITERAL;
-            token.value.string_value = scratch_save_to_arena();
-            break;
+                else {
+                    // Handles one-line quotation
+                    handle_quotation(character, false);
+                }
+                token.type = T_STRING_LITERAL;
+                token.value.string_value = scratch_save_to_arena();
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
         character = getchar();
-    } while (token.type == T_UNDEFINED && character != EOF);
+    } while(token.type == T_UNDEFINED && character != EOF);
 
     // In case next character is EOF, switch will never go into CASE_SLASH and can't set type to T_DIV, so I have to do it here
-    if (character == EOF && current_case == CASE_SLASH) {
+    if(character == EOF && current_case == CASE_SLASH) {
         token.type = T_DIV;
     }
 
     // Return last read character, that was not used
-    if (character != EOF) {
+    if(character != EOF) {
         ungetc(character, stdin);
     }
     return token;
@@ -722,55 +772,60 @@ token_t get_next_token()
     scratch_clear();
 
     // If buffer_token is not empty, the now-sent token should be buffer_token
-    if (buffer_token.type != T_UNDEFINED) {
+    if(buffer_token.type != T_UNDEFINED) {
         token = buffer_token;
         buffer_token = new_token(current_line_num); // line_num not important
         return token;
     }
 
     // For interpolated s extension
-    if (interpolated_s == true && token.type == T_UNDEFINED) {
+    if(interpolated_s == true && token.type == T_UNDEFINED) {
         token = process_interpolation(token);
     }
 
     // Main loop for finding and creating token
-    while (token.type == T_UNDEFINED && next_token.type == T_UNDEFINED) {
+    while(token.type == T_UNDEFINED && next_token.type == T_UNDEFINED) {
         // Handle white spaces and if some if them is a token, leave loop
         token = handle_white_spaces(&character, token);
-        if (token.type != T_UNDEFINED) {
+        if(token.type != T_UNDEFINED) {
             break;
         }
 
-        if (isalpha(character) || character == '_') {
+        if(isalpha(character) || character == '_') {
             token = first_alpha(character, token);
-        } else if (isdigit(character) || character == '.') {
-            if (character == '.') {
-                if (isdigit(next_character = getchar())) {
-                    if (next_character != EOF) {
+        }
+        else if(isdigit(character) || character == '.') {
+            if(character == '.') {
+                if(isdigit(next_character = getchar())) {
+                    if(next_character != EOF) {
                         ungetc(next_character, stdin);
                     }
                     token = first_digit(character, token, CASE_DOUBLE_LITERAL);
-                } else {
+                }
+                else {
                     token.type = T_DOT;
-                    if (next_character != EOF) {
+                    if(next_character != EOF) {
                         ungetc(next_character, stdin);
                     }
                 }
-            } else if (isdigit(next_character = getchar()) && character == '0') {
+            }
+            else if(isdigit(next_character = getchar()) && character == '0') {
                 error_exit(LEX_ERR, current_line_num, "Non-Zero number starting with zero.");
-            } else {
-                if (next_character != EOF) {
+            }
+            else {
+                if(next_character != EOF) {
                     ungetc(next_character, stdin);
                 }
                 token = first_digit(character, token, CASE_INT_LITERAL);
             }
-        } else if (!isspace(character)) {
+        }
+        else if(!isspace(character)) {
             token = first_special(character, token, current_case);
         }
     }
 
     // If there is a token stored in next_token, send it
-    if (next_token.type != T_UNDEFINED) {
+    if(next_token.type != T_UNDEFINED) {
         token = next_token;
         next_token = new_token(NO_VALUE);
     }

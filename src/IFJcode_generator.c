@@ -310,8 +310,8 @@ bool is_expression(ast_node_t *node, context_t *context)
         return false;
     } else if (node->stmt_type == EXPR_OPERATION || node->stmt_type == EXPR_LITERAL || node->stmt_type == EXPR_IDENTIFIER ||
                node->stmt_type == EXPR_INT2FLOAT ||
-               node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED ||
-               node->stmt_type == AST_CALL && is_builtin_function(node->data->call_node.id_val) == true) {
+               (node->stmt_type == AST_CALL && function_return_type(node->data->call_node.id_val, context) != T_UNDEFINED) ||
+               (node->stmt_type == AST_CALL && is_builtin_function(node->data->call_node.id_val) == true)) {
         return true;
     }
 
