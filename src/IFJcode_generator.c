@@ -658,7 +658,7 @@ void generate_readBoolean(char *target_var) {
     printf("READ %s bool\n", target_var);
 }
 
-void generate_toStr(char *target_var, ast_node_t *node) {
+void generate_toStr(char *target_var, ast_node_t *node, context_t *context) {
     switch (node->stmt_type)
     {
     case EXPR_LITERAL:
@@ -714,12 +714,12 @@ void generate_toStr(char *target_var, ast_node_t *node) {
                 break;
 
             case T_KEY_BOOLEAN:
-                printf("JUMPIFEQ $bool_true_%u LF@var_%u bool@true\n", id, id);
+                printf("JUMPIFEQ $bool_true_%u LF@var_%u bool@true\n", context->label_idx, id);
                 printf("MOVE %s string@false\n", target_var);
-                printf("JUMP $bool_end_%u\n", id);
-                printf("LABEL $bool_true_%u\n", id);
+                printf("JUMP $bool_end_%u\n", context->label_idx);
+                printf("LABEL $bool_true_%u\n", context->label_idx);
                 printf("MOVE %s string@true\n", target_var);
-                printf("LABEL $bool_end_%u\n", id);
+                printf("LABEL $bool_end_%u\n", context->label_idx++);
                 break;
             
             default:
@@ -940,7 +940,7 @@ bool generate_builtin_call(ast_node_t *node, context_t *context) {
         return true;
     }
     else if (strcmp(function_name, "toStr") == 0) {
-        generate_toStr("GF@$builtin_return", arg1);
+        generate_toStr("GF@$builtin_return", arg1, context);
         printf("PUSHS GF@$builtin_return\n");
         return true;
     }

@@ -234,8 +234,9 @@ void generate_readBoolean(char *target_var);
  *
  * @param target_var Pointer to a string, containing destination variable name
  * @param node Pointer to the argument AST node
+ * @param context Pointer to a structure that is managing label names (relevant for this function)
  */
-void generate_toStr(char *target_var, ast_node_t *node);
+void generate_toStr(char *target_var, ast_node_t *node, context_t *context);
 
 
 /**
