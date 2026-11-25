@@ -39,6 +39,9 @@ LABEL $main
 PUSHFRAME
 DEFVAR LF@discard_top_stack
 DEFVAR LF@var_1
+DEFVAR LF@left_concat
+DEFVAR LF@right_concat
+DEFVAR LF@result_concat
 PUSHS int@10
 PUSHS int@55
 ADDS
