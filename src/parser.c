@@ -300,7 +300,7 @@ static ast_node_t *parse_arg(token_t current_token, bool is_first)
         case T_IDENTIFIER:
             arg = expr_insert_id_leaf(current_token.value.string_value, line_num);
             break;
-        case T_INT_LITERAL: case T_DOUBLE_LITERAL: case T_STRING_LITERAL: case T_UNIT_LITERAL:
+        case T_INT_LITERAL: case T_DOUBLE_LITERAL: case T_STRING_LITERAL: case T_UNIT_LITERAL: case T_BOOLEAN_LITERAL:
             arg = expr_insert_lit_leaf(current_token.value, line_num, current_token.type);
             break;
         default:
