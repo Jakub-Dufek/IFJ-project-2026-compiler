@@ -5,9 +5,9 @@
  * @brief Library file containing structures
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 27.09.2026
+ * @date 25.11.2026
  *
- * @details This file contains definitions of structures
+ * @details This file contains definitions of token structures
  */
 
 #ifndef STRUCTURES_H
@@ -17,6 +17,9 @@
 #define MAX_INDENT_LENGTH 256
 #define NO_VALUE 0
 
+/**
+ * @brief Represents all the different types a token can have
+ */
 typedef enum token_type {
     T_UNDEFINED = NO_VALUE,
 

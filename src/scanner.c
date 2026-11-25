@@ -5,9 +5,9 @@
  * @brief FSM for scanner
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 27.09.2026
+ * @date 25.11.2026
  *
- * @details This file contains finite state machine representing the functions of a scanner
+ * @details This module contains finite state machine representing the functions of a scanner
  */
 
 // libraries
@@ -40,9 +40,9 @@ static unsigned last_indent_idx = NO_VALUE;
 // Array of increasing indent values. Used for handling blocks
 static unsigned indent_values[MAX_INDENT_LENGTH] = {NO_VALUE};
 // Bool value indicating if there is an interpolated expression active
-bool interpolated_s = false;
+static bool interpolated_s = false;
 // Bool value indicating if the interpolated expression is multiline or not
-bool multiline_interpolation = false;
+static bool multiline_interpolation = false;
 
 // dictionary
 keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
@@ -95,6 +95,7 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
         bool multiline_block = false;
         while (block_depth > 0 && (character = getchar()) != EOF) {
             switch (character) {
+            // Watch out for nested comments
             case '/':
                 if ((character = getchar()) == '*') {
                     block_depth++;
@@ -130,6 +131,7 @@ token_t handle_comment(int character, token_t token, scanner_case current_case)
             }
         }
 
+        // If there was EOF before the multiline comment ended, print error
         if (block_depth > 0 && character == EOF) {
             error_exit(LEX_ERR, token.line_num, "File ended inside of a block comment.");
         } else if (multiline_block == true) {
@@ -199,6 +201,7 @@ void handle_quotation(int character, bool multiline)
                 if ((character = getchar()) == '"') {
                     return; // end multiline quotation
                 } else {
+                    // Write quotation marks into the text of quotation
                     scratch_append('"');
                     scratch_append('"');
                     if (character != EOF) {
@@ -215,6 +218,7 @@ void handle_quotation(int character, bool multiline)
             }
             break;
         case EOF:
+            // EOF can't appear inside of a quotation
             error_exit(LEX_ERR, current_line_num, "File ended inside of a string literal");
             break;
         default:
@@ -230,9 +234,11 @@ void handle_quotation(int character, bool multiline)
 token_t handle_white_spaces(int *character, token_t token)
 {
     while (token.type == T_UNDEFINED && isspace(*character = getchar())) {
+        // Count the number of spaces on the start of the line
         if (line_start == true && *character == ' ') {
             indent_depth++;
         }
+
         switch (*character) {
         case '\t':
             if (line_start == true) {
@@ -240,18 +246,21 @@ token_t handle_white_spaces(int *character, token_t token)
             }
             break;
         case '\n':
-            // do not send T_LF token if one of these conditions happen
             if (line_start == false && depth_of_brackets == 0) {
                 token.type = T_LF;
-            } else if (line_start == false && depth_of_brackets > 0) {
+            } 
+            // Do not send T_LF token if one of these conditions happen
+            else if (line_start == false && depth_of_brackets > 0) {
                 line_start = true;
             } else if (line_start == true && tab_on_line_start == true) { // If the line is empty, using tab is not a misstake
                 tab_on_line_start = false;
             }
             current_line_num++;
+            // Make sure I don't overwrite T_LF line number
             if (token.type == T_UNDEFINED) {
                 token.line_num = current_line_num;
             }
+            // Reset indent 
             indent_depth = 0;
             break;
         default:
@@ -630,8 +639,8 @@ token_t first_special(int character, token_t token, scanner_case current_case)
                 if ((character = getchar()) == 'a') {
                     if ((character = getchar()) == 'i') {
                         if ((character = getchar()) == 'n') {
-                            /*  If statement created by ChatGPT.
-                                Prompt: "Co má po @main správně pokračovat?"  */
+                            // If statement created by ChatGPT version 5.2.
+                            // Prompt: "Co má po @main správně pokračovat?"
                             if (isalnum((character = getchar())) || character == '_') {
                                 error_exit(LEX_ERR, token.line_num, "Invalid @main anotation.");
                             } else if (character != EOF) {
@@ -703,6 +712,7 @@ token_t get_next_token()
         return token;
     }
 
+    // For interpolated s extension
     if (interpolated_s == true && token.type == T_UNDEFINED) {
         token = process_interpolation(token);
     }
@@ -747,6 +757,7 @@ token_t get_next_token()
         }
     }
 
+    // If there is a token stored in next_token, send it
     if (next_token.type != T_UNDEFINED) {
         token = next_token;
         next_token = new_token(NO_VALUE);

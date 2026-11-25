@@ -5,7 +5,7 @@
  * @brief Code generator library file
  * @author Šimon Greger (xgreges00)
  * @author Samuel Vít Lehotský (xlehots00)
- * @date 25.10.2026
+ * @date 25.11.2026
  *
  * @details This file contains definitions of functions used in IFJcode_generator.c
  */
@@ -15,11 +15,15 @@
 
 #include "ast.h"
 
+/**
+ * @struct context_t
+ * @brief Structure holding information used by many functions in this module
+ */
 typedef struct Context {
-    char *function_name;
-    token_type return_type;
-    ast_node_t *root;
-    unsigned label_idx;
+    char *function_name;    /**<Name of the function we are currently generating code for */
+    token_type return_type; /**<Return type of the function we are currently generating code for */
+    ast_node_t *root;       /**<Pointer to the root of the ast */
+    unsigned label_idx;     /**<Index of labels to ensure non-repeating labels */
 } context_t;
 
 
@@ -165,17 +169,15 @@ void generate_operation(ast_node_t *node, context_t *context);
  * @brief Generates IFJcode26 for an identifier
  *
  * @param node Pointer to a node that stores the identifier
- * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
-void generate_identifier(ast_node_t *node, context_t *context);
+void generate_identifier(ast_node_t *node);
 
 /**
  * @brief Generates IFJcode26 for any type of literal
  *
  * @param node Pointer to a node that holds the literal
- * @param context Pointer to a structure of parameters needed by some functions in IFJcode26 generator
  */
-void generate_literal(ast_node_t *node, context_t *context);
+void generate_literal(ast_node_t *node);
 
 
 /**
