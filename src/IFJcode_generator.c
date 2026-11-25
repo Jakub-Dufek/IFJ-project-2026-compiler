@@ -54,6 +54,10 @@ token_type find_operand_type (ast_node_t *node) {
             type = T_KEY_BOOLEAN;
             break;
         
+        case T_UNIT_LITERAL:
+            type = T_KEY_UNIT;
+            break;
+        
         default:
             type = T_UNDEFINED;
             break;
@@ -71,28 +75,29 @@ token_type find_operand_type (ast_node_t *node) {
     case EXPR_OPERATION: {
         // Handle unary operations seperatelly
         if (node->data->op_node.op_type == EP_UNARY_MINUS) {
-            return find_operand_type(node->data->op_node.right);
+            type = find_operand_type(node->data->op_node.right);
         }
         else if (node->data->op_node.op_type == EP_UNARY_NEG) {
-            return T_KEY_BOOLEAN;
+            type = T_KEY_BOOLEAN;
         }
-
-        if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
+        else if (node->data->op_node.op_type == T_EQ || node->data->op_node.op_type == T_NEQ || 
             node->data->op_node.op_type == T_GT || node->data->op_node.op_type == T_GTE ||
-            node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE) {
-            return T_KEY_BOOLEAN;
+            node->data->op_node.op_type == T_LT || node->data->op_node.op_type == T_LTE ||
+            node->data->op_node.op_type == T_AND || node->data->op_node.op_type == T_OR) {
+            type = T_KEY_BOOLEAN;
         }
-
-        token_type type_left = find_operand_type(node->data->op_node.left);
-        token_type type_right = find_operand_type(node->data->op_node.right);
-        if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
-            type = T_KEY_INT;
-        }
-        else if (type_left == T_KEY_DOUBLE || type_right == T_KEY_DOUBLE) {
-            type = T_KEY_DOUBLE;
-        }
-        else if (type_left == T_KEY_STRING && type_right == T_KEY_STRING) {
-            type = T_KEY_STRING;
+        else {
+            token_type type_left = find_operand_type(node->data->op_node.left);
+            token_type type_right = find_operand_type(node->data->op_node.right);
+            if (type_left == T_KEY_INT && type_right == T_KEY_INT) {
+                type = T_KEY_INT;
+            }
+            else if (type_left == T_KEY_DOUBLE || type_right == T_KEY_DOUBLE) {
+                type = T_KEY_DOUBLE;
+            }
+            else if (type_left == T_KEY_STRING && type_right == T_KEY_STRING) {
+                type = T_KEY_STRING;
+            }
         }
         break;
     }
@@ -536,7 +541,7 @@ void process_node(ast_node_t *node, context_t *context) {
         break;
 
     case AST_DEFINITION:
-       generate_function(node, context);
+        generate_function(node, context);
         break;
 
     case EXPR_OPERATION:
