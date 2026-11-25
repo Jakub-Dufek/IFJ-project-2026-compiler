@@ -57,13 +57,12 @@ typedef struct keyword {
  */
 void return_buffer_token(token_t token);
 
-
 /**
  * @brief Processes interpolation expression
  *
  * @param token Structure that will hold the result of the function
  */
-token_t process_interpolation (token_t token);
+token_t process_interpolation(token_t token);
 
 /**
  * @brief Creates new token and initialises it

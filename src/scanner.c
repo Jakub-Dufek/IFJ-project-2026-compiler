@@ -30,7 +30,7 @@ static unsigned depth_of_brackets = NO_VALUE;
 static unsigned indent_depth = NO_VALUE;
 // Variable for storing one token, that will be sent in the next call of this module
 static token_t next_token = {0};
-// Variable for storing one token that was sent back from parser. It will be sent in the 
+// Variable for storing one token that was sent back from parser. It will be sent in the
 // next call of scanner and has higher priority than next_token
 static token_t buffer_token = {0};
 // Variable holding the number of the active line this module is getting information from
@@ -53,14 +53,9 @@ keyword keywords_dictionary[KEYWORDS_TABLE_NUM_ELEMENTS] = {
     {"match", T_KEY_MATCH},     {"return", T_KEY_RETURN}, {"then", T_KEY_THEN}, {"true", T_KEY_TRUE},
     {"type", T_KEY_TYPE},       {"val", T_KEY_VAL},       {"var", T_KEY_VAR},   {"while", T_KEY_WHILE}};
 
-void return_buffer_token(token_t token) {
-    buffer_token = token;
-}
+void return_buffer_token(token_t token) { buffer_token = token; }
 
-token_t process_interpolation (token_t token) {
-
-    return token;
-}
+token_t process_interpolation(token_t token) { return token; }
 
 token_t new_token(unsigned line_num)
 {
@@ -248,7 +243,7 @@ token_t handle_white_spaces(int *character, token_t token)
         case '\n':
             if (line_start == false && depth_of_brackets == 0) {
                 token.type = T_LF;
-            } 
+            }
             // Do not send T_LF token if one of these conditions happen
             else if (line_start == false && depth_of_brackets > 0) {
                 line_start = true;
@@ -260,7 +255,7 @@ token_t handle_white_spaces(int *character, token_t token)
             if (token.type == T_UNDEFINED) {
                 token.line_num = current_line_num;
             }
-            // Reset indent 
+            // Reset indent
             indent_depth = 0;
             break;
         default:
@@ -345,7 +340,8 @@ int compare(const void *string, const void *keyword_string)
     return (strcmp((const char *)string, new_keyword->string));
 }
 
-token_t first_alpha (int character, token_t token) {
+token_t first_alpha(int character, token_t token)
+{
     // Check for interpolated s
     if (character == 's') {
         int next_character = getchar();
@@ -354,16 +350,14 @@ token_t first_alpha (int character, token_t token) {
             if ((next_character = getchar()) == '"') {
                 if ((next_character = getchar()) == '"') {
                     multiline_interpolation = true;
-                }
-                else {
+                } else {
                     multiline_interpolation = false;
                     if (next_character != EOF) {
                         ungetc(next_character, stdin);
                     }
                     ungetc('"', stdin);
                 }
-            }
-            else {
+            } else {
                 multiline_interpolation = false;
                 if (next_character != EOF) {
                     ungetc(next_character, stdin);
@@ -373,26 +367,28 @@ token_t first_alpha (int character, token_t token) {
             interpolated_s = false;
             multiline_interpolation = false;
             return token;
-        }
-        else if (next_character != EOF) {
+        } else if (next_character != EOF) {
             ungetc(next_character, stdin);
         }
     }
 
     do {
-        //note the lexeme's value
+        // note the lexeme's value
         scratch_append((char)character);
 
     } while (((character = getchar()) != EOF) && (isalnum(character) || character == '_'));
 
-    //Return last read character, that was not used
-    if (character != EOF) { ungetc(character, stdin); }
-
-    if (scratch_get_len() == 1 && scratch_get_string()[0] == '_') { 
-        error_exit(LEX_ERR, current_line_num, "Invalid identifier."); 
+    // Return last read character, that was not used
+    if (character != EOF) {
+        ungetc(character, stdin);
     }
 
-    keyword *the_keyword = bsearch(scratch_get_string(), keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
+    if (scratch_get_len() == 1 && scratch_get_string()[0] == '_') {
+        error_exit(LEX_ERR, current_line_num, "Invalid identifier.");
+    }
+
+    keyword *the_keyword =
+        bsearch(scratch_get_string(), keywords_dictionary, KEYWORDS_TABLE_NUM_ELEMENTS, sizeof(keyword), compare);
     if (the_keyword == NULL) {
         token.type = T_IDENTIFIER;
     } else if (the_keyword->type == T_KEY_TRUE || the_keyword->type == T_KEY_FALSE) {
@@ -410,73 +406,96 @@ token_t first_alpha (int character, token_t token) {
     return token;
 }
 
-token_t first_digit (int character, token_t token, scanner_case current_case) {
-    int num_cnt_e = 0; 
+token_t first_digit(int character, token_t token, scanner_case current_case)
+{
+    int num_cnt_e = 0;
     int num_cnt_d = 0;
     bool valid = true;
     bool d_suffix = false;
     bool zero = (current_case == CASE_INT_LITERAL && character == '0');
     int last_character = 0;
     do {
-        if (character == '_') { last_character = character; continue; }
-        
-        switch (current_case) {
-            case CASE_INT_LITERAL:
-                if (character == '.') { current_case = CASE_DOUBLE_LITERAL; }
-                else if (character == 'e' || character == 'E') { current_case = CASE_EXPONENT; }
-                else if (isdigit(character)) { if (zero && last_character != 0) { error_exit(LEX_ERR, current_line_num, "Non-zero number can not start with a zero."); } }
-                else { valid = false; }
-                break;
-        
-            case CASE_DOUBLE_LITERAL:
-                if (character == 'e' || character == 'E') { 
-                    if (num_cnt_d == 0) { error_exit(LEX_ERR, current_line_num, "Missing digits before exponent."); } 
-                    current_case = CASE_EXPONENT; 
-                }
-                else if (character == 'd' || character == 'D') { 
-                    if (num_cnt_d == 0) { error_exit(LEX_ERR, current_line_num, "Missing digits before 'd' suffix."); } 
-                    d_suffix = true;
-                    valid = false; 
-                }
-                else if(isdigit(character)) { num_cnt_d++; }
-                else { valid = false; }
-                break;
+        if (character == '_') {
+            last_character = character;
+            continue;
+        }
 
-            case CASE_EXPONENT:
-                if (character == '-' || character == '+') { 
-                    if (last_character != 'e' && last_character != 'E') { valid = false;  }
+        switch (current_case) {
+        case CASE_INT_LITERAL:
+            if (character == '.') {
+                current_case = CASE_DOUBLE_LITERAL;
+            } else if (character == 'e' || character == 'E') {
+                current_case = CASE_EXPONENT;
+            } else if (isdigit(character)) {
+                if (zero && last_character != 0) {
+                    error_exit(LEX_ERR, current_line_num, "Non-zero number can not start with a zero.");
                 }
-                else if (character == 'd' || character == 'D') {
-                    if (num_cnt_e == 0) {error_exit(LEX_ERR, current_line_num, "Missing exponent digits before 'd' suffix."); }
-                    d_suffix = true;
+            } else {
+                valid = false;
+            }
+            break;
+
+        case CASE_DOUBLE_LITERAL:
+            if (character == 'e' || character == 'E') {
+                if (num_cnt_d == 0) {
+                    error_exit(LEX_ERR, current_line_num, "Missing digits before exponent.");
+                }
+                current_case = CASE_EXPONENT;
+            } else if (character == 'd' || character == 'D') {
+                if (num_cnt_d == 0) {
+                    error_exit(LEX_ERR, current_line_num, "Missing digits before 'd' suffix.");
+                }
+                d_suffix = true;
+                valid = false;
+            } else if (isdigit(character)) {
+                num_cnt_d++;
+            } else {
+                valid = false;
+            }
+            break;
+
+        case CASE_EXPONENT:
+            if (character == '-' || character == '+') {
+                if (last_character != 'e' && last_character != 'E') {
                     valid = false;
                 }
-                else if (isdigit(character)) { num_cnt_e++; }
-                else { valid = false;}
-                break;
-
-            default:
+            } else if (character == 'd' || character == 'D') {
+                if (num_cnt_e == 0) {
+                    error_exit(LEX_ERR, current_line_num, "Missing exponent digits before 'd' suffix.");
+                }
+                d_suffix = true;
                 valid = false;
-                break;
+            } else if (isdigit(character)) {
+                num_cnt_e++;
+            } else {
+                valid = false;
             }
+            break;
+
+        default:
+            valid = false;
+            break;
+        }
 
         if (valid) {
-            //note the lexeme's value
+            // note the lexeme's value
             scratch_append((char)character);
             last_character = character;
+        } else {
+            break;
         }
-        else { break; }
 
-    } while(((character = getchar()) != EOF) && (isdigit(character) 
-                                            || character == 'e' || character == 'E' || character == '-' 
-                                            || character == '+' || character == '.' || character == '_'
-                                            || character == 'd' || character == 'D'));
+    } while (((character = getchar()) != EOF) &&
+             (isdigit(character) || character == 'e' || character == 'E' || character == '-' || character == '+' ||
+              character == '.' || character == '_' || character == 'd' || character == 'D'));
 
-    if ((current_case == CASE_EXPONENT && num_cnt_e == 0) || (current_case == CASE_DOUBLE_LITERAL && num_cnt_d == 0)) { 
+    if ((current_case == CASE_EXPONENT && num_cnt_e == 0) || (current_case == CASE_DOUBLE_LITERAL && num_cnt_d == 0)) {
         error_exit(LEX_ERR, current_line_num, "Missing value after decimal point/exponent.");
     }
 
-    if (d_suffix) { character = getchar(); }
+    if (d_suffix) {
+        character = getchar();
+    }
 
     if (character != EOF && (isalnum(character) || character == '_' || character == '.')) {
         error_exit(LEX_ERR, current_line_num, "Invalid character immediately following numeric literal.");
@@ -487,11 +506,10 @@ token_t first_digit (int character, token_t token, scanner_case current_case) {
         ungetc(character, stdin);
     }
 
-    if (current_case == CASE_INT_LITERAL) { 
+    if (current_case == CASE_INT_LITERAL) {
         token.type = T_INT_LITERAL;
         token.value.int_value = (int)strtol(scratch_get_string(), NULL, 10);
-    }
-    else if (current_case == CASE_DOUBLE_LITERAL || current_case == CASE_EXPONENT) {
+    } else if (current_case == CASE_DOUBLE_LITERAL || current_case == CASE_EXPONENT) {
         token.type = T_DOUBLE_LITERAL;
         token.value.double_value = strtod(scratch_get_string(), NULL);
     }
@@ -591,16 +609,14 @@ token_t first_special(int character, token_t token, scanner_case current_case)
             case '&':
                 if ((character = getchar()) == '&') {
                     token.type = T_AND;
-                }
-                else {
+                } else {
                     error_exit(LEX_ERR, token.line_num, "Symbol '&' is not supported. If you want AND operand, use '&&'.\n");
                 }
                 break;
             case '|':
                 if ((character = getchar()) == '|') {
                     token.type = T_OR;
-                }
-                else {
+                } else {
                     error_exit(LEX_ERR, token.line_num, "Symbol '|' is not supported. If you want OR operand, use '||'.\n");
                 }
                 break;
@@ -734,25 +750,21 @@ token_t get_next_token()
                         ungetc(next_character, stdin);
                     }
                     token = first_digit(character, token, CASE_DOUBLE_LITERAL);
-                }
-                else {
+                } else {
                     token.type = T_DOT;
                     if (next_character != EOF) {
                         ungetc(next_character, stdin);
                     }
                 }
-            }
-            else if (isdigit(next_character = getchar()) && character == '0') {
+            } else if (isdigit(next_character = getchar()) && character == '0') {
                 error_exit(LEX_ERR, current_line_num, "Non-Zero number starting with zero.");
-            }
-            else {
+            } else {
                 if (next_character != EOF) {
                     ungetc(next_character, stdin);
                 }
                 token = first_digit(character, token, CASE_INT_LITERAL);
             }
-        }
-        else if (!isspace(character)) {
+        } else if (!isspace(character)) {
             token = first_special(character, token, current_case);
         }
     }
