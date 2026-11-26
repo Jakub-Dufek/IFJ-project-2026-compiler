@@ -43,12 +43,21 @@ void run_sem_anal(ast_node_t *ast_node);
  */
 void sem_pre_anal(ast_node_t *ast_node, symtable_stack_t *stack);
 
+
+
 /**
  * @brief Second pass through the AST.
  *
  * Recursively analyzes the tree, performs type deductions, type checking,
  * variable scope management, and returns the resulting data type of the
  * evaluated block or statement.
+ *
+    This function was split into several static functions with Gemini Pro 3.1,
+    because it seemed to be a much better solution than one large switch across
+    hundreds of lines.
+    Prompt:
+       "Split this function into several functions (each case must have a standalone function now)"
+ *
  *
  * @param ast_node Pointer to the currently evaluated AST node.
  * @param stack Pointer to the symbol table stack.

@@ -684,6 +684,14 @@ static data_type sem_check_identifier(ast_node_t *ast_node, symtable_stack_t *st
 
 // SECOND GO THROUGH AST
 
+/*
+    This function was split into several static functions with Gemini Pro 3.1,
+    because it seemed to be a much better solution than one large switch across
+    hundreds of lines.
+    Prompt:
+       "Split this function into several functions (each case must have a standalone function now)"
+*/
+
 data_type sem_anal(ast_node_t *ast_node, symtable_stack_t *stack)
 {
     data_type last_evaluated_type = T_KEY_UNIT; // Tracks the type of the last evaluated node
