@@ -1,1 +1,13 @@
 \section{Blokové schéma architektúry}
+
+%\includegraphics[width=1.8\linewidth]{img/IFJ.drawio.pdf}
+\vspace{1.5em}
+{ \large 
+Centrálnim riadiacim uzlom je \verb|main.c|, ktorý inicializuje pamäť prostredníctvom \verb|arena_init()| a \verb|scratch_init()|.
+
+Modul \verb|scanner.c| načítava jeden lexém vstupného kódu IFJ26 z \verb|stdin|, vytvorí z neho token, ktorý je následne poslaný na spracovanie volajúcemu. Ten môže byť buď modul \verb|parser.c| alebo \verb|expr_parser.c|. 
+
+Modul \verb|expr_parser.c| je volaný z modulu \verb|parser.c|, ktorý odovzdá počiatočný token výrazu (\verb|token_t|), modulu, následne modul spracováva výraz a stavia AST strom, pričom si žiadia o nový token (\verb|token_t|) \verb|scanner.c|, pokím nenarazí na ukončovaní znak výraz, kedy analýzu výrazu zastaví a vráti vytvorení AST strom (\verb|ast_node_t*|) \verb|parser.c|.
+Modul \verb|IFJcode_grenerator.c| obdrží už spracovaný 
+
+}
