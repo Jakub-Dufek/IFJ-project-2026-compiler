@@ -149,6 +149,10 @@ bool is_builtin_function(char *function_name);
 void generate_call(ast_node_t *node, context_t *context);
 
 /**
+ * Idea for short-circuit implementation of AND and OR operations suggested by ChatGPT, model OpenAI GPT-6
+ * Prompt: Zkontroluješ, jestli už správně generuju operace z rozšíření BOOLTHEN? Kdyby ne, popiš
+ * proč a na vygenerovaném IFJcode26 mi ukaž moji chybu.
+ * 
  * @brief Generates IFJcode26 for two operands
  *
  * @param node Pointer to a operation node strucutre containing pointers to the operands
