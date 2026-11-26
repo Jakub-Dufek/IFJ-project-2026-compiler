@@ -1,21 +1,3 @@
 \section{Blokové schéma architektúry}
 
-%\includegraphics[width=1.8\linewidth]{img/IFJ.drawio.pdf}
-\vspace{1.5em}
-{ \large 
-Centrálnim riadiacim uzlom je \verb|main.c|, ktorý inicializuje pamäť prostredníctvom \verb|arena_init()| a \verb|scratch_init()|.
-
-Modul \verb|scanner.c| načítava jeden lexém vstupného kódu IFJ26 z \verb|stdin|, vytvorí z neho token, ktorý je následne poslaný na spracovanie volajúcemu. Ten môže byť buď modul \verb|parser.c| alebo \verb|expr_parser.c|. 
-
-Modul \verb|expr_parser.c| je volaný z modulu \verb|parser.c|, ktorý odovzdá počiatočný token výrazu (\verb|token_t|), modulu, následne modul spracováva výraz a stavia AST, pričom si žiadia o nový token (\verb|token_t|) \verb|scanner.c|, pokím nenarazí na ukončovaní znak výraz, kedy analýzu výrazu zastaví a vráti vytvorení AST strom (\verb|ast_node_t*|) \verb|parser.c|.
-
-Modul \verb|expr_parser_stack.c| je pomocným modulom \verb|expr_parser.c| obsahujúci funkcie na prácu so zásobníkom analyzátora výrazov, obsahujúcim tokeny a (ne)terminály práve spracovávaného výrazu ako aj časti skladaného AST stromu.
-
-Modul \verb|ast.c| je pomocným modulom, obsahujúci funkcie na prácu s abstraktným syntaktickým stromom (AST).
-
-Modul \verb|sem_anal.c|
-
-Modul \verb|symtable.c|
-
-Modul \verb|IFJcode_grenerator.c| je spustený \verb|main.c|, pričom obdrží už spracovaný abstraktný syntaktický strom od sémantickéj analýzi, na základe, ktorého sa generujú konštrukcie cieľového jazyka IFJcode26.
-}
+\includegraphics[width=1.8\linewidth]{img/IFJ.drawio.pdf}
