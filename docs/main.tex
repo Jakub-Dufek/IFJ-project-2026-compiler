@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{babel}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage[paper=portrait,pagesize]{typearea}
+
+\graphicspath{{images/}}
+
+\title{\includegraphics[width=10cm]{logo/logo_cz.png}\\Formálne jazyky a prekladače \\ 
+Dokumentácia k prekladaču jazyka IFJ26}
+\author{\textbf{Jakub Dufek}, Samuel Vít Lehotský, Šimon Greger, Ondrej Kycl \\ \textbf{274855}, xlehots00, xgreges00, xkyclon00}
+\date{\today}    
+
+\begin{document}
+    \maketitle
+
+    \vspace{1.5em}
+    {\large
+    \noindent\textbf{Zovlená varianta:}
+
+    \hspace*{0.25cm}Výškovo vyvážený binárny vyhľadávací strom (vv-BVS)\vspace{1.5em}
+
+    \noindent\textbf{Rozdelenie bodov:}
+
+    \begin{tabular}{ll}
+      274855:    &  100\\
+      xlehots00: &  100\\
+      xgreges00: &  100\\
+      xkyclon00: &  100\\
+    \end{tabular}\vspace{1.5em}
+
+    \noindent\textbf{Implementované rozšírenia:}
+    
+    \begin{tabular}{l}
+      BOOLTHEN\\
+    \end{tabular}\vspace{1.5em}
+
+    \noindent\textbf{GitHub repozitár:}
+    
+    \hspace*{0.25cm}\href{https://github.com/Jakub-Dufek/IFJ-project-2026-compiler.git}{IFJ-project-2026-compiler.git}
+    } 
+
+    \newpage
+
+    \tableofcontents
+
+    \newpage
+
+    \input{body}\newpage
+    \KOMAoptions{paper=landscape,pagesize}
+    \input{blockdiagram}\newpage
+    \KOMAoptions{paper=portrait,pagesize}
+    \input{blockdiagram_desc}\newpage
+    \KOMAoptions{paper=landscape,pagesize}
+    \input{lexdiagram}\newpage
+    \KOMAoptions{paper=portrait,pagesize}
+    \input{modules}\newpage
+    \input{sources}\newpage
+    
+\end{document}
