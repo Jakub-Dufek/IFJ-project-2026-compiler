@@ -1,18 +1,22 @@
 \vspace{1.5em}
 { \large 
-Centrálnim riadiacim uzlom je \verb|main.c|, ktorý inicializuje pamäť prostredníctvom \verb|arena_init()| a \verb|scratch_init()|.
+\begin{sloppypar}
+Centrálnym riadiacim uzlom je \verb|main.c|, ktorý inicializuje pamäť pre AST a scratchpad prostredníctvom \verb|arena_init()| a \verb|scratch_init()|. Postupne volá samostatné slučky programu \verb|parser.c|, \verb|sem_anal.c| a \verb|IFJcode_grenerator.c|. Pamäť uvoľňuje, hneď ako je to potrebné.
 
-Modul \verb|scanner.c| načítava jeden lexém vstupného kódu IFJ26 z \verb|stdin|, vytvorí z neho token, ktorý je následne poslaný na spracovanie volajúcemu. Ten môže byť buď modul \verb|parser.c| alebo \verb|expr_parser.c|. 
+Modul \verb|scanner.c| načítava jeden lexém vstupného kódu IFJ26 zo \verb|stdin|, vytvorí z neho token, ktorý je následne poslaný na spracovanie volajúcemu. Tým môže byť buď modul \verb|parser.c|, alebo \verb|expr_parser.c|. 
 
-Modul \verb|expr_parser.c| je volaný z modulu \verb|parser.c|, ktorý odovzdá počiatočný token výrazu (\verb|token_t|), modulu, následne modul spracováva výraz a stavia AST, pričom si žiadia o nový token (\verb|token_t|) \verb|scanner.c|, pokím nenarazí na ukončovaní znak výraz, kedy analýzu výrazu zastaví a vráti vytvorení AST strom (\verb|ast_node_t*|) \verb|parser.c|.
+Modul \verb|parser.c| je prvou samostatnou slučkou v rámci celého programu a volá moduly \verb|scanner.c|, \verb|expr_parser.c| a \verb|ast.c|. Modul stavia AST metódou rekurzívneho zostupu, pričom si žiada nový token (\verb|token_t|) od \verb|scanner.c|, kým nenarazí na koniec programu. Ak narazí na výraz, odovzdá réžiu modulu \verb|expr_parser.c|. Na konci vráti ukazovateľ na vrchol AST modulu \verb|main.c|.
 
-Modul \verb|expr_parser_stack.c| je pomocným modulom \verb|expr_parser.c| obsahujúci funkcie na prácu so zásobníkom analyzátora výrazov, obsahujúcim tokeny a (ne)terminály práve spracovávaného výrazu ako aj časti skladaného AST stromu.
+Modul \verb|expr_parser.c| je volaný z modulu \verb|parser.c|, ktorý mu odovzdá počiatočný token výrazu (\verb|token_t|). Následne modul spracováva výraz a stavia AST, pričom si žiada nový token (\verb|token_t|) od \verb|scanner.c|, kým nenarazí na ukončovací znak výrazu, kedy analýzu výrazu zastaví a vráti vytvorený AST strom (\verb|ast_node_t*|) modulu \verb|parser.c|.
 
-Modul \verb|ast.c| je pomocným modulom, obsahujúci funkcie na prácu s abstraktným syntaktickým stromom (AST).
+Modul \verb|expr_parser_stack.c| je pomocným modulom \verb|expr_parser.c| obsahujúcim funkcie na prácu so zásobníkom analyzátora výrazov, ktorý obsahuje tokeny a (ne)terminály práve spracovávaného výrazu, ako aj časti skladaného AST stromu. Tento modul má vlastnú správu pamäte oddelenú od modulu \verb|memory.c|.
 
-Modul \verb|sem_anal.c|
+Modul \verb|ast.c| je pomocným modulom, ktorý stavia a alokuje jednotlivé uzly stromu (\verb|ast_node_t*|).
 
-Modul \verb|symtable.c|
+Modul \verb|sem_anal.c| je druhou samostatnou slučkou programu a vykonáva sémantickú analýzu nad stromom, ktorý dostal od modulu \verb|main.c|. Stavia tabuľku symbolov pomocou modulu \verb|symtable.c|. Na konci vráti upravený AST modulu \verb|main.c|.
 
-Modul \verb|IFJcode_grenerator.c| je spustený \verb|main.c|, pričom obdrží už spracovaný abstraktný syntaktický strom od sémantickéj analýzi, na základe, ktorého sa generujú konštrukcie cieľového jazyka IFJcode26.
+Modul \verb|symtable.c| je pomocným modulom stavajúcim vyhľadávaciu tabuľku symbolov. Tento modul má vlastnú správu pamäte oddelenú od modulu \verb|memory.c|. Modulu \verb|sem_anal.c| vracia vyhľadané dáta.
+
+Modul \verb|IFJcode_grenerator.c| je spustený z \verb|main.c|, pričom dostane už spracovaný abstraktný syntaktický strom zo sémantickej analýzy, na základe ktorého sa generujú konštrukcie cieľového jazyka IFJcode26.
+\end{sloppypar}
 }

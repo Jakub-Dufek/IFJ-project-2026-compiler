@@ -8,7 +8,13 @@
         \item Modul, reprezentující lexikální analyzátor implementovaný pomocí konečného automatu. Modul se používá zavoláním jeho vstupní funkce \verb|get_token()|, která přečte jeden lexém ze vstupu, vytvoří z něj token a tento token vrátí.
     \end{itemize}
     \item \verb|parser.c /parser.h|
+    \begin{itemize}
+        \item Modul, reprezenující syntaktický analyzátor implementovaný pomocí metody rekurzivního sestupu. Modul se používá zavoláním jeho funkce \verb|build_ast()|, která spustí smyčku analýzy. Vrátí vybudovaný strom.
+    \end{itemize}
     \item \verb|ast.c / ast.h|
+    \begin{itemize}
+        \item Pomocný modul k modulu \verb|parser.c| a \verb|expr_parser.c| alokující jednotlivé uzly AST.
+    \end{itemize}
     \item \verb|expr_parser.c / expr_parser.h| 
     \begin{itemize}
         \item Modul, ktorý využíva syntaktická analýza na spracovávanie výrazov a tvorbu ich abstraktného syntaktického stromu (AST). Základom modulu je precedenčná tabuľka, na základe ktorej sa volí operácia spracovania, a to podľa najvyššieho terminálu na zásobníku a nasledujúceho vstupného tokenu.
@@ -18,12 +24,16 @@
         \item Pomocný modul k modulu \verb|expr_parser|, obsahujúci funkcie implementujúce zásobník \verb|TStack|, využívaný na uchovávanie tokenov a (ne)terminálov práve spracovávaného výrazu.
         \item Implementácia základných operácií (\verb|stack_push|, \verb|stack_pop|, \verb|top|, \verb|empty|) zásobníka, vychádzá z algoritmov uvedených v 3. prednáške predmetu IAL [1, slajdy 14-16] a je doplnená o pomocné operácie \verb|top_terminal| a \verb|stack_push_after_top_terminal|.
     \end{itemize}
+    \newpage
     \item \verb|memory.c / memory.h|
+    \begin{itemize}
+        \item Pomocný modul, implementující struktury Arena a Scratchpad. Arena slouží pro data potřebná po celou dobu běhu programu, tj. uzly AST a řetězce identifikátorů.
+        \item Značná část tohoto modulu byla implementovaná pomocí AI, konkrétně modelu Gemini Flash 3.8.
+    \end{itemize}
     \item \verb|semantic_anal.c / semantic_anal.h|
     \begin{itemize}
         \item Tento modul provádí sémantickou analýzu, tedy kontroluje a obohacuje výstup syntaktické analýzy za využití tabulky symbolů.
     \end{itemize}
-    \newpage
     \item \verb|symtable.c / symtable.h|
     \begin{itemize}
         \item Tento modul obsahuje implementaci tabulky symbolů pomocí AVL stromu, seznamu typů parametrů, a zásobníku tabulek symbolů. 
@@ -35,8 +45,12 @@
     \begin{itemize}
         \item Modul, který rekurzivně zpracovává obsah abstraktního syntaktického stromu, na jehož základě na standardní výstup vypisuje jeho interpretaci pomocí jazyka IFJcode26.
     \end{itemize}
+    \newpage
     \item \verb|error.c / error.h|
-    \item \verb|structers.h|
+    \begin{itemize}
+        \item Pomocný modul, který uvolňuje alokovanou paměť v případě chyby překladače, vypíše chybu na chybový výstup a skončí s příslušným error kódem.
+    \end{itemize}
+    \item \verb|structures.h|
     \begin{itemize}
         \item Knihovna obsahující definici struktury \verb|token_t| a hodnot specifické pro token. Struktura \verb|token_t| slouží jako reprezentace jednoho tokenu, který vyrábí scanner a využívá parser.
     \end{itemize}
