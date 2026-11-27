@@ -8,12 +8,12 @@
  */
 
 #include "parser.h"
-#include "expr_parser.h"
 #include "ast.h"
+#include "expr_parser.h"
 
-#include "structures.h"
-#include "scanner.h"
 #include "error.h"
+#include "scanner.h"
+#include "structures.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -69,7 +69,7 @@ void parse_prologue()
 
 /**
  * @brief Parses [: type] in declaration (call after recieving T_COLON)
- * 
+ *
  * @return data type
  */
 static token_type parse_data_type_def()
@@ -91,9 +91,9 @@ static token_type parse_data_type_def()
 
 /**
  * @brief Determines whether upcoming tokens are expr or fn-call as part of another type of stmt
- * 
+ *
  * @param id_token identifier as first token after T_ASSIGN
- * 
+ *
  * @return subtree of expr or call as part of another type of stmt
  */
 static ast_node_t *parse_expr_or_call(token_t id_token)
@@ -113,9 +113,9 @@ static ast_node_t *parse_expr_or_call(token_t id_token)
 
 /**
  * @brief Determines whether upcoming tokens are standalone expr, standalone fn-call or assign
- * 
+ *
  * @param id_token identifier as first token in whole stmt
- * 
+ *
  * @return subtree of standalone expr, standalone call or assign
  */
 static ast_node_t *parse_expr_call_or_assign(token_t id_token)
@@ -136,9 +136,9 @@ static ast_node_t *parse_expr_call_or_assign(token_t id_token)
 
 /**
  * @brief Parses next 'if' in an 'if else if' stmt, call after recieving 'if', second-degree recursion
- * 
- * @param orig_if AST of original 'if' in which's 'else' body an 'else if' to be inserted 
- * 
+ *
+ * @param orig_if AST of original 'if' in which's 'else' body an 'else if' to be inserted
+ *
  * @return Block AST consisting of only one stmt (the if) to be used as else block for first if
  */
 static ast_node_t *parse_elsif(ast_node_t *orig_if)
@@ -154,7 +154,7 @@ static ast_node_t *parse_elsif(ast_node_t *orig_if)
 
 /**
  * @brief Parses block under function, if or while; call after recieving newline
- * 
+ *
  * @return subtree of upcoming block with ptr->first being first stmt in block
  */
 static ast_node_t *parse_block()
@@ -190,10 +190,10 @@ static ast_node_t *parse_block()
 
 /**
  * @brief Parses fn def parameters through recursion
- * 
+ *
  * @param current_token
  * @param is_first
- * 
+ *
  * @return pointer to first param, ptr->next is next param, NULL if no param
  */
 static ast_node_t *parse_param(token_t current_token, bool is_first)
@@ -246,10 +246,10 @@ static ast_node_t *parse_param(token_t current_token, bool is_first)
 
 /**
  * @brief Parses fn call arguments through recursion
- * 
+ *
  * @param current_token
  * @param is_first
- * 
+ *
  * @return pointer to first arg, ptr->next is next arg, NULL if no arg
  */
 static ast_node_t *parse_arg(token_t current_token, bool is_first)
@@ -300,7 +300,11 @@ static ast_node_t *parse_arg(token_t current_token, bool is_first)
         case T_IDENTIFIER:
             arg = expr_insert_id_leaf(current_token.value.string_value, line_num);
             break;
-        case T_INT_LITERAL: case T_DOUBLE_LITERAL: case T_STRING_LITERAL: case T_UNIT_LITERAL:
+        case T_INT_LITERAL:
+        case T_DOUBLE_LITERAL:
+        case T_STRING_LITERAL:
+        case T_UNIT_LITERAL:
+        case T_BOOLEAN_LITERAL:
             arg = expr_insert_lit_leaf(current_token.value, line_num, current_token.type);
             break;
         default:
@@ -355,7 +359,7 @@ ast_node_t *parse_var_declaration(token_t current_token)
     else {
         expr_or_call = parse_expression(current_token);
     }
-    
+
     // AST insertion
     return ast_insert_var_declaration(value, line_num, is_mutable, data_type, expr_or_call);
 }
@@ -383,7 +387,7 @@ ast_node_t *parse_assign(token_t current_token)
     else {
         expr_or_call = parse_expression(current_token);
     }
-    
+
     // AST insertion
     return ast_insert_assign(value, line_num, expr_or_call);
 }
@@ -407,9 +411,7 @@ ast_node_t *parse_call(token_t current_token)
 
     // newline, eof, semicolon
     current_token = get_next_token();
-    if(current_token.type != T_LF &&
-       current_token.type != T_EOF &&
-       current_token.type != T_SEMICOLON) {
+    if(current_token.type != T_LF && current_token.type != T_EOF && current_token.type != T_SEMICOLON) {
         error_exit(SYNT_ERR, current_token.line_num, "Incorrect function call format");
     }
 
@@ -453,7 +455,7 @@ ast_node_t *parse_if()
         // newline
         if(current_token.type != T_LF) {
             error_exit(SYNT_ERR, current_token.line_num, "Expected newline or 'if' after 'else'");
-        } 
+        }
 
         // block
         else_body = parse_block();
@@ -495,9 +497,7 @@ ast_node_t *parse_return()
 {
     token_t current_token = get_next_token();
 
-    if(current_token.type == T_LF ||
-       current_token.type == T_EOF ||
-       current_token.type == T_SEMICOLON) {
+    if(current_token.type == T_LF || current_token.type == T_EOF || current_token.type == T_SEMICOLON) {
         return ast_insert_return(NULL, current_token.line_num);
     }
     else if(current_token.type == T_IDENTIFIER) {
@@ -589,7 +589,8 @@ ast_node_t *parse_fn_definition()
 ast_node_t *parse_next_local(token_t current_token)
 {
     switch(current_token.type) {
-        case T_KEY_VAR: case T_KEY_VAL:
+        case T_KEY_VAR:
+        case T_KEY_VAL:
             return parse_var_declaration(current_token);
         case T_KEY_IF:
             return parse_if();
@@ -626,10 +627,10 @@ ast_node_t *parse_next_global(token_t current_token)
 ast_node_t *build_ast()
 {
     parse_prologue();
-    
+
     token_t current_token = get_next_token();
-    ast_node_t *head = NULL;    // ptr pointing to start of ast
-    ast_node_t *tail = NULL;    // ptr pointing to current node in ast building process (end)
+    ast_node_t *head = NULL; // ptr pointing to start of ast
+    ast_node_t *tail = NULL; // ptr pointing to current node in ast building process (end)
 
     while(current_token.type != T_EOF) {
         // newline handling

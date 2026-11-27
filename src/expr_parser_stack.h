@@ -1,11 +1,13 @@
 /**
-* @file expr_parser_stack.h
-* @internal Part of IFJ-project-2026-compiler, Team 274855
-*
-* @brief Header file for expression parser stack
-* @author Samuel Vít Lehotský (xlehots00)
-* @date 18. 10. 2026
-*/
+ * @file expr_parser_stack.h
+ * @internal Part of IFJ-project-2026-compiler, Team 274855
+ *
+ * @brief Header file for expression parser stack
+ * @note Implementation of (stack_push, stack_pop, top and empty) 
+ *       is based on the 3rd lecture of the IAL course (Abstraktní datové typy II.), FIT BUT
+ * @author Samuel Vít Lehotský (xlehots00)
+ * @date 18. 10. 2026
+ */
 
 #ifndef EXPR_PARSER_STACK_H
 #define EXPR_PARSER_STACK_H
@@ -68,7 +70,7 @@ token_t top_terminal(TStack *stack);
 
 /**
  * @brief Checks if the stack is empty
- * 
+ *
  * @return true if the stack is empty
  */
 bool empty(TStack *stack);

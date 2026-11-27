@@ -33,9 +33,9 @@ struct arena {
 
 /**
  * @brief Allocates size number of bytes in arena
- * 
+ *
  * @param size size in bytes
- * 
+ *
  * @return ptr to allocated mem
  */
 void *arena_alloc(unsigned size);
@@ -66,21 +66,21 @@ void scratch_clear();
 
 /**
  * @brief Outputs UNALLOCATED string at buffer
- * 
+ *
  * @return UNALLOCATED string sitting in buffer
  */
 const char *scratch_get_string();
 
 /**
  * @brief Outputs length of string at buffer
- * 
+ *
  * @return length of string at buffer
  */
 unsigned scratch_get_len();
 
 /**
  * @brief Allocates string at buffer
- * 
+ *
  * @return ALLOCATED string sitting in buffer
  */
 char *scratch_save_to_arena();

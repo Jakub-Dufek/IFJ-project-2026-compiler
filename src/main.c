@@ -7,11 +7,11 @@
  * @date 17. 10. 2026
  */
 
-#include "memory.h"
+#include "IFJcode_generator.h"
 #include "ast.h"
+#include "memory.h"
 #include "parser.h"
 #include "semantic_anal.h"
-#include "IFJcode_generator.h"
 
 int main()
 {
@@ -19,9 +19,9 @@ int main()
     scratch_init();
 
 
-    ast_node_t *ast = build_ast();  // parser + scanner
-    run_sem_anal(ast);              // semantic analysis
-    generate_IFJcode26(ast);        // code generator
+    ast_node_t *ast = build_ast(); // parser + scanner
+    run_sem_anal(ast);             // semantic analysis
+    generate_IFJcode26(ast);       // code generator
 
 
     scratch_free();

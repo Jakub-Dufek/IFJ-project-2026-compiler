@@ -10,4 +10,8 @@ IndentWidth: 4
 ColumnLimit: 130
 
 PointerAlignment: Right
-BreakBeforeBraces: Linux
+BreakBeforeBraces: Stroustrup
+IndentCaseLabels: true
+
+MaxEmptyLinesToKeep: 3
+SpaceBeforeParens: Never
