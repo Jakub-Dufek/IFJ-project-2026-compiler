@@ -15,8 +15,8 @@
     \end{itemize}
     \item \verb|expr_parser_stack.c / expr_parser_stack.h|
     \begin{itemize}
-        \item Pomocný modul k modulu \verb|expression parser|, obsahujúci funkcie implementujúce zásobník \verb|tstack|, využívaný na uchovávanie tokenov a (ne)terminálov práve spracovávaného výrazu.
-        \item Implementácia základných operácií (\verb|stack_push|, \verb|stack_pop|, \verb|top|, \verb|empty|) zásobníka (\verb|tstack|) vychádzá z algoritmov uvedených v 3. prednáške predmetu IAL [1, slajdy 14-16] a je doplnená o pomocné operácie \verb|top_terminal| a \verb|stack_push_after_top_terminal|.
+        \item Pomocný modul k modulu \verb|expr_parser|, obsahujúci funkcie implementujúce zásobník \verb|TStack|, využívaný na uchovávanie tokenov a (ne)terminálov práve spracovávaného výrazu.
+        \item Implementácia základných operácií (\verb|stack_push|, \verb|stack_pop|, \verb|top|, \verb|empty|) zásobníka, vychádzá z algoritmov uvedených v 3. prednáške predmetu IAL [1, slajdy 14-16] a je doplnená o pomocné operácie \verb|top_terminal| a \verb|stack_push_after_top_terminal|.
     \end{itemize}
     \item \verb|memory.c / memory.h|
     \item \verb|semantic_anal.c / semantic_anal.h|
